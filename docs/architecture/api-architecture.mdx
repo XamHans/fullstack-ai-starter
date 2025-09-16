@@ -1,0 +1,529 @@
+---
+title: "API Architecture"
+description: "Comprehensive guide to the robust API pattern with standardized error handling, authentication wrappers, and clean architecture principles used in Next.js 15."
+---
+
+# Next.js 15 API Pattern: Robust Error Handling & Authentication
+
+This document outlines a scalable and maintainable pattern for building API routes in Next.js 15. The primary goal is to create a clean, secure, and developer-friendly API layer by abstracting common logic like error handling and authentication into reusable wrappers.
+
+## Table of Contents
+
+1. [The Philosophy (The "Why")](#the-philosophy-the-why)
+2. [Core Concepts](#core-concepts)
+3. [File Structure](#file-structure)
+4. [How It Works: The Flow of a Request](#how-it-works-the-flow-of-a-request)
+5. [Implementation Guide](#implementation-guide)
+6. [Example Usage](#example-usage)
+7. [Extending the Pattern](#extending-the-pattern)
+
+## The Philosophy (The "Why")
+
+In any growing application, API endpoints often share repetitive logic. This includes:
+
+- Wrapping every handler in a try...catch block
+- Checking for a user session to protect routes
+- Ensuring responses have a consistent JSON structure (`{ success: true, data: ... }`)
+- Validating user permissions (authorization)
+
+This pattern addresses these challenges by adhering to a few core principles:
+
+- **Don't Repeat Yourself (DRY)**: Common logic is centralized in higher-order functions (wrappers), so you only have to write it once
+- **Separation of Concerns**: Your API route handlers should only contain business logic. They shouldn't be cluttered with boilerplate for handling HTTP requests and responses
+- **Consistency and Predictability**: Every API endpoint returns a standardized, predictable JSON response, making the frontend development experience much smoother
+- **Security by Default**: The `withAuthentication` wrapper makes it trivial to secure endpoints and provides the user session, encouraging proper authorization checks
+
+## Core Concepts
+
+This pattern is built on three key components:
+
+### 1. ApiError Class
+
+A custom error class that allows you to specify an HTTP status code and an optional error code. Throwing `new ApiError(404, 'Post not found')` from anywhere in your code will automatically result in a properly formatted 404 JSON response.
+
+### 2. API Utility Functions
+
+A centralized file containing all the building blocks:
+- `createApiResponse` / `createApiError`: Functions that format success and error responses
+- Helper functions like `parseRequestBody` and `validateRequiredFields`
+
+### 3. Higher-Order Functions (Wrappers)
+
+These are functions that take your API handler as an argument and return a new function with added capabilities:
+
+- **`withErrorHandling`**: Wraps a handler in a try...catch block and uses the utility functions to guarantee a standardized JSON response
+- **`withAuthentication`**: First checks for a valid user session using better-auth. If the user is authenticated, it calls the handler, passing the session details. It internally uses `withErrorHandling` to provide both features in one
+
+## File Structure
+
+```
+.
+├── app/
+│   └── api/
+│       └── posts/
+│           ├── route.ts              # Example: List/Create posts
+│           └── [id]/
+│               └── route.ts          # Example: Individual post CRUD
+├── lib/
+│   ├── auth.ts                       # Better-auth configuration
+│   ├── api/
+│   │   └── base.ts                   # Core API utilities and wrappers
+│   └── container/
+│       └── index.ts                  # Dependency injection container
+└── modules/
+    └── posts/
+        ├── schema.ts                 # Database schema
+        ├── types.ts                  # TypeScript types
+        └── services/
+            └── post.service.ts       # Business logic
+```
+
+## How It Works: The Flow of a Request
+
+Here's how a request is processed from start to finish when using the `withAuthentication` wrapper:
+
+1. **Request Received**: An incoming request hits a Next.js Route Handler (e.g., `app/api/posts/[id]/route.ts`)
+
+2. **Wrapper Execution**: The exported handler, `export const PUT = withAuthentication(...)`, is invoked
+
+3. **Authentication Check**: The `withAuthentication` wrapper takes over:
+   - It calls `auth.api.getSession()` to retrieve the current user's session
+   - **Failure**: If there is no session, it immediately throws a `new ApiError(401, 'Unauthorized')`. The flow stops here
+   - **Success**: If a session exists, it proceeds to the next step
+
+4. **Business Logic Execution**: The wrapper calls your original API handler function, passing the session, request, and params objects as arguments
+
+5. **Inside Your Handler**:
+   - Your code focuses purely on the task (e.g., fetching data, updating a database)
+   - You can perform authorization checks, like `if (post.authorId !== session.user.id)`. If the check fails, you throw an `ApiError` (e.g., `new ApiError(403, 'Forbidden')`)
+   - If the requested resource doesn't exist, you throw `new ApiError(404, 'Not Found')`
+
+6. **Response Handling** (via `withErrorHandling`):
+   - **If your handler completes successfully**: The `withErrorHandling` logic catches the returned value (e.g., the post object) and passes it to `createApiResponse`. This generates a 200 OK response with the format `{ success: true, data: post }`
+   - **If your handler throws an error**: The catch block is triggered:
+     - If the error is an instance of `ApiError`, it uses the error's status and message to generate a formatted JSON response (e.g., `{ success: false, error: 'Post not found' }` with a 404 status)
+     - If it's any other unexpected error, it defaults to a generic 500 Internal Server Error response to avoid leaking sensitive information
+
+7. **Response Sent**: The final, formatted `NextResponse` object is sent back to the client
+
+## Implementation Guide
+
+### Step 1: Set Up Core API Utilities
+
+The foundation file for your API logic:
+
+**`lib/api/base.ts`**
+
+```typescript
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { Session } from "better-auth";
+
+export type ApiResponse<T = any> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+  code?: string;
+};
+
+export class ApiError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export function createApiResponse<T>(
+  data?: T,
+  message?: string,
+  statusCode = 200
+): NextResponse<ApiResponse<T>> {
+  return NextResponse.json({ success: true, data, message }, { status: statusCode });
+}
+
+export function createApiError(
+  error: string | Error,
+  statusCode = 500,
+  code?: string
+): NextResponse<ApiResponse> {
+  const message = error instanceof Error ? error.message : error;
+  return NextResponse.json({ success: false, error: message, code }, { status: statusCode });
+}
+
+export async function withErrorHandling<T>(
+  handler: () => Promise<T>
+): Promise<NextResponse<ApiResponse<T>>> {
+  try {
+    const result = await handler();
+    return createApiResponse(result);
+  } catch (error) {
+    console.error("API Error:", error);
+    if (error instanceof ApiError) {
+      return createApiError(error.message, error.statusCode, error.code);
+    }
+    return createApiError("Internal server error", 500, "INTERNAL_ERROR");
+  }
+}
+
+type AuthenticatedApiHandler<T> = (
+  session: Session,
+  req: NextRequest,
+  params: { [key: string]: string | string[] }
+) => Promise<T>;
+
+export function withAuthentication<T>(handler: AuthenticatedApiHandler<T>) {
+  return async (req: NextRequest, { params }: { params: any }) => {
+    return withErrorHandling(async () => {
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (!session) {
+        throw new ApiError(401, "Unauthorized", "UNAUTHORIZED");
+      }
+      return handler(session, req, params);
+    });
+  };
+}
+
+// Helper utilities
+export async function parseRequestBody<T>(request: NextRequest): Promise<T> {
+  try {
+    return await request.json();
+  } catch (error) {
+    throw new ApiError(400, "Invalid JSON body", "INVALID_JSON");
+  }
+}
+
+export function validateRequiredFields(
+  data: Record<string, any>,
+  requiredFields: string[]
+): void {
+  const missingFields = requiredFields.filter((field) => !data[field]);
+  if (missingFields.length > 0) {
+    throw new ApiError(
+      400,
+      `Missing required fields: ${missingFields.join(", ")}`,
+      "MISSING_FIELDS"
+    );
+  }
+}
+
+export function getQueryParams(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  return {
+    limit: Math.min(Number.parseInt(searchParams.get("limit") || "20"), 100),
+    offset: Math.max(Number.parseInt(searchParams.get("offset") || "0"), 0),
+    search: searchParams.get("search") || undefined,
+  };
+}
+```
+
+### Step 2: Configure Authentication
+
+Your better-auth instance:
+
+**`lib/auth.ts`**
+
+```typescript
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/lib/db";
+import * as schema from "@/modules/users/schema";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db(), {
+    provider: "pg",
+    schema,
+  }),
+  emailAndPassword: {
+    enabled: true,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  plugins: [nextCookies()],
+});
+```
+
+## Example Usage
+
+### Creating a Posts Module
+
+**Database Schema** - `modules/posts/schema.ts`:
+
+```typescript
+import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+
+export const posts = pgTable("posts", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorId: text("author_id").notNull(),
+  published: boolean("published").default(false).notNull(),
+  createdAt: timestamp("created_at").$defaultFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updated_at").$defaultFn(() => new Date()).notNull(),
+});
+```
+
+**Service Layer** - `modules/posts/services/post.service.ts`:
+
+```typescript
+import { eq, desc, and, ilike } from "drizzle-orm";
+import type { ServiceDependencies } from "@/lib/container/types";
+import { posts } from "../schema";
+import type { CreatePostInput, UpdatePostInput, PostFilters } from "../types";
+
+export class PostService {
+  constructor(private deps: ServiceDependencies) {}
+
+  async createPost(data: CreatePostInput, authorId: string) {
+    const [post] = await this.deps.db
+      .insert(posts)
+      .values({
+        ...data,
+        authorId,
+      })
+      .returning();
+
+    return post;
+  }
+
+  async getPostById(id: string) {
+    const [post] = await this.deps.db
+      .select()
+      .from(posts)
+      .where(eq(posts.id, id));
+
+    return post;
+  }
+
+  async updatePost(id: string, data: UpdatePostInput) {
+    const [post] = await this.deps.db
+      .update(posts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(posts.id, id))
+      .returning();
+
+    return post;
+  }
+
+  async deletePost(id: string) {
+    await this.deps.db.delete(posts).where(eq(posts.id, id));
+  }
+
+  async getPosts(filters: PostFilters = {}) {
+    const { limit = 20, offset = 0, search, authorId } = filters;
+
+    let query = this.deps.db
+      .select()
+      .from(posts)
+      .where(and(
+        eq(posts.published, true),
+        search ? ilike(posts.title, `%${search}%`) : undefined,
+        authorId ? eq(posts.authorId, authorId) : undefined
+      ))
+      .orderBy(desc(posts.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return await query;
+  }
+}
+```
+
+### API Route Implementation
+
+**List/Create Posts** - `app/api/posts/route.ts`:
+
+```typescript
+import { type NextRequest } from "next/server";
+import { getContainer } from "@/lib/container";
+import {
+  withAuthentication,
+  withErrorHandling,
+  ApiError,
+  parseRequestBody,
+  validateRequiredFields,
+  getQueryParams,
+} from "@/lib/api/base";
+
+// GET /api/posts - List posts (public)
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  const { limit, offset, search } = getQueryParams(request);
+
+  const posts = await postService.getPosts({
+    limit,
+    offset,
+    search,
+  });
+
+  return posts;
+});
+
+// POST /api/posts - Create post (requires authentication)
+export const POST = withAuthentication(async (session, request) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  const body = await parseRequestBody<{
+    title: string;
+    content: string;
+    published?: boolean;
+  }>(request);
+
+  validateRequiredFields(body, ["title", "content"]);
+
+  const post = await postService.createPost(body, session.user.id);
+
+  return post;
+});
+```
+
+**Individual Post CRUD** - `app/api/posts/[id]/route.ts`:
+
+```typescript
+import type { NextRequest } from "next/server";
+import { getContainer } from "@/lib/container";
+import {
+  withAuthentication,
+  withErrorHandling,
+  ApiError,
+  parseRequestBody,
+} from "@/lib/api/base";
+
+// GET /api/posts/[id] - Get single post (public)
+export const GET = withErrorHandling(async (request: NextRequest, { params }) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  const post = await postService.getPostById(params.id);
+
+  if (!post) {
+    throw new ApiError(404, "Post not found", "POST_NOT_FOUND");
+  }
+
+  return post;
+});
+
+// PUT /api/posts/[id] - Update post (requires authentication + ownership)
+export const PUT = withAuthentication(async (session, request, { params }) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  // Authorization check
+  const existingPost = await postService.getPostById(params.id);
+  if (!existingPost) {
+    throw new ApiError(404, "Post not found", "POST_NOT_FOUND");
+  }
+
+  if (existingPost.authorId !== session.user.id) {
+    throw new ApiError(403, "You do not have permission to edit this post", "FORBIDDEN");
+  }
+
+  const body = await parseRequestBody<{
+    title?: string;
+    content?: string;
+    published?: boolean;
+  }>(request);
+
+  const updatedPost = await postService.updatePost(params.id, body);
+
+  return updatedPost;
+});
+
+// DELETE /api/posts/[id] - Delete post (requires authentication + ownership)
+export const DELETE = withAuthentication(async (session, request, { params }) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  // Authorization check
+  const existingPost = await postService.getPostById(params.id);
+  if (!existingPost) {
+    throw new ApiError(404, "Post not found", "POST_NOT_FOUND");
+  }
+
+  if (existingPost.authorId !== session.user.id) {
+    throw new ApiError(403, "You do not have permission to delete this post", "FORBIDDEN");
+  }
+
+  await postService.deletePost(params.id);
+
+  return { message: "Post deleted successfully" };
+});
+```
+
+## Extending the Pattern
+
+The beauty of this approach is its composability. You can easily create more specific wrappers:
+
+### Admin Access Wrapper (Example Extension)
+
+```typescript
+export function withAdminAccess<T>(handler: AuthenticatedApiHandler<T>) {
+  return withAuthentication(async (session, req, params) => {
+    // Assuming your session.user has a 'role' property
+    if (session.user?.role !== 'admin') {
+      throw new ApiError(403, 'Forbidden: Administrator access required', 'FORBIDDEN_ADMIN');
+    }
+    return handler(session, req, params);
+  });
+}
+```
+
+### Rate Limiting Wrapper
+
+```typescript
+export function withRateLimit<T>(
+  handler: (req: NextRequest, params?: any) => Promise<T>,
+  limit = 100
+) {
+  return withErrorHandling(async (req, params) => {
+    // Implement rate limiting logic
+    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+
+    // Check rate limit for this IP
+    const isAllowed = await checkRateLimit(clientIp, limit);
+    if (!isAllowed) {
+      throw new ApiError(429, "Too many requests", "RATE_LIMIT_EXCEEDED");
+    }
+
+    return handler(req, params);
+  });
+}
+```
+
+### Usage Examples
+
+```typescript
+// Admin-only endpoint
+export const GET = withAdminAccess(async (session, request) => {
+  const container = getContainer();
+  const userService = container.userService;
+  return await userService.getAllUsers();
+});
+
+// Rate-limited public endpoint
+export const POST = withRateLimit(withErrorHandling(async (request) => {
+  // Handle request
+}), 50); // 50 requests per window
+```
+
+## Best Practices
+
+1. **Keep handlers focused**: Your route handlers should only contain business logic
+2. **Use proper HTTP status codes**: The `ApiError` class makes this easy
+3. **Validate input**: Always validate and sanitize input data
+4. **Handle authorization properly**: Check ownership and permissions consistently
+5. **Use the dependency injection container**: Keep your routes testable by using the container
+6. **Test your APIs**: The pattern makes it easy to test both success and error cases
+
+This pattern provides a solid foundation for building scalable, maintainable APIs while keeping your code DRY and secure by default.

@@ -1,0 +1,117 @@
+---
+title: "Introduction"
+description: "Welcome to the Fullstack AI Starter documentation. This comprehensive guide covers the architecture, API patterns, and best practices for building scalable AI-powered applications."
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Hero Dark"
+/>
+
+## What is Fullstack AI Starter?
+
+Fullstack AI Starter is a production-ready Next.js 15 application template that provides a robust foundation for building AI-powered applications. It combines modern web development practices with scalable architecture patterns.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card
+    title="Robust API Architecture"
+    icon="code"
+    href="/architecture/api-architecture"
+  >
+    Standardized error handling, authentication, and response formatting with higher-order functions.
+  </Card>
+  <Card
+    title="Dependency Injection"
+    icon="plug"
+    href="/architecture/code-architecture"
+  >
+    Clean, testable architecture with proper separation of concerns and dependency management.
+  </Card>
+  <Card
+    title="Authentication & Security"
+    icon="shield"
+    href="/architecture/authentication"
+  >
+    Better-auth integration with email/password and OAuth providers.
+  </Card>
+  <Card
+    title="Database & ORM"
+    icon="database"
+    href="/architecture/database"
+  >
+    Drizzle ORM with PostgreSQL, type-safe queries, and migrations.
+  </Card>
+</CardGroup>
+
+## Architecture Overview
+
+The application follows a modular, domain-driven architecture:
+
+- **Modular Structure**: Business logic organized by domain (users, posts, etc.)
+- **Service Layer**: Encapsulated business logic with dependency injection
+- **API Layer**: Standardized REST endpoints with authentication and error handling
+- **Testing Strategy**: Unit, integration, and BDD testing with comprehensive coverage
+
+## Quick Start
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone <your-repo-url>
+    cd fullstack-ai-starter
+    ```
+  </Step>
+  <Step title="Install dependencies">
+    ```bash
+    npm install
+    # or
+    pnpm install
+    ```
+  </Step>
+  <Step title="Set up environment variables">
+    Copy `.env.example` to `.env.local` and fill in your database and authentication credentials.
+  </Step>
+  <Step title="Run database migrations">
+    ```bash
+    npm run db:migrate
+    ```
+  </Step>
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Explore the Architecture"
+    icon="sitemap"
+    href="/architecture/code-architecture"
+  >
+    Learn about the modular architecture, dependency injection, and design patterns.
+  </Card>
+  <Card
+    title="API Documentation"
+    icon="book-open"
+    href="/api-reference/introduction"
+  >
+    Discover the standardized API patterns with authentication and error handling.
+  </Card>
+</CardGroup>
+
+## Community and Support
+
+- **GitHub**: [Report issues and contribute](https://github.com/yourcompany/fullstack-ai-starter)
+- **Documentation**: You're reading it!
+- **Support**: [Contact us](mailto:support@yourcompany.com) for help

@@ -1,0 +1,256 @@
+---
+title: "Quick Start Guide"
+description: "Get up and running with the Fullstack AI Starter in minutes. This guide covers installation, setup, and your first API calls."
+---
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+- **Node.js** (v18 or later)
+- **PostgreSQL** database
+- **Git** for version control
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/yourcompany/fullstack-ai-starter.git
+    cd fullstack-ai-starter
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    <CodeGroup>
+      ```bash npm
+      npm install
+      ```
+
+      ```bash pnpm
+      pnpm install
+      ```
+
+      ```bash yarn
+      yarn install
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Set up environment variables">
+    Copy the example environment file and update it with your credentials:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    Update the following variables in `.env.local`:
+
+    ```env
+    DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
+    NEXTAUTH_SECRET="your-secret-key"
+    ```
+  </Step>
+
+  <Step title="Set up the database">
+    Generate and run the database migrations:
+
+    ```bash
+    npm run db:generate
+    npm run db:migrate
+    ```
+
+    Optionally, seed the database with sample data:
+
+    ```bash
+    npm run db:seed
+    ```
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+
+    Your application will be available at [http://localhost:3000](http://localhost:3000)
+  </Step>
+</Steps>
+
+## Testing Your Setup
+
+### 1. Check the API Health
+
+Visit [http://localhost:3000/api/health](http://localhost:3000/api/health) to verify the API is working.
+
+### 2. Authentication Flow
+
+1. Navigate to the login page
+2. Sign up with email/password or use Google OAuth
+3. Access the protected dashboard
+
+### 3. Test API Endpoints
+
+Try making API calls to the posts endpoints:
+
+<CodeGroup>
+  ```bash cURL
+  # Get all posts (public)
+  curl http://localhost:3000/api/posts
+
+  # Create a post (requires authentication)
+  curl -X POST http://localhost:3000/api/posts \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer YOUR_TOKEN" \
+    -d '{"title": "Hello World", "content": "My first post!"}'
+  ```
+
+  ```javascript JavaScript
+  // Get all posts
+  const response = await fetch('/api/posts');
+  const posts = await response.json();
+
+  // Create a new post (authenticated)
+  const newPost = await fetch('/api/posts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      title: 'Hello World',
+      content: 'My first post!'
+    })
+  });
+  ```
+</CodeGroup>
+
+## Development Workflow
+
+### Running Tests
+
+<CodeGroup>
+  ```bash Unit Tests
+  npm run test
+  ```
+
+  ```bash Integration Tests
+  npm run test:integration
+  ```
+
+  ```bash BDD Tests
+  npm run test:bdd
+  ```
+
+  ```bash All Tests
+  npm run test:all
+  ```
+</CodeGroup>
+
+### Database Operations
+
+<CodeGroup>
+  ```bash Generate Migration
+  npm run db:generate
+  ```
+
+  ```bash Run Migration
+  npm run db:migrate
+  ```
+
+  ```bash Database Studio
+  npm run db:studio
+  ```
+</CodeGroup>
+
+### Code Quality
+
+<CodeGroup>
+  ```bash Linting
+  npm run lint
+  ```
+
+  ```bash Type Checking
+  npm run type-check
+  ```
+
+  ```bash Build
+  npm run build
+  ```
+</CodeGroup>
+
+## Project Structure
+
+```
+├── app/                    # Next.js app directory
+│   ├── (main)/            # Main application pages
+│   └── api/               # API routes
+├── components/            # Reusable React components
+├── docs/                 # Documentation (you're here!)
+├── lib/                  # Core libraries and utilities
+│   ├── api/              # API utilities and wrappers
+│   ├── auth.ts           # Authentication configuration
+│   ├── container/        # Dependency injection
+│   └── db/               # Database configuration
+├── modules/              # Business domain modules
+│   ├── users/            # User domain
+│   └── posts/            # Posts domain
+└── tests/                # Test utilities and setup
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Explore the Architecture"
+    icon="building"
+    href="/architecture/code-architecture"
+  >
+    Learn about the modular architecture and design patterns used in this starter.
+  </Card>
+
+  <Card
+    title="API Documentation"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Understand the robust API patterns and authentication system.
+  </Card>
+
+  <Card
+    title="Database Schema"
+    icon="database"
+    href="/architecture/database"
+  >
+    Explore the database design and ORM usage.
+  </Card>
+
+  <Card
+    title="Testing Strategy"
+    icon="check-circle"
+    href="/architecture/testing-strategy"
+  >
+    Learn about the comprehensive testing approach.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Database connection issues">
+    Make sure PostgreSQL is running and the `DATABASE_URL` in your `.env.local` file is correct. Check that the database exists and the user has proper permissions.
+  </Accordion>
+
+  <Accordion title="Authentication not working">
+    Verify your OAuth credentials are correct in `.env.local`. For Google OAuth, make sure you've added `http://localhost:3000` to your allowed origins in the Google Console.
+  </Accordion>
+
+  <Accordion title="Build errors">
+    Run `npm run lint` and `npm run type-check` to identify any code issues. Make sure all dependencies are installed with `npm install`.
+  </Accordion>
+
+  <Accordion title="Tests failing">
+    Ensure your test database is properly configured. Run `npm run test:setup` if available, or check the test configuration in `vitest.config.ts`.
+  </Accordion>
+</AccordionGroup>

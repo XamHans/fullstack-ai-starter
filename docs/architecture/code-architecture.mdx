@@ -1,0 +1,130 @@
+---
+title: 'Code Architecture'
+description: 'Overview of the modular, domain-driven architecture used in the Fullstack AI Starter, including dependency injection, service layers, and design patterns.'
+---
+
+The application follows a modular, domain-driven architecture. The core business logic is organized into modules, each representing a specific domain (e.g., posts, users). This approach promotes a clean separation of concerns and makes the codebase easier to understand, maintain, and scale.
+
+The frontend is a standard Next.js application using React components, while the backend is built using Next.js API Routes.
+
+## Directory Structure
+
+The project is organized into the following key directories:
+
+- `app/`: The main Next.js application directory.
+  - `app/(main)/`: Contains the main pages of the application (e.g., dashboard, inventory).
+  - `app/api/`: Holds the backend API routes, which are the entry points for all client-server communication.
+- `components/`: Contains reusable React components used throughout the application.
+- `lib/`: Houses the core libraries and utilities shared across the application.
+  - `lib/container/`: Implements the Dependency Injection (DI) container.
+  - `lib/db/`: Manages the database connection and aggregates the database schemas.
+  - `lib/auth.ts`: Configures and exports authentication-related functions.
+- `modules/`: The heart of the backend architecture. Each subdirectory represents a business domain.
+  - `[domain]/schema.ts`: Defines the database schema for the domain using Drizzle ORM.
+  - `[domain]/services/`: Contains the business logic for the domain, encapsulated in service classes.
+  - `[domain]/types.ts`: Defines the TypeScript types and interfaces for the domain.
+
+## Design Patterns and Concepts
+
+### Dependency Injection (DI) and the Container
+
+The application uses a Dependency Injection (DI) container to manage and provide dependencies, primarily the database connection, to the service layer.
+
+- **Container:** The container is defined in `lib/container/index.ts`. It is responsible for creating and holding a single instance (singleton pattern) of the application's services and their dependencies.
+- **Injection:** Services receive their dependencies (like the database instance) through their constructor. This decouples the services from the concrete implementation of their dependencies, making them easier to test.
+- **Usage:** API routes use the `getContainer()` function to get an instance of a service and call its methods.
+
+This pattern is crucial for testing, as it allows for swapping real dependencies with mock implementations, as seen with the `MockGeminiClient` in the container's logic.
+
+### Modular (Domain-Driven) Architecture
+
+The backend logic is organized into modules based on business domains (e.g., `inventory`, `users`). This has several advantages:
+
+- **Separation of Concerns:** Each module is responsible for a specific part of the business logic.
+- **Scalability:** New features can be added as new modules without impacting existing ones.
+- **Maintainability:** The code is easier to navigate and understand.
+
+### Service Layer
+
+The business logic is encapsulated within service classes (e.g., `ProductService`). These services are responsible for all the operations related to a specific domain entity. They are the only part of the application that should directly interact with the data layer.
+
+### Data Access Layer
+
+The data access layer is implemented using the Drizzle ORM.
+
+- **Schema Definition:** The database schema for each module is defined in the `schema.ts` file of that module. These schemas are then combined in `lib/db/schema.ts`.
+- **Data Interaction:** Services interact with the database directly through the Drizzle instance provided by the DI container. There is no separate repository pattern; the services themselves act as repositories of domain logic.
+
+### Authentication
+
+Authentication is handled by the `better-auth` library, which is configured in `lib/auth.ts`.
+
+- **Configuration:** The library is configured with the Drizzle adapter to connect to the database and can be set up with various social providers.
+- **Session Management:** The `getCurrentUser` function provides a simple way to retrieve the currently authenticated user from the session. This is used in the API routes to protect endpoints.
+
+## API Architecture
+
+The application employs a robust API pattern built on Next.js 15 Route Handlers with standardized error handling, authentication, and response formatting.
+
+### Core API Principles
+
+- **Consistency:** All API endpoints return standardized JSON responses with a predictable structure
+- **Security by Default:** Authentication is handled through higher-order functions that make securing endpoints trivial
+- **Error Handling:** Centralized error handling with custom error types and proper HTTP status codes
+- **Clean Separation:** Business logic is kept separate from HTTP handling concerns
+
+### API Response Structure
+
+All API responses follow this standardized format:
+
+```typescript
+{
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+  code?: string;
+}
+```
+
+### Higher-Order Functions (Wrappers)
+
+The API layer uses composition through higher-order functions:
+
+- **`withErrorHandling`:** Wraps handlers in try-catch blocks and ensures standardized error responses
+- **`withAuthentication`:** Adds authentication checks and provides session data to authenticated handlers
+- **Custom Error Class:** `ApiError` allows throwing errors with specific HTTP status codes and error codes
+
+### Request Flow
+
+1. **Request Received:** Next.js Route Handler receives the request
+2. **Wrapper Execution:** Authentication wrapper checks for valid session
+3. **Business Logic:** Handler executes with access to session, request, and params
+4. **Response Formatting:** Results are automatically formatted into standardized JSON responses
+5. **Error Handling:** Any errors are caught and formatted consistently
+
+### Integration with Dependency Injection
+
+API routes integrate seamlessly with the application's DI container:
+
+- Services are retrieved from the container within route handlers
+- Database connections and other dependencies are injected automatically
+- Mock services can be easily substituted for testing
+
+## Testing Strategy
+
+The project employs a multi-layered testing strategy to ensure code quality and correctness.
+
+### Unit and Integration Tests
+
+- **Framework:** The project uses [Vitest](https://vitest.dev/) for unit and integration testing.
+- **Service-Level Tests:** As seen in `product.service.test.ts`, services are tested in isolation. A `createTestContainer` utility is used to provide mocked dependencies (like a mock database), allowing for fast and reliable unit tests.
+- **Separation:** The Vitest configuration is set up to distinguish between unit tests (`*.test.ts`) and integration tests (`*.integration.test.ts`), allowing them to be run separately.
+
+### Behavior-Driven Development (BDD)
+
+- **Framework:** The application uses [Cucumber.js](https://cucumber.io/) for Behavior-Driven Development (BDD).
+- **Features:** Business requirements are defined in plain-language `.feature` files (e.g., `add-product.feature`). These files describe user scenarios and expected outcomes.
+- **Step Definitions:** The steps in the feature files are implemented in TypeScript in the `steps` directories within each module.
+- **API Testing:** BDD is used to test the API from the outside in, ensuring that it behaves as expected from a user's perspective. This covers success cases, error handling, and authorization.
+- **Reporting:** The Cucumber configuration is set up to generate test reports in both JSON and HTML formats for easy analysis.

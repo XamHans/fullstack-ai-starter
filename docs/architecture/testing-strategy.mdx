@@ -1,0 +1,1172 @@
+---
+title: "Testing Strategy"
+description: "Comprehensive testing approach using Vitest, Supertest, and Testing Library with unit, integration, and BDD testing strategies."
+---
+
+# Testing Strategy with Vitest & Supertest
+
+## Overview
+
+Comprehensive testing strategy for the Ahlan Community App using Vitest for unit/integration tests, Supertest for API testing, and Testing Library for component testing, ensuring reliability and maintainability.
+
+## Testing Stack
+
+### Core Testing Libraries
+```json
+{
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "supertest": "^6.3.4",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/user-event": "^14.5.2",
+    "msw": "^2.3.1",
+    "mongodb-memory-server": "^9.4.0",
+    "jsdom": "^24.1.0",
+    "happy-dom": "^14.12.0"
+  }
+}
+```
+
+### Package.json Scripts
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:api": "vitest run --config vitest.api.config.ts",
+    "test:components": "vitest run --config vitest.components.config.ts",
+    "test:e2e": "playwright test",
+    "test:watch": "vitest --watch",
+    "test:db": "vitest run --config vitest.db.config.ts"
+  }
+}
+```
+
+## Vitest Configuration
+
+### Main Vitest Config
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'test/',
+        '.next/',
+        'coverage/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/types/**',
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+    },
+    testTimeout: 10000,
+    hookTimeout: 10000,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, '.'),
+    },
+  },
+});
+```
+
+### API Testing Config
+```typescript
+// vitest.api.config.ts
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    globals: true,
+    setupFiles: ['./test/api-setup.ts'],
+    include: ['**/*.api.test.{ts,tsx}', '**/api/**/*.test.{ts,tsx}'],
+    testTimeout: 15000,
+    hookTimeout: 15000,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, '.'),
+    },
+  },
+});
+```
+
+### Component Testing Config
+```typescript
+// vitest.components.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'happy-dom', // Faster than jsdom for component tests
+    globals: true,
+    setupFiles: ['./test/component-setup.ts'],
+    include: ['**/components/**/*.test.{ts,tsx}', '**/*.component.test.{ts,tsx}'],
+    testTimeout: 5000,
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, '.'),
+    },
+  },
+});
+```
+
+## Test Setup Files
+
+### Main Test Setup
+```typescript
+// test/setup.ts
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// Mock Next.js image
+vi.mock('next/image', () => ({
+  default: ({ src, alt, ...props }: any) => {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={alt} {...props} />;
+  },
+}));
+
+// Mock environment variables
+process.env.MONGODB_URI = 'mongodb://localhost:27017/test';
+process.env.MONGODB_DB = 'ahlan_community_test';
+process.env.BETTER_AUTH_SECRET = 'test-secret-32-characters-long';
+process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000';
+
+// Global test utilities
+global.ResizeObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock geolocation
+global.navigator.geolocation = {
+  getCurrentPosition: vi.fn(),
+  watchPosition: vi.fn(),
+  clearWatch: vi.fn(),
+};
+
+// Increase timeout for slow tests
+vi.setConfig({ testTimeout: 10000 });
+```
+
+### API Testing Setup
+```typescript
+// test/api-setup.ts
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { connectToDatabase } from '@/modules/common/db/mongodb';
+import { vi } from 'vitest';
+
+let mongod: MongoMemoryServer;
+
+// Start in-memory MongoDB
+beforeAll(async () => {
+  mongod = await MongoMemoryServer.create({
+    binary: {
+      version: '7.0.0',
+    },
+  });
+  
+  process.env.MONGODB_URI = mongod.getUri();
+  process.env.MONGODB_DB = 'test-db';
+});
+
+// Clean database between tests
+beforeEach(async () => {
+  const { db } = await connectToDatabase();
+  const collections = await db.listCollections().toArray();
+  
+  for (const collection of collections) {
+    await db.collection(collection.name).deleteMany({});
+  }
+});
+
+// Cleanup
+afterAll(async () => {
+  if (mongod) {
+    await mongod.stop();
+  }
+});
+
+// Mock external services
+vi.mock('@/lib/email/email-service', () => ({
+  EmailService: {
+    sendMagicLinkEmail: vi.fn().mockResolvedValue({ success: true, id: 'test-id' }),
+    sendWelcomeEmail: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
+vi.mock('uploadthing/next', () => ({
+  createUploadthing: vi.fn(() => vi.fn()),
+  createRouteHandler: vi.fn(),
+}));
+```
+
+### Component Testing Setup
+```typescript
+// test/component-setup.ts
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+import { server } from './mocks/server';
+
+// Start MSW server
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+// Mock authentication
+vi.mock('@/lib/auth-client', () => ({
+  useSession: vi.fn(() => ({
+    data: {
+      user: {
+        id: 'test-user-id',
+        fullName: 'Test User',
+        email: 'test@example.com',
+        role: 'homeowner',
+      },
+    },
+    isPending: false,
+  })),
+  signIn: {
+    emailAndPassword: vi.fn(),
+    magicLink: vi.fn(),
+  },
+  signOut: vi.fn(),
+}));
+
+// Mock translation hook
+vi.mock('@/lib/hooks/use-translation', () => ({
+  useTranslation: vi.fn(() => ({
+    t: (key: string) => key,
+    language: 'en',
+    setLanguage: vi.fn(),
+    direction: 'ltr',
+    isRTL: false,
+  })),
+}));
+```
+
+## Mock Service Worker (MSW) Setup
+
+### MSW Configuration
+```typescript
+// test/mocks/server.ts
+import { setupServer } from 'msw/node';
+import { handlers } from './handlers';
+
+export const server = setupServer(...handlers);
+```
+
+### API Handlers
+```typescript
+// test/mocks/handlers.ts
+import { http, HttpResponse } from 'msw';
+import type { PostWithAuthor, FeedResponse } from '@/lib/types/feed';
+
+const mockPosts: PostWithAuthor[] = [
+  {
+    _id: '1',
+    content: 'Test post content',
+    authorId: 'user-1',
+    author: {
+      _id: 'user-1',
+      fullName: 'John Doe',
+      avatar: null,
+      userType: 'homeowner',
+    },
+    likes: [],
+    commentCount: 0,
+    communityId: 'hawana-salalah',
+    status: 'active',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+export const handlers = [
+  // Feed API handlers
+  http.get('/api/posts', () => {
+    const response: FeedResponse = {
+      posts: mockPosts,
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
+    
+    return HttpResponse.json({ success: true, data: response });
+  }),
+
+  http.post('/api/posts', async ({ request }) => {
+    const body = await request.json();
+    const newPost: PostWithAuthor = {
+      ...mockPosts[0],
+      _id: 'new-post-id',
+      content: (body as any).content,
+      createdAt: new Date(),
+    };
+    
+    return HttpResponse.json(
+      { success: true, data: newPost },
+      { status: 201 }
+    );
+  }),
+
+  // User API handlers
+  http.get('/api/user/profile', () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: 'test-user-id',
+        fullName: 'Test User',
+        email: 'test@example.com',
+        role: 'homeowner',
+      },
+    });
+  }),
+
+  // Facilities API handlers
+  http.get('/api/facilities', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          _id: 'facility-1',
+          name: 'Test Restaurant',
+          category: 'restaurant',
+          location: { latitude: 17.0154, longitude: 54.0917 },
+        },
+      ],
+    });
+  }),
+
+  // Error handlers
+  http.get('/api/error-test', () => {
+    return HttpResponse.json(
+      { error: 'Test error message' },
+      { status: 500 }
+    );
+  }),
+];
+```
+
+## Unit Testing Patterns
+
+### Database Query Testing
+```typescript
+// modules/user/queries.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { UserQueries } from './queries';
+import { connectToDatabase } from '@/modules/common/db/mongodb';
+import { ObjectId } from 'mongodb';
+
+describe('UserQueries', () => {
+  beforeEach(async () => {
+    // Database is already clean from global setup
+  });
+
+  describe('getBasicProfile', () => {
+    it('should return user profile when user exists', async () => {
+      // Setup test data
+      const { db } = await connectToDatabase();
+      const testUser = {
+        _id: new ObjectId(),
+        fullName: 'Test User',
+        email: 'test@example.com',
+        role: 'homeowner',
+        preferences: { language: 'en' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      await db.collection('user').insertOne(testUser);
+      
+      // Test the query
+      const result = await UserQueries.getBasicProfile(testUser._id.toString());
+      
+      expect(result).toBeTruthy();
+      expect(result?.fullName).toBe('Test User');
+      expect(result?.email).toBe('test@example.com');
+      expect(result?.language).toBe('en');
+    });
+
+    it('should return null when user does not exist', async () => {
+      const result = await UserQueries.getBasicProfile(new ObjectId().toString());
+      expect(result).toBeNull();
+    });
+
+    it('should handle database errors gracefully', async () => {
+      // Test with invalid ObjectId format
+      await expect(
+        UserQueries.getBasicProfile('invalid-id')
+      ).rejects.toThrow('Failed to fetch user profile');
+    });
+  });
+});
+```
+
+### Mutation Testing
+```typescript
+// modules/feed/mutations.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { FeedMutations } from './mutations';
+import { connectToDatabase } from '@/modules/common/db/mongodb';
+import { ObjectId } from 'mongodb';
+
+describe('FeedMutations', () => {
+  describe('createPost', () => {
+    it('should create a new post successfully', async () => {
+      const postData = {
+        content: 'Test post content',
+        authorId: new ObjectId().toString(),
+        communityId: 'hawana-salalah',
+        isAnnouncement: false,
+      };
+
+      const postId = await FeedMutations.createPost(postData);
+      expect(postId).toBeTruthy();
+
+      // Verify post was created
+      const { db } = await connectToDatabase();
+      const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+      
+      expect(post).toBeTruthy();
+      expect(post?.content).toBe(postData.content);
+      expect(post?.communityId).toBe(postData.communityId);
+    });
+
+    it('should validate required fields', async () => {
+      await expect(
+        FeedMutations.createPost({ content: '', authorId: '', communityId: '' })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('likePost', () => {
+    it('should add like to post', async () => {
+      // Setup test post
+      const { db } = await connectToDatabase();
+      const postId = new ObjectId();
+      const userId = new ObjectId();
+      
+      await db.collection('posts').insertOne({
+        _id: postId,
+        content: 'Test post',
+        authorId: new ObjectId(),
+        likes: [],
+        communityId: 'hawana-salalah',
+        createdAt: new Date(),
+      });
+
+      await FeedMutations.likePost(postId.toString(), userId.toString());
+
+      // Verify like was added
+      const post = await db.collection('posts').findOne({ _id: postId });
+      expect(post?.likes).toHaveLength(1);
+      expect(post?.likes[0]).toEqual(userId);
+    });
+
+    it('should not duplicate likes', async () => {
+      const { db } = await connectToDatabase();
+      const postId = new ObjectId();
+      const userId = new ObjectId();
+      
+      await db.collection('posts').insertOne({
+        _id: postId,
+        content: 'Test post',
+        likes: [userId], // Already liked
+        communityId: 'hawana-salalah',
+        createdAt: new Date(),
+      });
+
+      await FeedMutations.likePost(postId.toString(), userId.toString());
+
+      // Should still only have one like
+      const post = await db.collection('posts').findOne({ _id: postId });
+      expect(post?.likes).toHaveLength(1);
+    });
+  });
+});
+```
+
+## API Testing with Supertest
+
+### API Route Testing
+```typescript
+// app/api/posts/route.api.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import request from 'supertest';
+import { createServer } from 'http';
+import { NextRequest } from 'next/server';
+import { GET, POST } from './route';
+import { connectToDatabase } from '@/modules/common/db/mongodb';
+
+// Create test server
+const createTestServer = () => {
+  return createServer(async (req, res) => {
+    const url = new URL(req.url!, `http://${req.headers.host}`);
+    const nextReq = new NextRequest(url, {
+      method: req.method,
+      headers: req.headers as any,
+      body: req.method !== 'GET' ? req : undefined,
+    });
+
+    let response;
+    if (req.method === 'GET') {
+      response = await GET(nextReq);
+    } else if (req.method === 'POST') {
+      response = await POST(nextReq);
+    }
+
+    if (response) {
+      res.writeHead(response.status, Object.fromEntries(response.headers));
+      if (response.body) {
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+      }
+      res.end();
+    }
+  });
+};
+
+describe('/api/posts', () => {
+  let server: any;
+
+  beforeEach(() => {
+    server = createTestServer();
+  });
+
+  afterEach(() => {
+    server?.close();
+  });
+
+  describe('GET /api/posts', () => {
+    it('should return paginated posts', async () => {
+      // Setup test data
+      const { db } = await connectToDatabase();
+      await db.collection('posts').insertMany([
+        {
+          content: 'Test post 1',
+          authorId: new ObjectId(),
+          communityId: 'hawana-salalah',
+          status: 'active',
+          likes: [],
+          commentCount: 0,
+          createdAt: new Date(),
+        },
+        {
+          content: 'Test post 2',
+          authorId: new ObjectId(),
+          communityId: 'hawana-salalah',
+          status: 'active',
+          likes: [],
+          commentCount: 0,
+          createdAt: new Date(),
+        },
+      ]);
+
+      const response = await request(server)
+        .get('/api/posts')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeDefined();
+      expect(response.body.pagination).toBeDefined();
+      expect(response.body.pagination.total).toBe(2);
+    });
+
+    it('should filter announcements when requested', async () => {
+      const response = await request(server)
+        .get('/api/posts?announcements=true')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+    });
+
+    it('should handle pagination parameters', async () => {
+      const response = await request(server)
+        .get('/api/posts?page=2&limit=5')
+        .expect(200);
+
+      expect(response.body.pagination.page).toBe(2);
+      expect(response.body.pagination.limit).toBe(5);
+    });
+  });
+
+  describe('POST /api/posts', () => {
+    it('should create a new post with valid data', async () => {
+      const postData = {
+        content: 'New test post content',
+        isAnnouncement: false,
+      };
+
+      const response = await request(server)
+        .post('/api/posts')
+        .send(postData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.content).toBe(postData.content);
+      expect(response.body.data._id).toBeDefined();
+    });
+
+    it('should validate required fields', async () => {
+      const response = await request(server)
+        .post('/api/posts')
+        .send({ content: '' })
+        .expect(400);
+
+      expect(response.body.error).toBe('Content is required');
+      expect(response.body.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should require authentication', async () => {
+      // Mock unauthenticated request
+      vi.mocked(getCurrentUser).mockResolvedValueOnce(null);
+
+      const response = await request(server)
+        .post('/api/posts')
+        .send({ content: 'Test content' })
+        .expect(401);
+
+      expect(response.body.error).toBe('Unauthorized');
+    });
+  });
+});
+```
+
+## Component Testing
+
+### Component Test Utilities
+```typescript
+// test/component-utils.tsx
+import { render, RenderOptions } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LanguageProvider } from '@/components/language-provider';
+import { ReactElement } from 'react';
+
+// Create test query client
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+
+// Test providers wrapper
+interface ProvidersProps {
+  children: React.ReactNode;
+  queryClient?: QueryClient;
+}
+
+function TestProviders({ children, queryClient }: ProvidersProps) {
+  const client = queryClient || createTestQueryClient();
+  
+  return (
+    <QueryClientProvider client={client}>
+      <LanguageProvider>
+        {children}
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+}
+
+// Custom render function
+interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+  queryClient?: QueryClient;
+}
+
+export function renderWithProviders(
+  ui: ReactElement,
+  options: CustomRenderOptions = {}
+) {
+  const { queryClient, ...renderOptions } = options;
+
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <TestProviders queryClient={queryClient}>
+        {children}
+      </TestProviders>
+    ),
+    ...renderOptions,
+  });
+}
+
+// Re-export everything
+export * from '@testing-library/react';
+export { default as userEvent } from '@testing-library/user-event';
+```
+
+### Component Testing Examples
+```typescript
+// components/feed/post-card.test.tsx
+import { describe, it, expect, vi } from 'vitest';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { PostCard } from './post-card';
+import { renderWithProviders } from '@/test/component-utils';
+import type { PostWithAuthor } from '@/lib/types/feed';
+
+const mockPost: PostWithAuthor = {
+  _id: '1',
+  content: 'Test post content with #hashtag',
+  authorId: 'user-1',
+  author: {
+    _id: 'user-1',
+    fullName: 'John Doe',
+    avatar: 'https://example.com/avatar.jpg',
+    userType: 'homeowner',
+  },
+  likes: ['user-2', 'user-3'],
+  commentCount: 5,
+  communityId: 'hawana-salalah',
+  status: 'active',
+  createdAt: new Date('2024-01-01T10:00:00Z'),
+  updatedAt: new Date('2024-01-01T10:00:00Z'),
+};
+
+describe('PostCard', () => {
+  const defaultProps = {
+    post: mockPost,
+    currentUserId: 'user-1',
+    onLike: vi.fn(),
+    onComment: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders post content and author information', () => {
+    renderWithProviders(<PostCard {...defaultProps} />);
+    
+    expect(screen.getByText('Test post content with #hashtag')).toBeInTheDocument();
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument(); // Likes count
+    expect(screen.getByText('5')).toBeInTheDocument(); // Comments count
+  });
+
+  it('displays user avatar', () => {
+    renderWithProviders(<PostCard {...defaultProps} />);
+    
+    const avatar = screen.getByRole('img', { name: /john doe/i });
+    expect(avatar).toHaveAttribute('src', 'https://example.com/avatar.jpg');
+  });
+
+  it('handles like interaction', async () => {
+    const user = userEvent.setup();
+    const onLike = vi.fn();
+    
+    renderWithProviders(
+      <PostCard {...defaultProps} onLike={onLike} />
+    );
+    
+    const likeButton = screen.getByRole('button', { name: /like/i });
+    await user.click(likeButton);
+    
+    expect(onLike).toHaveBeenCalledWith('1');
+  });
+
+  it('handles comment interaction', async () => {
+    const user = userEvent.setup();
+    const onComment = vi.fn();
+    
+    renderWithProviders(
+      <PostCard {...defaultProps} onComment={onComment} />
+    );
+    
+    const commentButton = screen.getByRole('button', { name: /comment/i });
+    await user.click(commentButton);
+    
+    expect(onComment).toHaveBeenCalledWith('1');
+  });
+
+  it('shows liked state for current user', () => {
+    const likedPost = {
+      ...mockPost,
+      likes: ['user-1', 'user-2'], // Current user has liked
+    };
+    
+    renderWithProviders(
+      <PostCard {...defaultProps} post={likedPost} />
+    );
+    
+    const likeButton = screen.getByRole('button', { name: /unlike/i });
+    expect(likeButton).toHaveClass('text-red-500');
+  });
+
+  it('disables interactions when no current user', () => {
+    renderWithProviders(
+      <PostCard {...defaultProps} currentUserId={undefined} />
+    );
+    
+    const likeButton = screen.getByRole('button', { name: /like/i });
+    const commentButton = screen.getByRole('button', { name: /comment/i });
+    
+    expect(likeButton).toBeDisabled();
+    expect(commentButton).toBeDisabled();
+  });
+
+  it('shows announcement badge for announcements', () => {
+    const announcementPost = {
+      ...mockPost,
+      isAnnouncement: true,
+    };
+    
+    renderWithProviders(
+      <PostCard {...defaultProps} post={announcementPost} />
+    );
+    
+    expect(screen.getByText('announcement')).toBeInTheDocument();
+  });
+
+  it('formats relative time correctly', () => {
+    renderWithProviders(<PostCard {...defaultProps} />);
+    
+    // Should show relative time (mocked date-fns)
+    expect(screen.getByText(/ago/i)).toBeInTheDocument();
+  });
+
+  it('prevents double-clicking like button', async () => {
+    const user = userEvent.setup();
+    const onLike = vi.fn().mockImplementation(() => 
+      new Promise(resolve => setTimeout(resolve, 100))
+    );
+    
+    renderWithProviders(
+      <PostCard {...defaultProps} onLike={onLike} />
+    );
+    
+    const likeButton = screen.getByRole('button', { name: /like/i });
+    
+    // Double click rapidly
+    await user.click(likeButton);
+    await user.click(likeButton);
+    
+    // Should only be called once
+    expect(onLike).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+### Hook Testing
+```typescript
+// lib/hooks/use-feed.test.ts
+import { describe, it, expect, waitFor } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useFeed } from './use-feed';
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
+describe('useFeed', () => {
+  it('should fetch feed data successfully', async () => {
+    const { result } = renderHook(() => useFeed(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toBeDefined();
+    expect(result.current.data?.posts).toBeInstanceOf(Array);
+  });
+
+  it('should handle filters correctly', async () => {
+    const { result } = renderHook(
+      () => useFeed({ onlyAnnouncements: true }),
+      { wrapper: createWrapper() }
+    );
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    // MSW should return filtered results
+    expect(result.current.data?.posts).toBeDefined();
+  });
+});
+```
+
+## Integration Testing
+
+### Database Integration Tests
+```typescript
+// test/integration/feed-integration.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { FeedQueries, FeedMutations } from '@/modules/feed';
+import { UserMutations } from '@/modules/user';
+import { connectToDatabase } from '@/modules/common/db/mongodb';
+import { ObjectId } from 'mongodb';
+
+describe('Feed Integration', () => {
+  let testUserId: string;
+  let testCommunityId: string;
+
+  beforeEach(async () => {
+    // Create test user
+    testUserId = new ObjectId().toString();
+    testCommunityId = 'hawana-salalah';
+    
+    const { db } = await connectToDatabase();
+    await db.collection('user').insertOne({
+      _id: new ObjectId(testUserId),
+      fullName: 'Test User',
+      email: 'test@example.com',
+      role: 'homeowner',
+      communityId: testCommunityId,
+      createdAt: new Date(),
+    });
+  });
+
+  it('should create post and retrieve in feed', async () => {
+    // Create post
+    const postId = await FeedMutations.createPost({
+      content: 'Integration test post',
+      authorId: testUserId,
+      communityId: testCommunityId,
+    });
+
+    expect(postId).toBeTruthy();
+
+    // Retrieve from feed
+    const feedResponse = await FeedQueries.getCommunityFeed({
+      page: 1,
+      limit: 10,
+    });
+
+    expect(feedResponse.posts).toHaveLength(1);
+    expect(feedResponse.posts[0].content).toBe('Integration test post');
+    expect(feedResponse.posts[0].author.fullName).toBe('Test User');
+  });
+
+  it('should handle like interactions correctly', async () => {
+    // Create post
+    const postId = await FeedMutations.createPost({
+      content: 'Post to like',
+      authorId: testUserId,
+      communityId: testCommunityId,
+    });
+
+    // Like the post
+    await FeedMutations.likePost(postId, testUserId);
+
+    // Check like status
+    const isLiked = await FeedQueries.hasUserLikedPost(postId, testUserId);
+    expect(isLiked).toBe(true);
+
+    // Unlike the post
+    await FeedMutations.unlikePost(postId, testUserId);
+    
+    const isStillLiked = await FeedQueries.hasUserLikedPost(postId, testUserId);
+    expect(isStillLiked).toBe(false);
+  });
+});
+```
+
+## Coverage and Quality Gates
+
+### Coverage Configuration
+```typescript
+// vitest.coverage.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'test/',
+        '.next/',
+        'coverage/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/types/**',
+        '**/mocks/**',
+      ],
+      include: [
+        'app/**/*.{ts,tsx}',
+        'components/**/*.{ts,tsx}',
+        'lib/**/*.{ts,tsx}',
+        'modules/**/*.{ts,tsx}',
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+        'modules/': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90,
+        },
+        'lib/': {
+          branches: 85,
+          functions: 85,
+          lines: 85,
+          statements: 85,
+        },
+      },
+    },
+  },
+});
+```
+
+### GitHub Actions CI
+```yaml
+# .github/workflows/test.yml
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run unit tests
+        run: npm run test:run
+        env:
+          MONGODB_URI: mongodb://localhost:27017/test
+          
+      - name: Run API tests
+        run: npm run test:api
+        
+      - name: Run component tests
+        run: npm run test:components
+        
+      - name: Generate coverage
+        run: npm run test:coverage
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          fail_ci_if_error: true
+```
+
+### Quality Gates
+```json
+// package.json scripts for quality gates
+{
+  "scripts": {
+    "test:ci": "npm run test:run && npm run test:coverage",
+    "test:quality": "npm run lint && npm run typecheck && npm run test:ci",
+    "pre-commit": "npm run test:quality && npm run build"
+  }
+}
+```
+
+This comprehensive testing strategy ensures:
+
+1. **Unit Testing**: Database queries, mutations, utilities, and business logic
+2. **Integration Testing**: API routes, database operations, and service interactions
+3. **Component Testing**: UI components with user interactions and state management
+4. **API Testing**: HTTP endpoints with authentication, validation, and error handling
+5. **Coverage Monitoring**: Minimum coverage thresholds with detailed reporting
+6. **Quality Gates**: Automated testing in CI/CD pipeline with failure prevention
+
+The setup provides fast feedback during development while ensuring comprehensive test coverage for production reliability.

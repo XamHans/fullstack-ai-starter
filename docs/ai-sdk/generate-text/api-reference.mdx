@@ -1,0 +1,562 @@
+---
+title: "Generate Text API Reference"
+description: "Complete API documentation for text generation endpoints. Includes parameters, response formats, error codes, and authentication requirements."
+---
+
+## Endpoint Overview
+
+The Generate Text API provides a simple yet powerful interface for AI-powered text generation using various language models.
+
+<Note>
+All endpoints require authentication using the application's built-in auth system. Include your session token in requests.
+</Note>
+
+## Base Endpoint
+
+```
+POST /api/generate-text
+```
+
+**Authentication:** Required
+**Rate Limit:** 10 requests per minute per user
+**Timeout:** 30 seconds
+
+## Request Format
+
+### Headers
+
+```http
+Content-Type: application/json
+Authorization: Bearer <session-token>
+```
+
+### Request Body
+
+<Tabs>
+  <Tab title="Basic Request">
+    ```json
+    {
+      "prompt": "Write a product description for a smart coffee maker"
+    }
+    ```
+  </Tab>
+
+  <Tab title="Advanced Request">
+    ```json
+    {
+      "prompt": "Write a product description for a smart coffee maker",
+      "model": "gpt-4",
+      "maxTokens": 500,
+      "temperature": 0.7,
+      "systemInstruction": "You are a professional copywriter specializing in kitchen appliances."
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Parameters
+
+### Required Parameters
+
+<ParamField body="prompt" type="string" required>
+  The text prompt to generate content from. Maximum length: 4,000 characters.
+
+  <Expandable title="Prompt Best Practices">
+    - Be specific and clear about what you want
+    - Include context and desired format
+    - Specify tone and style requirements
+    - Use examples when helpful
+
+    **Good:** "Write a professional email to a client about project delays, apologizing and providing a new timeline"
+
+    **Bad:** "Write an email"
+  </Expandable>
+</ParamField>
+
+### Optional Parameters
+
+<ParamField body="model" type="string" default="gpt-3.5-turbo">
+  The AI model to use for generation. Available options:
+
+  | Model | Description | Best For | Cost |
+  |-------|-------------|----------|------|
+  | `gpt-3.5-turbo` | Fast, cost-effective | General text, chat, summaries | Low |
+  | `gpt-4` | High-quality reasoning | Complex content, analysis | High |
+  | `gpt-4-turbo` | Balanced performance | Long-form content | Medium |
+  | `claude-3-sonnet` | Creative and analytical | Writing, research | Medium |
+</ParamField>
+
+<ParamField body="maxTokens" type="number" default="1000">
+  Maximum number of tokens to generate. Range: 1-4000.
+
+  <Note>
+    1 token ≈ 0.75 words in English. Set this based on your expected response length.
+  </Note>
+</ParamField>
+
+<ParamField body="temperature" type="number" default="0.7">
+  Controls randomness in generation. Range: 0.0-1.0.
+
+  - **0.0-0.3:** Focused, consistent, factual
+  - **0.4-0.7:** Balanced creativity and coherence
+  - **0.8-1.0:** Creative, varied, unpredictable
+</ParamField>
+
+<ParamField body="topP" type="number" default="0.9">
+  Controls diversity via nucleus sampling. Range: 0.0-1.0.
+
+  Alternative to temperature. Lower values = more focused responses.
+</ParamField>
+
+<ParamField body="systemInstruction" type="string" optional>
+  System-level instruction to guide the AI's behavior and personality.
+
+  ```json
+  {
+    "systemInstruction": "You are a helpful assistant that writes in a friendly, professional tone. Always include practical examples and actionable advice."
+  }
+  ```
+</ParamField>
+
+<ParamField body="stopSequences" type="string[]" optional>
+  Array of strings where generation should stop.
+
+  ```json
+  {
+    "stopSequences": ["END", "---", "\n\n###"]
+  }
+  ```
+</ParamField>
+
+## Response Format
+
+### Successful Response
+
+```json
+{
+  "text": "Generated text content appears here...",
+  "metadata": {
+    "model": "gpt-4",
+    "tokensUsed": 245,
+    "generationTime": 1.2,
+    "finishReason": "completed"
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="text" type="string">
+  The generated text content.
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Additional information about the generation:
+
+  <Expandable title="Metadata Properties">
+    <ResponseField name="model" type="string">
+      The model used for generation
+    </ResponseField>
+
+    <ResponseField name="tokensUsed" type="number">
+      Number of tokens consumed in the generation
+    </ResponseField>
+
+    <ResponseField name="generationTime" type="number">
+      Time taken to generate the response (in seconds)
+    </ResponseField>
+
+    <ResponseField name="finishReason" type="string">
+      Why generation stopped:
+      - `completed`: Natural completion
+      - `length`: Hit token limit
+      - `stop`: Hit stop sequence
+      - `filtered`: Content filtered
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Error Responses
+
+### Authentication Errors
+
+<CodeGroup>
+
+```json 401 Unauthorized
+{
+  "error": "Authentication required",
+  "code": "UNAUTHORIZED",
+  "message": "Valid session token required for API access"
+}
+```
+
+```json 403 Forbidden
+{
+  "error": "Access denied",
+  "code": "FORBIDDEN",
+  "message": "User does not have permission to access this resource"
+}
+```
+
+</CodeGroup>
+
+### Validation Errors
+
+<CodeGroup>
+
+```json 400 Bad Request - Missing Prompt
+{
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "message": "Field 'prompt' is required",
+  "details": {
+    "field": "prompt",
+    "received": null,
+    "expected": "string"
+  }
+}
+```
+
+```json 400 Bad Request - Invalid Model
+{
+  "error": "Validation failed",
+  "code": "INVALID_MODEL",
+  "message": "Model 'gpt-5' is not supported",
+  "details": {
+    "supportedModels": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "claude-3-sonnet"]
+  }
+}
+```
+
+</CodeGroup>
+
+### Rate Limiting
+
+```json 429 Too Many Requests
+{
+  "error": "Rate limit exceeded",
+  "code": "RATE_LIMITED",
+  "message": "Too many requests. Limit: 10 requests per minute",
+  "retryAfter": 45
+}
+```
+
+### Server Errors
+
+<CodeGroup>
+
+```json 500 Internal Server Error
+{
+  "error": "Generation failed",
+  "code": "GENERATION_ERROR",
+  "message": "An error occurred during text generation",
+  "requestId": "req_abc123"
+}
+```
+
+```json 503 Service Unavailable
+{
+  "error": "Service temporarily unavailable",
+  "code": "SERVICE_UNAVAILABLE",
+  "message": "AI service is currently unavailable. Please try again later"
+}
+```
+
+</CodeGroup>
+
+## Code Examples
+
+### JavaScript/TypeScript
+
+<CodeGroup>
+
+```typescript Basic Example
+async function generateText(prompt: string): Promise<string> {
+  const response = await fetch('/api/generate-text', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.text;
+}
+```
+
+```typescript Advanced Example
+interface GenerateTextOptions {
+  prompt: string;
+  model?: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-turbo' | 'claude-3-sonnet';
+  maxTokens?: number;
+  temperature?: number;
+  systemInstruction?: string;
+}
+
+interface GenerateTextResponse {
+  text: string;
+  metadata: {
+    model: string;
+    tokensUsed: number;
+    generationTime: number;
+    finishReason: string;
+  };
+}
+
+async function generateTextAdvanced(
+  options: GenerateTextOptions
+): Promise<GenerateTextResponse> {
+  const response = await fetch('/api/generate-text', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify(options),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`API Error: ${error.message}`);
+  }
+
+  return response.json();
+}
+
+// Usage
+const result = await generateTextAdvanced({
+  prompt: 'Write a technical blog post about React Server Components',
+  model: 'gpt-4',
+  maxTokens: 2000,
+  temperature: 0.7,
+  systemInstruction: 'You are a senior React developer who writes clear, educational content.'
+});
+```
+
+</CodeGroup>
+
+### React Hook
+
+```typescript Custom Hook
+import { useState, useCallback } from 'react';
+
+interface UseGenerateTextOptions {
+  defaultModel?: string;
+  onSuccess?: (text: string) => void;
+  onError?: (error: Error) => void;
+}
+
+export function useGenerateText(options: UseGenerateTextOptions = {}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [result, setResult] = useState<string>('');
+
+  const generateText = useCallback(async (
+    prompt: string,
+    overrideOptions: Partial<GenerateTextOptions> = {}
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const requestOptions = {
+        prompt,
+        model: options.defaultModel || 'gpt-3.5-turbo',
+        ...overrideOptions,
+      };
+
+      const response = await fetch('/api/generate-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getSessionToken()}`,
+        },
+        body: JSON.stringify(requestOptions),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Generation failed');
+      }
+
+      const data = await response.json();
+      setResult(data.text);
+      options.onSuccess?.(data.text);
+
+      return data;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error');
+      setError(error);
+      options.onError?.(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [options]);
+
+  const reset = useCallback(() => {
+    setResult('');
+    setError(null);
+  }, []);
+
+  return {
+    generateText,
+    loading,
+    error,
+    result,
+    reset,
+  };
+}
+```
+
+## Rate Limits & Usage
+
+### Rate Limiting
+
+| Plan | Requests per Minute | Daily Limit | Monthly Limit |
+|------|-------------------|-------------|---------------|
+| **Free** | 10 | 100 | 1,000 |
+| **Pro** | 100 | 2,000 | 50,000 |
+| **Enterprise** | 1,000 | 20,000 | 500,000 |
+
+### Best Practices for Rate Limits
+
+<Accordion title="Implement Retry Logic">
+  ```typescript
+  async function generateTextWithRetry(
+    prompt: string,
+    maxRetries = 3
+  ): Promise<string> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await generateText(prompt);
+      } catch (error) {
+        if (error.status === 429 && attempt < maxRetries) {
+          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Max retries exceeded');
+  }
+  ```
+</Accordion>
+
+<Accordion title="Batch Requests">
+  For multiple generations, consider batching:
+
+  ```typescript
+  async function batchGenerateText(prompts: string[]): Promise<string[]> {
+    const BATCH_SIZE = 5; // Stay within rate limits
+    const results: string[] = [];
+
+    for (let i = 0; i < prompts.length; i += BATCH_SIZE) {
+      const batch = prompts.slice(i, i + BATCH_SIZE);
+      const batchPromises = batch.map(prompt => generateText(prompt));
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+
+      // Wait between batches to respect rate limits
+      if (i + BATCH_SIZE < prompts.length) {
+        await new Promise(resolve => setTimeout(resolve, 6000));
+      }
+    }
+
+    return results;
+  }
+  ```
+</Accordion>
+
+## Webhooks (Coming Soon)
+
+For long-running generations, webhook support will be available:
+
+```json Future Webhook Payload
+{
+  "event": "generation.completed",
+  "data": {
+    "requestId": "req_abc123",
+    "text": "Generated content...",
+    "metadata": {
+      "model": "gpt-4",
+      "tokensUsed": 1250
+    }
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+## Testing
+
+### Test API Access
+
+```bash
+curl -X POST /api/generate-text \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -d '{"prompt": "Hello, world!"}'
+```
+
+### Mock Responses for Testing
+
+```typescript
+// Mock for testing
+jest.mock('/api/generate-text', () => ({
+  POST: jest.fn().mockResolvedValue({
+    json: () => Promise.resolve({
+      text: 'Mocked generated text response',
+      metadata: {
+        model: 'gpt-3.5-turbo',
+        tokensUsed: 10,
+        generationTime: 0.5,
+        finishReason: 'completed'
+      }
+    })
+  })
+}));
+```
+
+<Note>
+This API is continuously being improved. Check the changelog for updates and new features.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Try the Playground"
+    icon="play"
+    href="/playground/generate-text"
+  >
+    Test the API interactively with our built-in playground interface.
+  </Card>
+  <Card
+    title="View Examples"
+    icon="code"
+    href="/ai-sdk/generate-text/examples"
+  >
+    Explore real-world implementations and copy-paste ready code.
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="lightbulb"
+    href="/ai-sdk/best-practices"
+  >
+    Learn optimization techniques and production deployment strategies.
+  </Card>
+  <Card
+    title="Authentication Guide"
+    icon="shield"
+    href="/architecture/authentication"
+  >
+    Understand how authentication works in the application.
+  </Card>
+</CardGroup>

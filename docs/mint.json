@@ -1,0 +1,97 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Fullstack AI Starter",
+  "logo": {
+    "dark": "../public/logo/dark.svg",
+    "light": "../public/logo/light.svg"
+  },
+  "favicon": "../public/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:support@yourcompany.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://dashboard.yourapp.com"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Documentation",
+      "icon": "book-open-cover",
+      "url": "https://docs.yourapp.com"
+    },
+    {
+      "name": "Community",
+      "icon": "slack",
+      "url": "https://yourslack.com"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://blog.yourapp.com"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "icon": "play",
+      "pages": ["introduction", "quickstart"]
+    },
+    {
+      "group": "AI SDK",
+      "icon": "robot",
+      "pages": [
+        "ai-sdk/overview",
+        "ai-sdk/getting-started",
+        {
+          "group": "Text Generation",
+          "icon": "message-square",
+          "pages": [
+            "ai-sdk/generate-text/overview",
+            "ai-sdk/generate-text/examples",
+            "ai-sdk/generate-text/api-reference"
+          ]
+        },
+        "ai-sdk/best-practices"
+      ]
+    },
+    {
+      "group": "Architecture",
+      "icon": "sitemap",
+      "pages": [
+        "architecture/code-architecture",
+        "architecture/api-architecture",
+        "architecture/database",
+        "architecture/authentication",
+        "architecture/testing-strategy"
+      ]
+    },
+    {
+      "group": "API Documentation",
+      "icon": "book-open",
+      "pages": ["api-reference/introduction"]
+    }
+  ],
+  "footerSocials": {
+    "x": "https://x.com/yourcompany",
+    "github": "https://github.com/yourcompany/fullstack-ai-starter",
+    "linkedin": "https://www.linkedin.com/company/yourcompany"
+  }
+}

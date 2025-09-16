@@ -1,0 +1,344 @@
+---
+title: "Getting Started with AI SDK"
+description: "Set up AI SDK integration in minutes. Configure your API keys, understand the architecture, and generate your first AI-powered content."
+---
+
+## Prerequisites
+
+Before you start building with AI SDK, make sure you have:
+
+- **Node.js 18+** installed
+- **OpenAI API key** (or other supported AI provider)
+- **Environment variables** configured
+- **Next.js 15** project setup (included in this starter)
+
+<Tip>
+This fullstack starter comes pre-configured with AI SDK dependencies. If you're adding to an existing project, install: `npm install ai @ai-sdk/openai`
+</Tip>
+
+## Environment Setup
+
+<Steps>
+  <Step title="Get your API keys">
+    Sign up for an AI provider account and get your API key:
+
+    <Tabs>
+      <Tab title="OpenAI">
+        1. Visit [OpenAI Platform](https://platform.openai.com/)
+        2. Create an account or sign in
+        3. Navigate to **API Keys** section
+        4. Click **Create new secret key**
+        5. Copy your key (starts with `sk-`)
+      </Tab>
+      <Tab title="Anthropic">
+        1. Visit [Anthropic Console](https://console.anthropic.com/)
+        2. Create account and verify email
+        3. Go to **API Keys** section
+        4. Generate new key
+        5. Copy your key (starts with `sk-ant-`)
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Configure environment variables">
+    Add your API key to your `.env.local` file:
+
+    ```bash .env.local
+    # OpenAI Configuration
+    OPENAI_API_KEY=sk-your-openai-api-key-here
+
+    # Optional: Other providers
+    ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+    GOOGLE_GENERATIVE_AI_API_KEY=your-google-ai-key-here
+    ```
+
+    <Warning>
+      Never commit API keys to version control. Add `.env.local` to your `.gitignore` file.
+    </Warning>
+  </Step>
+
+  <Step title="Verify installation">
+    Check that AI SDK is installed by looking at your `package.json`:
+
+    ```json package.json
+    {
+      "dependencies": {
+        "ai": "^5.0.14",
+        "@ai-sdk/openai": "latest"
+      }
+    }
+    ```
+
+    If missing, install with:
+    ```bash
+    npm install ai @ai-sdk/openai
+    ```
+  </Step>
+
+  <Step title="Test your setup">
+    Create a simple test to verify everything works:
+
+    ```typescript app/api/test-ai/route.ts
+    import { generateText } from 'ai';
+    import { openai } from '@ai-sdk/openai';
+
+    export async function GET() {
+      try {
+        const { text } = await generateText({
+          model: openai('gpt-3.5-turbo'),
+          prompt: 'Say hello from AI SDK!'
+        });
+
+        return Response.json({ success: true, text });
+      } catch (error) {
+        return Response.json({ success: false, error: error.message });
+      }
+    }
+    ```
+
+    Visit `/api/test-ai` to test your configuration.
+  </Step>
+</Steps>
+
+## Your First AI Generation
+
+Let's create a simple text generation component:
+
+<CodeGroup>
+
+```typescript app/components/my-first-ai.tsx
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+
+export function MyFirstAI() {
+  const [prompt, setPrompt] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!prompt.trim()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      setResult(data.text);
+    } catch (error) {
+      console.error('Generation failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-6 space-y-4">
+      <h2 className="text-2xl font-bold">My First AI Generation</h2>
+
+      <div className="space-y-4">
+        <Textarea
+          placeholder="Enter your prompt here..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          rows={3}
+        />
+
+        <Button
+          onClick={handleGenerate}
+          disabled={loading || !prompt.trim()}
+          className="w-full"
+        >
+          {loading ? 'Generating...' : 'Generate Text'}
+        </Button>
+      </div>
+
+      {result && (
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2">Generated Result:</h3>
+          <p className="text-gray-700 dark:text-gray-300">{result}</p>
+        </Card>
+      )}
+    </div>
+  );
+}
+```
+
+```typescript app/api/generate-text/route.ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { NextRequest } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { prompt } = await request.json();
+
+    if (!prompt || typeof prompt !== 'string') {
+      return Response.json(
+        { error: 'Valid prompt is required' },
+        { status: 400 }
+      );
+    }
+
+    const { text } = await generateText({
+      model: openai('gpt-3.5-turbo'),
+      prompt: prompt,
+      maxTokens: 500, // Limit response length
+    });
+
+    return Response.json({ text });
+  } catch (error) {
+    console.error('AI generation error:', error);
+    return Response.json(
+      { error: 'Failed to generate text' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+</CodeGroup>
+
+## Understanding the Code
+
+<Accordion title="Client Component Breakdown">
+  **State Management**: Uses React's `useState` to manage prompt input, generated result, and loading state.
+
+  **API Call**: Makes POST request to `/api/generate-text` with the user's prompt.
+
+  **Error Handling**: Includes basic error handling and loading states for better UX.
+
+  **UI Components**: Uses shadcn/ui components for consistent styling.
+</Accordion>
+
+<Accordion title="API Route Breakdown">
+  **Input Validation**: Checks that prompt exists and is a valid string.
+
+  **AI SDK Call**: Uses `generateText` function with OpenAI model.
+
+  **Response Formatting**: Returns JSON with generated text or error message.
+
+  **Error Handling**: Catches and logs errors, returns appropriate HTTP status codes.
+</Accordion>
+
+## Model Configuration
+
+<Tabs>
+  <Tab title="Basic Setup">
+    ```typescript
+    import { openai } from '@ai-sdk/openai';
+
+    const { text } = await generateText({
+      model: openai('gpt-3.5-turbo'),
+      prompt: 'Your prompt here'
+    });
+    ```
+  </Tab>
+
+  <Tab title="With Options">
+    ```typescript
+    const { text } = await generateText({
+      model: openai('gpt-4'),
+      prompt: 'Your prompt here',
+      maxTokens: 1000,
+      temperature: 0.7,
+      topP: 0.9,
+    });
+    ```
+  </Tab>
+
+  <Tab title="Multiple Providers">
+    ```typescript
+    import { openai } from '@ai-sdk/openai';
+    import { anthropic } from '@ai-sdk/anthropic';
+
+    // Choose provider based on use case
+    const model = useCase === 'creative'
+      ? anthropic('claude-3-sonnet-20240229')
+      : openai('gpt-3.5-turbo');
+
+    const { text } = await generateText({
+      model,
+      prompt: 'Your prompt here'
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Common Issues & Solutions
+
+<Accordion title="API Key Errors">
+  **Problem**: `401 Unauthorized` or `Invalid API key`
+
+  **Solutions**:
+  - Check your `.env.local` file exists and has correct key
+  - Verify API key is active in your provider dashboard
+  - Restart your development server after adding env vars
+  - Ensure no extra spaces in the API key
+</Accordion>
+
+<Accordion title="Rate Limiting">
+  **Problem**: `429 Too Many Requests`
+
+  **Solutions**:
+  - Implement request throttling in your code
+  - Add retry logic with exponential backoff
+  - Upgrade your API plan for higher limits
+  - Cache responses when appropriate
+</Accordion>
+
+<Accordion title="Large Responses">
+  **Problem**: Responses are too long or incomplete
+
+  **Solutions**:
+  - Set appropriate `maxTokens` limit
+  - Use streaming for long-form content
+  - Break large requests into smaller chunks
+  - Implement proper pagination
+</Accordion>
+
+## Next Steps
+
+Now that you have AI SDK working, explore these advanced features:
+
+<CardGroup cols={2}>
+  <Card
+    title="Interactive Playground"
+    icon="play"
+    href="/playground/generate-text"
+  >
+    Try different models and prompts in our built-in playground interface.
+  </Card>
+  <Card
+    title="Text Generation Examples"
+    icon="code"
+    href="/ai-sdk/generate-text/examples"
+  >
+    Explore real-world use cases and copy-paste ready code examples.
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/ai-sdk/generate-text/api-reference"
+  >
+    Complete documentation of all available options and parameters.
+  </Card>
+  <Card
+    title="Best Practices"
+    icon="lightbulb"
+    href="/ai-sdk/best-practices"
+  >
+    Learn optimization tips, cost management, and production strategies.
+  </Card>
+</CardGroup>
+
+<Note>
+Ready to see it in action? Visit the [Generate Text playground](/playground/generate-text) to experiment with different prompts and see the code examples in real-time.
+</Note>
