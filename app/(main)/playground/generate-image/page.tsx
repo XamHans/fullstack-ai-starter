@@ -12,14 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type ApiResponse } from '@/lib/api/base';
 import { type GenerateImageResponseData } from '@/lib/api/types';
-import {
-  Book,
-  Code,
-  Download,
-  ImageIcon,
-  Lightbulb,
-  Loader2,
-} from 'lucide-react';
+import { Book, Download, ImageIcon, Lightbulb, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useId, useState } from 'react';
 
@@ -43,7 +36,7 @@ export default function GenerateImagePage() {
     setImage(null);
 
     try {
-      const response = await fetch('/api/generate-image', {
+      const response = await fetch('/api/ai/generate-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,24 +97,6 @@ export default function GenerateImagePage() {
               <Button variant="outline" size="sm">
                 <Book className="h-4 w-4 mr-2" />
                 Documentation
-              </Button>
-            </Link>
-            <Link href="https://ai-sdk.dev/docs/ai-sdk-core/generating-content">
-              <Button variant="outline" size="sm">
-                <Code className="h-4 w-4 mr-2" />
-                Examples
-              </Button>
-            </Link>
-            <Link href="https://ai-sdk.dev/docs/reference/ai-sdk-core/generate-text">
-              <Button variant="outline" size="sm">
-                <Book className="h-4 w-4 mr-2" />
-                API Reference
-              </Button>
-            </Link>
-            <Link href="https://ai-sdk.dev/docs/ai-sdk-core/prompts">
-              <Button variant="outline" size="sm">
-                <Lightbulb className="h-4 w-4 mr-2" />
-                Prompt Engineering
               </Button>
             </Link>
           </div>

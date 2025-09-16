@@ -1,12 +1,18 @@
 'use client';
 
-import { Loader2, Book, Code, Lightbulb } from 'lucide-react';
-import { useState, useId } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Book, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useId, useState } from 'react';
 
 export default function GenerateTextPage() {
   const [prompt, setPrompt] = useState('');
@@ -28,7 +34,7 @@ export default function GenerateTextPage() {
     setResult('');
 
     try {
-      const response = await fetch('/api/generate-text', {
+      const response = await fetch('/api/ai/generate-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,32 +60,16 @@ export default function GenerateTextPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Generate Text</h1>
-          <p className="text-muted-foreground mt-2">Use AI to generate text based on your prompt</p>
+          <p className="text-muted-foreground mt-2">
+            Use AI to generate text based on your prompt
+          </p>
 
           {/* Documentation Links */}
           <div className="flex flex-wrap gap-2 mt-4">
             <Link href="/docs/ai-sdk/generate-text/overview">
               <Button variant="outline" size="sm">
                 <Book className="h-4 w-4 mr-2" />
-                Overview
-              </Button>
-            </Link>
-            <Link href="/docs/ai-sdk/generate-text/examples">
-              <Button variant="outline" size="sm">
-                <Code className="h-4 w-4 mr-2" />
-                Examples
-              </Button>
-            </Link>
-            <Link href="/docs/ai-sdk/generate-text/api-reference">
-              <Button variant="outline" size="sm">
-                <Book className="h-4 w-4 mr-2" />
-                API Reference
-              </Button>
-            </Link>
-            <Link href="/docs/ai-sdk/best-practices">
-              <Button variant="outline" size="sm">
-                <Lightbulb className="h-4 w-4 mr-2" />
-                Best Practices
+                See Documentation
               </Button>
             </Link>
           </div>
@@ -90,7 +80,9 @@ export default function GenerateTextPage() {
           <Card>
             <CardHeader>
               <CardTitle>Input</CardTitle>
-              <CardDescription>Enter your prompt to generate text</CardDescription>
+              <CardDescription>
+                Enter your prompt to generate text
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,7 +99,9 @@ export default function GenerateTextPage() {
                 </div>
 
                 {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                    {error}
+                  </div>
                 )}
 
                 <Button type="submit" disabled={loading} className="w-full">
@@ -122,7 +116,9 @@ export default function GenerateTextPage() {
           <Card>
             <CardHeader>
               <CardTitle>Generated Text</CardTitle>
-              <CardDescription>AI-generated response will appear here</CardDescription>
+              <CardDescription>
+                AI-generated response will appear here
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="min-h-[300px] p-4 bg-muted/50 rounded-lg">
