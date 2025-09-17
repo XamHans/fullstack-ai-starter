@@ -1,47 +1,138 @@
 ---
 **name:** `implement-bdd-spec`
-**description:** 'Implements a feature by following the scenarios in a Gherkin .feature file one by one.'
-**argument-hint:** '[path/to/your-feature-file.feature]'
+**description:** 'Implements a feature by following the scenarios in a simple Gherkin .md spec file using test-first BDD approach.'
+**argument-hint:** '[path/to/your-spec-file.md]'
 ---
 
-You are the `BDD Dev Agent`, an expert in Test-Driven and Behavior-Driven Development. Your task is to implement the feature described in the Gherkin file provided.
+You are a BDD Implementation Coordinator. Your task is to read the provided Gherkin specification file and delegate the implementation to the specialized `bdd-modular-dev` agent.
 
-Your primary tool for connecting Gherkin specifications to test code is **`vitest-cucumber`**. You must create step definition files that match the feature files and use them to drive your implementation.
+The `bdd-modular-dev` agent is an expert in test-first BDD using Vitest and Supertest within a modular Next.js architecture. It will strategically choose the most efficient test type (Unit, API, E2E) and implement using co-located tests.
 
-You **MUST** follow the implementation workflow strictly, focusing on one scenario at a time to ensure an incremental, test-driven approach.
+**Your Process:**
 
---- Gherkin Specification ---
+1. **Read the Specification File**: Load and parse the provided .md specification file
+2. **Delegate to Specialist**: Hand off the specification content to the `bdd-modular-dev` agent for implementation
+
+--- Specification File Path ---
 $ARGUMENTS
---- End Specification ---
+--- End Path ---
 
-**Mandatory Implementation Blueprint:**
+**Implementation Steps:**
 
-1.  **Branch Creation:**
+1. **Create Feature Branch**:
+   - Create a new Git branch for the feature based on the spec file name
+   - Example: `git checkout -b feature/user-authentication` for user authentication spec
 
-    - Create a new, descriptive Git branch for this feature based on the file path (e.g., `feature/user-login`).
+2. **Read the Specification File**:
+   - Load the content of the provided .md specification file
+   - Verify it contains valid Gherkin scenarios
 
-2.  **Implement Scenario 1 (The "Happy Path"):**
+3. **Delegate to bdd-modular-dev Agent**:
+   - Use the Task tool to invoke the `bdd-modular-dev` agent
+   - Pass the complete specification content to the agent
+   - Let the agent handle:
+     - Strategic test selection (Unit vs API vs E2E)
+     - Test-first implementation using Vitest + Supertest
+     - Co-located test creation within appropriate modules
+     - Iterative scenario implementation
 
-    - **Create Step Definition File:** Create a corresponding step definition file (e.g., `user_login.steps.ts`) next to the `.feature` file.
-    - **Write Failing Steps:** Implement the `Given`, `When`, and `Then` steps for the _first_ scenario. The code inside these steps will call your application logic, which does not yet exist. You can use `expect.fail()` or assert conditions you know will not be met yet.
-    - **Confirm Failure:** Run the test suite and confirm that the new test fails because the steps are failing.
-    - **Write Minimal Code to Pass:** Following the "inside-out" TDD pattern, write only the application code (services, API routes, etc.) required to make the failing steps pass.
-    - **Confirm Success:** Run the test suite again to ensure the steps for the first scenario now pass and no existing tests have been broken.
-    - **Commit:** Commit the changes with a message like "feat: Implement happy path for [feature name]".
+4. **Post-Implementation Quality**:
+   - Run code formatting: `pnpm format` (or `npm run format`)
+   - Run linting checks: `pnpm run check:fix` (or `npm run check:fix`)
+   - Verify all tests pass: `npm test && npm run test:integration`
 
-3.  **Implement Scenario 2 (The Alternative Path):**
+5. **Feature Documentation**:
+   - Create/update `features.md` in the respective domain module
+   - Document what was implemented with reference to original spec
+   - Example: Create `modules/posts/features.md` for posts-related features
 
-    - **Write New Failing Steps:** Add the new step definitions required for the _second_ scenario to the _same_ step definition file. Some steps may already exist and can be reused.
-    - **Confirm Failure:** Run the tests and watch the new scenario fail.
-    - **Write Minimal Code to Pass:** Modify or add only the application code necessary to handle this alternative case and make the new steps pass.
-    - **Confirm Success:** Run all tests to confirm all scenarios in the feature file now pass.
-    - **Commit:** Commit the changes with a message like "feat: Handle [alternative scenario description]".
+**Example Task Delegation:**
+```
+Use Task tool with:
+- subagent_type: "bdd-modular-dev"
+- description: "Implement BDD spec scenarios"
+- prompt: "Please implement the following Gherkin specification using test-first BDD approach:
 
-4.  **(If Applicable) Repeat for any subsequent scenarios.**
+[SPEC CONTENT HERE]
+
+Follow the testing pyramid strategy, choosing the most efficient test layer for each scenario, and co-locate tests within the appropriate module structure."
+```
 
 **Validation Gates:**
 
-Before finalizing, run these commands to ensure code quality and correctness.
+After the `bdd-modular-dev` agent completes implementation, verify quality with these commands:
 
-- **Linting & Style**: `npm run lint`
-- **All Tests**: `npm test`
+**Testing & Quality Checks:**
+- **Unit Tests**: `npm test` - Run all unit tests
+- **Integration Tests**: `npm run test:integration` - Run API tests with Supertest
+- **All Tests**: `npm run test:run` - Run complete test suite once
+
+**Code Quality (Required):**
+- **Format Code**: `pnpm format` - Format code with Biome
+- **Lint & Fix**: `pnpm run check:fix` - Fix linting issues with Biome
+- **Type Checking**: `tsc --noEmit` - TypeScript validation
+- **Build Verification**: `npm run build` - Ensure production build succeeds
+
+**Git Workflow:**
+- **Commit Changes**: After formatting and linting pass
+- **Feature Branch**: Keep feature isolated until ready for merge
+
+**Feature Documentation (Required):**
+- **Update Module Features**: Create/update `modules/{domain}/features.md`
+- **Cross-Reference**: Link back to original specification file
+- **Implementation Summary**: Brief description of what was built
+
+### Feature Documentation Template
+
+After successful implementation, create or update the features.md file in the relevant domain module:
+
+**File**: `modules/{domain}/features.md`
+
+```markdown
+# {Domain} Features
+
+## Implemented Features
+
+### {Feature Name}
+**Specification**: `specs/{domain}/{feature-name}.md`
+**Implemented**: {date}
+**Description**: [Brief description of what was implemented]
+
+**Components Added:**
+- **Services**: [List key service methods added]
+- **API Endpoints**: [List endpoints created/modified]
+- **Database**: [Schema changes if any]
+- **Tests**: [Test coverage added]
+
+**Key Functionality:**
+- [Brief bullet point of main capabilities]
+- [Any important implementation notes]
+
+---
+
+### {Previous Feature Name}
+[Previous feature documentation...]
+```
+
+**Example Feature Documentation:**
+```bash
+# For a post creation feature
+Write/Update file: modules/posts/features.md
+
+Content:
+### Post Creation
+**Specification**: `specs/posts/create-post.md`
+**Implemented**: 2024-01-15
+**Description**: Full post creation workflow with validation and API endpoints
+
+**Components Added:**
+- **Services**: PostService.createPost() with validation
+- **API Endpoints**: POST /api/posts with authentication
+- **Database**: No schema changes (existing posts table)
+- **Tests**: Unit tests for service, API tests for endpoint
+
+**Key Functionality:**
+- Authenticated users can create posts with title and content
+- Input validation prevents empty or invalid posts
+- Proper error handling for unauthorized access
+```
