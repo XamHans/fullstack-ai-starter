@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import type React from 'react';
 import './globals.css';
 
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};
@@ -27,6 +29,13 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
+        {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
+          <Script
+            defer
+            src={process.env.NEXT_PUBLIC_UMAMI_URL || 'https://cloud.umami.is/script.js'}
+            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          />
+        )}
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider

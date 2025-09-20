@@ -53,6 +53,8 @@ These are functions that take your API handler as an argument and return a new f
 
 - **`withErrorHandling`**: Wraps a handler in a try...catch block and uses the utility functions to guarantee a standardized JSON response
 - **`withAuthentication`**: First checks for a valid user session using better-auth. If the user is authenticated, it calls the handler, passing the session details. It internally uses `withErrorHandling` to provide both features in one
+- **`withObservability`**: Adds automatic tracing and observability to API endpoints using Langfuse integration
+- **`withAuthenticatedObservability`**: Combines authentication and observability, providing both user context and telemetry tracking
 
 ## File Structure
 
@@ -461,6 +463,94 @@ export const DELETE = withAuthentication(async (session, request, { params }) =>
 });
 ```
 
+## Observability Integration
+
+This API pattern includes built-in observability through Langfuse integration, following the same clean architecture principles:
+
+### Observability Wrappers
+
+**`withObservability`** - For public endpoints that need telemetry:
+```typescript
+export const GET = withObservability(
+  async (req, params, logger) => {
+    // Your business logic here
+    const data = await someService.getData();
+    return data;
+  },
+  {
+    operationName: 'get-data',
+    extractInput: (req) => req.url,
+    extractOutput: (result) => result.id,
+  }
+);
+```
+
+**Simple Authenticated Endpoints with AI Telemetry**:
+```typescript
+export const POST = withAuthentication(async (session, req, params, logger) => {
+  const body = await parseRequestBody<{ prompt: string }>(req);
+  validateRequiredFields(body, ['prompt']);
+
+  const { text } = await generateText(
+    withAITelemetry({
+      model: openai('gpt-3.5-turbo'),
+      prompt: body.prompt,
+    }, {
+      functionId: 'generate-text',
+      metadata: {
+        userId: session.userId,
+        sessionId: session.id,
+      },
+    })
+  );
+
+  return { text };
+});
+```
+
+### AI SDK Telemetry Helper
+
+**`withAITelemetry`** - Leverages AI SDK's native telemetry:
+```typescript
+// AI SDK provides comprehensive telemetry automatically
+const { text } = await generateText(
+  withAITelemetry({
+    model: openai('gpt-3.5-turbo'),
+    prompt: body.prompt,
+  }, {
+    functionId: 'generate-text',           // Custom operation name
+    metadata: {                            // Business context
+      userId: session.userId,
+      feature: 'content-generation',
+    },
+    recordInputs: true,                   // Privacy controls
+    recordOutputs: true,
+  })
+);
+```
+
+### AI SDK Native Telemetry Features
+
+The AI SDK automatically provides:
+
+- **Rich Performance Metrics**: Response times, tokens/second, time to first chunk
+- **Comprehensive Usage Data**: Prompt tokens, completion tokens, costs
+- **Model Information**: Provider details, model ID, response metadata
+- **Error Handling**: Finish reasons, error spans, retry tracking
+- **Tool Call Tracing**: Complete tool execution traces (if using tools)
+- **OpenTelemetry Standards**: Full semantic conventions for GenAI operations
+
+### Telemetry Configuration Options
+
+```typescript
+interface AITelemetryOptions {
+  functionId?: string;                      // Custom operation name
+  metadata?: Record<string, any>;           // Business context data
+  recordInputs?: boolean;                   // Control input logging
+  recordOutputs?: boolean;                  // Control output logging
+}
+```
+
 ## Extending the Pattern
 
 The beauty of this approach is its composability. You can easily create more specific wrappers:
@@ -525,5 +615,18 @@ export const POST = withRateLimit(withErrorHandling(async (request) => {
 4. **Handle authorization properly**: Check ownership and permissions consistently
 5. **Use the dependency injection container**: Keep your routes testable by using the container
 6. **Test your APIs**: The pattern makes it easy to test both success and error cases
+7. **Use AI SDK telemetry**: Always use `withAITelemetry` for AI operations to get comprehensive observability
+8. **Configure meaningful function IDs**: Use descriptive names for `functionId` (e.g., 'generate-text', 'create-post')
+9. **Add business context**: Use metadata to include user context and feature information
+10. **Privacy controls**: Use `recordInputs` and `recordOutputs` for sensitive data handling
 
-This pattern provides a solid foundation for building scalable, maintainable APIs while keeping your code DRY and secure by default.
+## Observability Best Practices
+
+- **Environment Variables**: Set up Langfuse credentials in your deployment environment
+- **Function IDs**: Use consistent, descriptive names for function IDs to organize traces
+- **Metadata Strategy**: Include relevant business context without sensitive information
+- **Privacy First**: Use `recordInputs: false` for sensitive inputs, `recordOutputs: false` for private responses
+- **Testing**: AI SDK telemetry works seamlessly with your existing test patterns
+- **Performance**: AI SDK handles all batching and flushing automatically - no manual optimization needed
+
+This pattern provides a solid foundation for building scalable, maintainable APIs while keeping your code DRY, secure, and observable by default.

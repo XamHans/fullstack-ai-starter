@@ -24,6 +24,10 @@
     "browsertool": {
       "command": "npx",
       "args": ["-y", "m @agentdeskai/browser-tools-mcp@1.2.0"]
+    },
+    "vercel": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://mcp.vercel.com"]
     }
   }
 }

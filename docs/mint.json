@@ -73,6 +73,13 @@
       ]
     },
     {
+      "group": "Playground",
+      "icon": "folder",
+      "pages": [
+        "file-uploads"
+      ]
+    },
+    {
       "group": "Architecture",
       "icon": "sitemap",
       "pages": [
@@ -81,6 +88,14 @@
         "architecture/database",
         "architecture/authentication",
         "architecture/testing-strategy"
+      ]
+    },
+    {
+      "group": "Observability",
+      "icon": "chart-line",
+      "pages": [
+        "observability",
+        "umami-analytics"
       ]
     },
     {

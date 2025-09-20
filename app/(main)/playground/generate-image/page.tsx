@@ -1,5 +1,6 @@
 'use client';
 
+import { analytics } from '@/lib/services/analytics';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -35,6 +36,12 @@ export default function GenerateImagePage() {
     setError('');
     setImage(null);
 
+    // Track image generation request
+    analytics.ai.generateImage.submit({
+      promptLength: prompt.length,
+      promptWords: prompt.trim().split(/\s+/).length
+    });
+
     try {
       const response = await fetch('/api/ai/generate-image', {
         method: 'POST',
@@ -54,11 +61,26 @@ export default function GenerateImagePage() {
 
       if (result.success && result.data) {
         setImage(result.data.imageUrl);
+
+        // Track successful generation
+        analytics.ai.generateImage.success();
       } else {
-        setError(result.error || 'The API call was not successful.');
+        const errorMessage = result.error || 'The API call was not successful.';
+        setError(errorMessage);
+
+        // Track generation error
+        analytics.ai.generateImage.error({
+          errorType: 'api_response_error'
+        });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      setError(errorMessage);
+
+      // Track generation error
+      analytics.ai.generateImage.error({
+        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error'
+      });
     } finally {
       setLoading(false);
     }
@@ -66,6 +88,10 @@ export default function GenerateImagePage() {
 
   const downloadImage = () => {
     if (!image) return;
+
+    // Track image download
+    analytics.utils.imageDownload('png');
+
     const link = document.createElement('a');
     link.href = image;
     link.download = 'generated-image.png';
@@ -94,7 +120,11 @@ export default function GenerateImagePage() {
           {/* Documentation Links */}
           <div className="flex flex-wrap gap-2 mt-4">
             <Link href="https://ai-sdk.dev/cookbook/guides/google-gemini-image-generation">
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => analytics.ui.docsLink({ page: 'generate-image', section: 'gemini-guide' })}
+              >
                 <Book className="h-4 w-4 mr-2" />
                 Documentation
               </Button>
@@ -135,7 +165,14 @@ export default function GenerateImagePage() {
                         variant="ghost"
                         size="sm"
                         className="justify-start text-left h-auto py-2 px-3 text-sm text-muted-foreground hover:text-foreground whitespace-normal"
-                        onClick={() => setPrompt(example)}
+                        onClick={() => {
+                          setPrompt(example);
+                          // Track example prompt usage
+                          analytics.ui.examplePrompt({
+                            promptIndex: index,
+                            promptType: 'image_generation'
+                          });
+                        }}
                         type="button"
                       >
                         {example}

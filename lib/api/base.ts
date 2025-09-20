@@ -1,10 +1,10 @@
 // lib/api/base.ts
 
-import type { Session } from 'better-auth';
-import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import type { CustomLogger } from '@/lib/logger';
 import { createRequestLogger } from '@/lib/logger';
+import type { Session } from 'better-auth';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getOrCreateCorrelationId } from './correlation';
 
 export type ApiResponse<T = any> = {
@@ -18,7 +18,7 @@ export class ApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public code?: string,
+    public code?: string
   ) {
     super(message);
     this.name = 'ApiError';
@@ -29,7 +29,7 @@ export class ApiError extends Error {
 export function createApiResponse<T>(
   data?: T,
   message?: string,
-  statusCode = 200,
+  statusCode = 200
 ): NextResponse<ApiResponse<T>> {
   return NextResponse.json(
     {
@@ -37,7 +37,7 @@ export function createApiResponse<T>(
       data,
       message,
     },
-    { status: statusCode },
+    { status: statusCode }
   );
 }
 
@@ -45,7 +45,7 @@ export function createApiResponse<T>(
 export function createApiError(
   error: string | Error,
   statusCode = 500,
-  code?: string,
+  code?: string
 ): NextResponse<ApiResponse> {
   const message = error instanceof Error ? error.message : error;
 
@@ -55,7 +55,7 @@ export function createApiError(
       error: message,
       code,
     },
-    { status: statusCode },
+    { status: statusCode }
   );
 }
 
@@ -64,19 +64,27 @@ export type AuthenticatedApiHandler<T = any> = (
   session: Session,
   req: NextRequest,
   params?: { [key: string]: string | string[] },
-  logger?: CustomLogger,
+  logger?: CustomLogger
 ) => Promise<T>;
+
+// AI SDK Telemetry options
+export interface AITelemetryOptions {
+  functionId?: string;
+  metadata?: Record<string, any>;
+  recordInputs?: boolean;
+  recordOutputs?: boolean;
+}
 
 // Higher-order function to handle errors and authentication
 export function withErrorHandling<T>(
   handler: (
     req: NextRequest,
     params?: { [key: string]: string | string[] },
-    logger?: CustomLogger,
-  ) => Promise<T>,
+    logger?: CustomLogger
+  ) => Promise<T | NextResponse>
 ): (
   req: NextRequest,
-  params?: { [key: string]: string | string[] },
+  params?: { [key: string]: string | string[] }
 ) => Promise<NextResponse<ApiResponse<T>>> {
   return async (req, params) => {
     const correlationId = getOrCreateCorrelationId(req);
@@ -89,17 +97,21 @@ export function withErrorHandling<T>(
 
     try {
       const result = await handler(req, params, logger);
+      if (result instanceof NextResponse) {
+        return result;
+      }
       return createApiResponse(result);
     } catch (error) {
       if (error instanceof ApiError) {
         logger.error('API Error', {
           error: error,
-          statusCode: error.statusCode,
           code: error.code,
         });
         return createApiError(error.message, error.statusCode, error.code);
       }
-      logger.error('Unexpected API Error', { error });
+      logger.error('Unexpected API Error', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return createApiError('Internal server error', 500);
     }
   };
@@ -107,10 +119,10 @@ export function withErrorHandling<T>(
 
 // Higher-order function for authenticated routes
 export function withAuthentication<T>(
-  handler: AuthenticatedApiHandler<T>,
+  handler: AuthenticatedApiHandler<T>
 ): (
   req: NextRequest,
-  params?: { [key: string]: string | string[] },
+  params?: { [key: string]: string | string[] }
 ) => Promise<NextResponse<ApiResponse<T>>> {
   return withErrorHandling(async (req, params, logger) => {
     const session = await auth.api.getSession({
@@ -134,14 +146,17 @@ export function withAuthentication<T>(
   });
 }
 
-export function validateRequiredFields(data: Record<string, any>, requiredFields: string[]): void {
+export function validateRequiredFields(
+  data: Record<string, any>,
+  requiredFields: string[]
+): void {
   const missingFields = requiredFields.filter((field) => !data[field]);
 
   if (missingFields.length > 0) {
     throw new ApiError(
       400,
       `Missing required fields: ${missingFields.join(', ')}`,
-      'MISSING_FIELDS',
+      'MISSING_FIELDS'
     );
   }
 }
@@ -161,5 +176,30 @@ export function getQueryParams(request: NextRequest) {
     offset: Math.max(Number.parseInt(searchParams.get('offset') || '0'), 0),
     search: searchParams.get('search') || undefined,
     category: searchParams.get('category') || undefined,
+  };
+}
+
+// Utility function to enhance AI SDK calls with telemetry
+export function withAITelemetry<T extends Record<string, any>>(
+  config: T,
+  options?: AITelemetryOptions
+): T & {
+  experimental_telemetry: {
+    isEnabled: boolean;
+    functionId?: string;
+    metadata?: Record<string, any>;
+    recordInputs?: boolean;
+    recordOutputs?: boolean;
+  };
+} {
+  return {
+    ...config,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: options?.functionId,
+      metadata: options?.metadata,
+      recordInputs: options?.recordInputs ?? true,
+      recordOutputs: options?.recordOutputs ?? true,
+    },
   };
 }

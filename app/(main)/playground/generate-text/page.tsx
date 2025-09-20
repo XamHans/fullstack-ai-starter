@@ -1,5 +1,6 @@
 'use client';
 
+import { analytics } from '@/lib/services/analytics';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -33,6 +34,12 @@ export default function GenerateTextPage() {
     setError('');
     setResult('');
 
+    // Track text generation request
+    analytics.ai.generateText.submit({
+      promptLength: prompt.length,
+      promptWords: prompt.trim().split(/\s+/).length
+    });
+
     try {
       const response = await fetch('/api/ai/generate-text', {
         method: 'POST',
@@ -48,8 +55,20 @@ export default function GenerateTextPage() {
 
       const data = await response.json();
       setResult(data.text);
+
+      // Track successful generation
+      analytics.ai.generateText.success({
+        responseLength: data.text?.length || 0,
+        responseWords: data.text ? data.text.trim().split(/\s+/).length : 0
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      setError(errorMessage);
+
+      // Track generation error
+      analytics.ai.generateText.error({
+        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error'
+      });
     } finally {
       setLoading(false);
     }
@@ -67,7 +86,11 @@ export default function GenerateTextPage() {
           {/* Documentation Links */}
           <div className="flex flex-wrap gap-2 mt-4">
             <Link href="/docs/ai-sdk/generate-text/overview">
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => analytics.ui.docsLink({ page: 'generate-text', section: 'overview' })}
+              >
                 <Book className="h-4 w-4 mr-2" />
                 See Documentation
               </Button>

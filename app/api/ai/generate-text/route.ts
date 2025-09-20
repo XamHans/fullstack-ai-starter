@@ -4,20 +4,30 @@ import {
   withAuthentication,
   parseRequestBody,
   validateRequiredFields,
+  withAITelemetry,
 } from '@/lib/api/base';
 
 export const POST = withAuthentication(async (session, req, params, logger) => {
   logger?.info('Generate text request received');
+
   const body = await parseRequestBody<{
     prompt: string;
   }>(req);
 
   validateRequiredFields(body, ['prompt']);
 
-  const { text } = await generateText({
-    model: openai('gpt-3.5-turbo'),
-    prompt: body.prompt,
-  });
+  const { text } = await generateText(
+    withAITelemetry({
+      model: openai('gpt-3.5-turbo'),
+      prompt: body.prompt,
+    }, {
+      functionId: 'generate-text',
+      metadata: {
+        userId: session.userId,
+        sessionId: session.id,
+      },
+    })
+  );
 
   logger?.info('Text generated successfully');
   return { text };

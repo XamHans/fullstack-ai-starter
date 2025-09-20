@@ -7,7 +7,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    domains: [
+      'api.microlink.io', // Microlink Image Preview
+    ],
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -20,10 +22,10 @@ const nextConfig = {
         fs: false,
         path: false,
         os: false,
-      }
+      };
     }
-    return config
+    return config;
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

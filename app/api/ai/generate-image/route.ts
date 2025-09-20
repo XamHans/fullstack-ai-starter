@@ -4,21 +4,30 @@ import {
   withAuthentication,
   parseRequestBody,
   validateRequiredFields,
+  withAITelemetry,
 } from '@/lib/api/base';
 
-export const POST = withAuthentication(async (_session, req, _params, logger) => {
+export const POST = withAuthentication(async (session, req, params, logger) => {
   logger?.info('Generate image request received');
+
   const body = await parseRequestBody<{
     prompt: string;
   }>(req);
 
   validateRequiredFields(body, ['prompt']);
 
-  try {
-    const result = await generateText({
+  const result = await generateText(
+    withAITelemetry({
       model: google('gemini-2.5-flash-image-preview'),
       prompt: body.prompt,
-    });
+    }, {
+      functionId: 'generate-image',
+      metadata: {
+        userId: session.userId,
+        sessionId: session.id,
+      },
+    })
+  );
 
     // Debug logging to see actual response structure
     logger?.info('Gemini result structure:', {
@@ -61,14 +70,8 @@ export const POST = withAuthentication(async (_session, req, _params, logger) =>
     }
 
     logger?.info('Image generated successfully');
-
     return {
       imageUrl,
       success: true
     };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger?.error(`Failed to generate image: ${errorMessage}`);
-    throw new Error('Failed to generate image. Please try again.');
-  }
 });

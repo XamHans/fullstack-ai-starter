@@ -1,0 +1,444 @@
+---
+title: 'Umami Analytics'
+description: 'Privacy-focused web analytics with Umami - setup and usage guide'
+---
+
+# Umami Analytics Integration
+
+Umami is a privacy-focused, open-source web analytics platform that serves as a lightweight alternative to Google Analytics. This starter kit includes built-in Umami integration for tracking page views and custom events without compromising user privacy.
+
+## What is Umami?
+
+Umami provides essential website analytics while respecting user privacy:
+
+- **Privacy-First**: No cookies, no personal data collection, GDPR compliant
+- **Lightweight**: Minimal impact on page load times
+- **Open Source**: Self-hostable with full control over your data
+- **Simple**: Clean interface with essential metrics
+
+## Quick Setup
+
+### 1. Get Your Umami Account
+
+Choose one of these options:
+
+**Option A: Umami Cloud (Recommended)**
+1. Visit [Umami Cloud](https://cloud.umami.is/)
+2. Create a free account
+3. Add your website to get a Website ID
+
+**Option B: Self-Hosted**
+1. Deploy Umami on your preferred platform
+2. Follow the [official installation guide](https://umami.is/docs/install)
+3. Add your website to get a Website ID
+
+### 2. Configure Environment Variables
+
+Add your Umami configuration to your `.env.local` file:
+
+```bash
+# Required: Your website ID from Umami dashboard
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id-here
+
+# Optional: Custom Umami instance URL (defaults to cloud.umami.is)
+NEXT_PUBLIC_UMAMI_URL=https://cloud.umami.is/script.js
+```
+
+### 3. Verify Installation
+
+The tracking script is automatically included in your application when the environment variables are set. Visit your website and check your Umami dashboard to see real-time data.
+
+## Event Tracking
+
+Umami supports custom event tracking to measure user interactions beyond page views. This starter kit provides a reusable analytics service that eliminates boilerplate code and provides type safety.
+
+### Analytics Service (Recommended)
+
+Import the analytics service for clean, type-safe event tracking:
+
+```typescript
+import { analytics } from '@/lib/services/analytics';
+```
+
+**Benefits:**
+- 🔒 **Type Safety**: Full TypeScript support with autocomplete
+- 🚀 **No Boilerplate**: Eliminates repetitive `window.umami` checks
+- 📊 **Consistent API**: Standardized event names and data structures
+- 🛠️ **Easy Maintenance**: Single service for all analytics logic
+
+### Direct Umami Functions (Advanced)
+
+For advanced use cases, you can still access the `window.umami` object directly:
+
+#### `umami.track()`
+
+Track custom events with optional data:
+
+```javascript
+// Simple event tracking
+umami.track('button-click');
+
+// Event with custom data
+umami.track('form-submit', {
+  form_type: 'contact',
+  user_type: 'premium'
+});
+
+// Track page views manually
+umami.track();
+```
+
+#### `umami.identify()`
+
+Associate session data with users:
+
+```javascript
+// Identify user with custom ID
+umami.identify('user-123');
+
+// Add session data
+umami.identify('user-123', {
+  plan: 'premium',
+  signup_date: '2024-01-15'
+});
+
+// Add session data without ID
+umami.identify({
+  theme: 'dark',
+  language: 'en'
+});
+```
+
+### HTML Attribute Tracking
+
+You can also track events using HTML data attributes:
+
+```html
+<!-- Simple event tracking -->
+<button data-umami-event="signup-button">Sign Up</button>
+
+<!-- Event with custom properties -->
+<button
+  data-umami-event="download-file"
+  data-umami-event-file-type="pdf"
+  data-umami-event-file-size="2.5mb">
+  Download PDF
+</button>
+```
+
+## Analytics Service API
+
+The analytics service provides organized methods for different event categories:
+
+### AI Events
+
+Track AI-related interactions with type-safe methods:
+
+```typescript
+// Text generation tracking
+analytics.ai.generateText.submit({
+  promptLength: prompt.length,
+  promptWords: prompt.trim().split(/\s+/).length
+});
+
+analytics.ai.generateText.success({
+  responseLength: response.length,
+  responseWords: response.trim().split(/\s+/).length
+});
+
+analytics.ai.generateText.error({
+  errorType: 'api_error'
+});
+
+// Image generation tracking
+analytics.ai.generateImage.submit({
+  promptLength: prompt.length,
+  promptWords: prompt.trim().split(/\s+/).length
+});
+
+analytics.ai.generateImage.success();
+analytics.ai.generateImage.error({ errorType: 'api_error' });
+```
+
+### File Events
+
+Track file operations with detailed context:
+
+```typescript
+// File uploads
+analytics.file.upload.success({
+  uploadType: 'dashboard',
+  fileCount: 3,
+  totalSize: 1024000,
+  fileTypes: ['image', 'video']
+});
+
+analytics.file.upload.error({
+  uploadType: 'dropzone',
+  errorMessage: 'File too large'
+});
+
+// File actions
+analytics.file.download({
+  fileType: 'image/png',
+  fileSize: 512000
+});
+
+analytics.file.view({ fileType: 'application/pdf' });
+analytics.file.delete({ fileName: 'document.pdf' });
+analytics.file.clearAll({ fileCount: 5 });
+```
+
+### UI Interactions
+
+Track user interface interactions:
+
+```typescript
+// Documentation links
+analytics.ui.docsLink({
+  page: 'generate-text',
+  section: 'overview'
+});
+
+// Example prompt usage
+analytics.ui.examplePrompt({
+  promptIndex: 0,
+  promptType: 'image_generation'
+});
+
+// Settings changes
+analytics.ui.uploadMethodChange('s3');
+analytics.ui.settingChange('maxFileSize', 10);
+```
+
+### Utility Methods
+
+Common tracking patterns made simple:
+
+```typescript
+// Image downloads
+analytics.utils.imageDownload('png');
+
+// Error tracking
+analytics.utils.error(new Error('Something went wrong'), 'file-upload');
+
+// Performance timing
+analytics.utils.timing('api-call', 1250, 'ai-generation');
+```
+
+## Playground Examples
+
+The starter kit includes comprehensive event tracking examples in the playground pages:
+
+### Real Implementation Examples
+
+**Generate Text Page:**
+```typescript
+// Track form submission
+analytics.ai.generateText.submit({
+  promptLength: prompt.length,
+  promptWords: prompt.trim().split(/\s+/).length
+});
+
+// Track successful generation
+analytics.ai.generateText.success({
+  responseLength: data.text?.length || 0,
+  responseWords: data.text ? data.text.trim().split(/\s+/).length : 0
+});
+```
+
+**Generate Image Page:**
+```typescript
+// Track image generation with error handling
+try {
+  analytics.ai.generateImage.submit({ promptLength: prompt.length });
+  // ... API call
+  analytics.ai.generateImage.success();
+} catch (err) {
+  analytics.ai.generateImage.error({ errorType: 'api_error' });
+}
+
+// Track image download
+analytics.utils.imageDownload('png');
+```
+
+**File Upload Page:**
+```typescript
+// Track upload results
+if (state.success) {
+  analytics.file.upload.success({
+    uploadType: 'dashboard',
+    fileCount: state.uploadedFiles.length,
+    totalSize: state.uploadedFiles.reduce((acc, file) => acc + file.size, 0),
+    fileTypes: [...new Set(state.uploadedFiles.map(file => file.contentType.split('/')[0]))]
+  });
+} else {
+  analytics.file.upload.error({
+    uploadType: 'dashboard',
+    errorMessage: state.error
+  });
+}
+```
+
+## Best Practices
+
+### Using the Analytics Service
+
+**✅ Recommended:**
+```typescript
+// Use the analytics service for consistency
+analytics.ai.generateText.submit({ promptLength: prompt.length });
+analytics.file.download({ fileType: 'image/png', fileSize: 1024 });
+analytics.ui.docsLink({ page: 'setup', section: 'config' });
+```
+
+**❌ Avoid:**
+```typescript
+// Don't use manual tracking when service methods exist
+if (typeof window !== 'undefined' && window.umami) {
+  window.umami.track('generate-text-submit', { prompt_length: prompt.length });
+}
+```
+
+### Custom Events
+
+For events not covered by the service, use the `track` method:
+
+```typescript
+// Custom business logic events
+analytics.track('subscription-upgrade', {
+  plan: 'premium',
+  duration: 'yearly'
+});
+
+// Feature usage tracking
+analytics.track('advanced-filter-used', {
+  filters_count: 3,
+  category: 'search'
+});
+```
+
+### Data Limits
+
+Be aware of Umami's data constraints:
+
+- Event names: Max 50 characters
+- String values: Max 500 characters
+- Numbers: Max 4 decimal places
+- Objects: Max 50 properties
+
+## TypeScript Support
+
+The analytics service provides full TypeScript support out of the box:
+
+```typescript
+import { analytics } from '@/lib/services/analytics';
+import type { AIEventData, FileEventData, UIEventData } from '@/lib/services/analytics';
+
+// Type-safe event tracking with autocomplete
+analytics.ai.generateText.submit({
+  promptLength: 150,  // ✅ Type-safe
+  promptWords: 25     // ✅ Type-safe
+  // invalidField: 123   // ❌ TypeScript error
+});
+
+// Custom event data with types
+const fileData: FileEventData = {
+  fileType: 'image/png',
+  fileSize: 1024000,
+  fileName: 'screenshot.png'
+};
+
+analytics.file.download(fileData);
+```
+
+**Advanced Usage:**
+```typescript
+// For direct Umami access (when needed)
+declare global {
+  interface Window {
+    umami?: {
+      track: (event?: string, data?: Record<string, any>) => void;
+      identify: (data?: Record<string, any>) => void;
+      identify: (id: string, data?: Record<string, any>) => void;
+    };
+  }
+}
+```
+
+## Privacy Features
+
+Umami's privacy-focused approach means:
+
+- **No cookies**: Users can't be tracked across sessions
+- **No personal data**: IP addresses are anonymized
+- **GDPR compliant**: No consent banners required
+- **Respect DNT**: Honors Do Not Track browser settings
+
+## Troubleshooting
+
+### Analytics Not Showing
+
+1. **Check Environment Variables**: Ensure `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set
+2. **Verify Website ID**: Confirm the ID matches your Umami dashboard
+3. **Check Browser Console**: Look for any JavaScript errors
+4. **Test with Service**: Manually trigger events in browser console
+   ```javascript
+   analytics.track('test-event', { timestamp: Date.now() });
+   ```
+
+### Events Not Tracking
+
+1. **Import Check**: Ensure analytics service is properly imported
+   ```typescript
+   import { analytics } from '@/lib/services/analytics';
+   ```
+2. **Wait for Page Load**: The service automatically handles browser detection
+3. **Check Event Names**: Verify names are under 50 characters
+4. **Validate Data**: Ensure custom data meets size limits
+5. **Test in Network Tab**: Check for outgoing requests to your Umami instance
+
+### Service Issues
+
+1. **TypeScript Errors**: Ensure you're using the correct data types
+2. **Method Not Found**: Check the API reference for available methods
+3. **Console Warnings**: The service logs warnings for failed tracking attempts
+
+## Useful Links
+
+- [Umami Official Documentation](https://umami.is/docs)
+- [Umami Cloud Dashboard](https://cloud.umami.is/)
+- [GitHub Repository](https://github.com/umami-software/umami)
+- [Community Discord](https://discord.gg/4dz4zcXYrQ)
+
+## Next Steps
+
+1. **Set up your Umami account** and get your Website ID
+2. **Configure environment variables** in your `.env.local`
+3. **Import the analytics service** in your components:
+   ```typescript
+   import { analytics } from '@/lib/services/analytics';
+   ```
+4. **Add event tracking** using the service methods
+5. **Deploy your application** and verify tracking works
+6. **Monitor your analytics** in the Umami dashboard
+
+## Migration from Manual Tracking
+
+If you have existing manual Umami tracking, migrate to the service:
+
+**Before:**
+```javascript
+if (typeof window !== 'undefined' && window.umami) {
+  window.umami.track('button-click', { page: 'home' });
+}
+```
+
+**After:**
+```typescript
+analytics.ui.click('button', { page: 'home' });
+// or for custom events:
+analytics.track('button-click', { page: 'home' });
+```
+
+The service automatically handles browser detection and provides better developer experience with TypeScript support.
