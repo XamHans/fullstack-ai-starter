@@ -75,7 +75,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       filename: file.name,
       secureFilename,
       size: file.size,
-      contentType: file.type,
+      contentType: file.type || 'application/octet-stream',
       warnings: fileValidation.warnings,
     };
   } catch (error) {

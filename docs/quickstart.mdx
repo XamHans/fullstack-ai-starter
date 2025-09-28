@@ -1,256 +1,107 @@
 ---
 title: "Quick Start Guide"
-description: "Get up and running with the Fullstack AI Starter in minutes. This guide covers installation, setup, and your first API calls."
+description: "Get your AI-powered application running in minutes with this step-by-step setup guide"
 ---
+
+Get from zero to a fully functional AI application in under 5 minutes. This guide walks you through installation, configuration, and verification.
 
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
-
-- **Node.js** (v18 or later)
-- **PostgreSQL** database
-- **Git** for version control
+- **Node.js** (v18+)
+- **PostgreSQL** database (or Neon account)
+- **AI Provider API Key** (OpenAI, Anthropic, etc.)
 
 ## Installation
 
 <Steps>
-  <Step title="Clone the repository">
+  <Step title="Clone and install">
     ```bash
     git clone https://github.com/yourcompany/fullstack-ai-starter.git
     cd fullstack-ai-starter
+    npm install
     ```
   </Step>
 
-  <Step title="Install dependencies">
-    <CodeGroup>
-      ```bash npm
-      npm install
-      ```
-
-      ```bash pnpm
-      pnpm install
-      ```
-
-      ```bash yarn
-      yarn install
-      ```
-    </CodeGroup>
-  </Step>
-
-  <Step title="Set up environment variables">
-    Copy the example environment file and update it with your credentials:
-
+  <Step title="Environment setup">
+    Copy the example file and add your credentials:
     ```bash
     cp .env.example .env.local
     ```
 
-    Update the following variables in `.env.local`:
-
+    Essential environment variables:
     ```env
+    # Database
     DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+
+    # AI Providers
+    OPENAI_API_KEY="sk-..."
+    ANTHROPIC_API_KEY="sk-ant-..."
+
+    # Authentication
+    BETTER_AUTH_SECRET="your-secret-key"
     GOOGLE_CLIENT_ID="your-google-client-id"
     GOOGLE_CLIENT_SECRET="your-google-client-secret"
-    NEXTAUTH_SECRET="your-secret-key"
+
+    # File Storage (R2/S3)
+    R2_ACCOUNT_ID="your-account-id"
+    R2_ACCESS_KEY_ID="your-access-key"
+    R2_SECRET_ACCESS_KEY="your-secret-key"
+    R2_BUCKET_NAME="your-bucket"
+
+    # Analytics (optional)
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID="your-umami-id"
+    LANGFUSE_SECRET_KEY="sk-lf-..."
     ```
   </Step>
 
-  <Step title="Set up the database">
-    Generate and run the database migrations:
-
+  <Step title="Database setup">
+    Run migrations to create tables:
     ```bash
     npm run db:generate
     npm run db:migrate
     ```
-
-    Optionally, seed the database with sample data:
-
-    ```bash
-    npm run db:seed
-    ```
   </Step>
 
-  <Step title="Start the development server">
+  <Step title="Start development">
     ```bash
     npm run dev
     ```
-
-    Your application will be available at [http://localhost:3000](http://localhost:3000)
+    Visit http://localhost:3000
   </Step>
 </Steps>
 
-## Testing Your Setup
+## Verify Setup
 
-### 1. Check the API Health
+Test each feature to confirm everything works:
 
-Visit [http://localhost:3000/api/health](http://localhost:3000/api/health) to verify the API is working.
-
-### 2. Authentication Flow
-
-1. Navigate to the login page
-2. Sign up with email/password or use Google OAuth
-3. Access the protected dashboard
-
-### 3. Test API Endpoints
-
-Try making API calls to the posts endpoints:
-
-<CodeGroup>
-  ```bash cURL
-  # Get all posts (public)
-  curl http://localhost:3000/api/posts
-
-  # Create a post (requires authentication)
-  curl -X POST http://localhost:3000/api/posts \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer YOUR_TOKEN" \
-    -d '{"title": "Hello World", "content": "My first post!"}'
-  ```
-
-  ```javascript JavaScript
-  // Get all posts
-  const response = await fetch('/api/posts');
-  const posts = await response.json();
-
-  // Create a new post (authenticated)
-  const newPost = await fetch('/api/posts', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      title: 'Hello World',
-      content: 'My first post!'
-    })
-  });
-  ```
-</CodeGroup>
-
-## Development Workflow
-
-### Running Tests
-
-<CodeGroup>
-  ```bash Unit Tests
-  npm run test
-  ```
-
-  ```bash Integration Tests
-  npm run test:integration
-  ```
-
-  ```bash BDD Tests
-  npm run test:bdd
-  ```
-
-  ```bash All Tests
-  npm run test:all
-  ```
-</CodeGroup>
-
-### Database Operations
-
-<CodeGroup>
-  ```bash Generate Migration
-  npm run db:generate
-  ```
-
-  ```bash Run Migration
-  npm run db:migrate
-  ```
-
-  ```bash Database Studio
-  npm run db:studio
-  ```
-</CodeGroup>
-
-### Code Quality
-
-<CodeGroup>
-  ```bash Linting
-  npm run lint
-  ```
-
-  ```bash Type Checking
-  npm run type-check
-  ```
-
-  ```bash Build
-  npm run build
-  ```
-</CodeGroup>
-
-## Project Structure
-
-```
-├── app/                    # Next.js app directory
-│   ├── (main)/            # Main application pages
-│   └── api/               # API routes
-├── components/            # Reusable React components
-├── docs/                 # Documentation (you're here!)
-├── lib/                  # Core libraries and utilities
-│   ├── api/              # API utilities and wrappers
-│   ├── auth.ts           # Authentication configuration
-│   ├── container/        # Dependency injection
-│   └── db/               # Database configuration
-├── modules/              # Business domain modules
-│   ├── users/            # User domain
-│   └── posts/            # Posts domain
-└── tests/                # Test utilities and setup
-```
+1. **Homepage**: Visit http://localhost:3000
+2. **Authentication**: Sign up/login with email or Google
+3. **AI Generation**: Visit `/playground/generate-text`
+4. **File Uploads**: Visit `/playground/file-upload`
+5. **Chat Interface**: Visit `/playground/chat`
 
 ## Next Steps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card
-    title="Explore the Architecture"
-    icon="building"
-    href="/architecture/code-architecture"
+    title="Build AI Features"
+    icon="robot"
+    href="/ai-overview"
   >
-    Learn about the modular architecture and design patterns used in this starter.
+    Add text generation, chat interfaces, and streaming responses to your app.
   </Card>
-
   <Card
-    title="API Documentation"
-    icon="code"
-    href="/api-reference/introduction"
+    title="Configure Platform"
+    icon="server"
+    href="/authentication"
   >
-    Understand the robust API patterns and authentication system.
+    Set up authentication, database connections, and file uploads.
   </Card>
-
   <Card
-    title="Database Schema"
-    icon="database"
-    href="/architecture/database"
+    title="Monitor & Analyze"
+    icon="chart-line"
+    href="/observability"
   >
-    Explore the database design and ORM usage.
-  </Card>
-
-  <Card
-    title="Testing Strategy"
-    icon="check-circle"
-    href="/architecture/testing-strategy"
-  >
-    Learn about the comprehensive testing approach.
+    Track AI usage, performance, and user analytics in production.
   </Card>
 </CardGroup>
-
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title="Database connection issues">
-    Make sure PostgreSQL is running and the `DATABASE_URL` in your `.env.local` file is correct. Check that the database exists and the user has proper permissions.
-  </Accordion>
-
-  <Accordion title="Authentication not working">
-    Verify your OAuth credentials are correct in `.env.local`. For Google OAuth, make sure you've added `http://localhost:3000` to your allowed origins in the Google Console.
-  </Accordion>
-
-  <Accordion title="Build errors">
-    Run `npm run lint` and `npm run type-check` to identify any code issues. Make sure all dependencies are installed with `npm install`.
-  </Accordion>
-
-  <Accordion title="Tests failing">
-    Ensure your test database is properly configured. Run `npm run test:setup` if available, or check the test configuration in `vitest.config.ts`.
-  </Accordion>
-</AccordionGroup>

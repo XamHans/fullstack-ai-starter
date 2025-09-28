@@ -1,0 +1,153 @@
+---
+title: "API Architecture"
+description: "Robust API pattern with standardized error handling, authentication wrappers, and clean architecture principles"
+---
+
+# API Architecture
+
+## What
+
+A robust API pattern built on Next.js 15 Route Handlers with standardized error handling, authentication wrappers, and consistent response formatting. The pattern uses higher-order functions to abstract common concerns like authentication and error handling.
+
+## Why
+
+- **Consistency**: All endpoints return standardized JSON responses
+- **Security**: Authentication is handled through reusable wrappers
+- **DRY Principle**: Common logic is centralized, not repeated in every route
+- **Developer Experience**: Clean, predictable API responses make frontend development easier
+
+## How
+
+### Core Components
+
+1. **ApiError Class**: Custom error with HTTP status codes
+2. **Response Utilities**: Standardized success/error response formatting
+3. **Wrapper Functions**: Higher-order functions for authentication and error handling
+
+### Implementation Steps
+
+1. Set up base API utilities in `lib/api/base.ts`
+2. Create authentication configuration in `lib/auth.ts`
+3. Build route handlers using the wrapper functions
+4. Handle business logic in service layer
+
+### API Response Structure
+
+All responses follow this format:
+```typescript
+{
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+  code?: string;
+}
+```
+
+## Example
+
+### 1. Base API Setup
+```typescript
+// lib/api/base.ts
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+
+export class ApiError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export function createApiResponse<T>(data?: T, statusCode = 200) {
+  return NextResponse.json({ success: true, data }, { status: statusCode });
+}
+
+export async function withErrorHandling<T>(
+  handler: () => Promise<T>
+): Promise<NextResponse> {
+  try {
+    const result = await handler();
+    return createApiResponse(result);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return NextResponse.json(
+        { success: false, error: error.message, code: error.code },
+        { status: error.statusCode }
+      );
+    }
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export function withAuthentication<T>(
+  handler: (session: any, req: NextRequest, params: any) => Promise<T>
+) {
+  return async (req: NextRequest, { params }: { params: any }) => {
+    return withErrorHandling(async () => {
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (!session) {
+        throw new ApiError(401, "Unauthorized");
+      }
+      return handler(session, req, params);
+    });
+  };
+}
+```
+
+### 2. Protected API Route
+```typescript
+// app/api/posts/[id]/route.ts
+import { getContainer } from "@/lib/container";
+import { withAuthentication, ApiError } from "@/lib/api/base";
+
+export const PUT = withAuthentication(async (session, request, { params }) => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  // Check if post exists and user owns it
+  const existingPost = await postService.getPostById(params.id);
+  if (!existingPost) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  if (existingPost.authorId !== session.user.id) {
+    throw new ApiError(403, "You don't have permission to edit this post");
+  }
+
+  const body = await request.json();
+  const updatedPost = await postService.updatePost(params.id, body);
+
+  return updatedPost;
+});
+```
+
+### 3. Public API Route
+```typescript
+// app/api/posts/route.ts
+import { getContainer } from "@/lib/container";
+import { withErrorHandling } from "@/lib/api/base";
+
+export const GET = withErrorHandling(async () => {
+  const container = getContainer();
+  const postService = container.postService;
+
+  const posts = await postService.getPosts();
+  return posts;
+});
+```
+
+## Request Flow
+
+1. **Request Received**: Next.js Route Handler processes the request
+2. **Wrapper Execution**: Authentication wrapper checks for valid session
+3. **Business Logic**: Handler executes with session, request, and params
+4. **Response Formatting**: Results are automatically formatted into standardized JSON
+5. **Error Handling**: Any errors are caught and formatted consistently

@@ -17,6 +17,9 @@ export interface AIEventData {
   responseWords?: number;
   errorType?: string;
   model?: string;
+  messageLength?: number;
+  conversationLength?: number;
+  clearedMessageCount?: number;
 }
 
 export interface FileEventData {
@@ -97,12 +100,14 @@ class AnalyticsService {
       submit: (data: Pick<AIEventData, 'promptLength' | 'promptWords'>) => {
         this.track('generate-text-submit', data);
       },
-      success: (data: Pick<AIEventData, 'responseLength' | 'responseWords'>) => {
+      success: (
+        data: Pick<AIEventData, 'responseLength' | 'responseWords'>
+      ) => {
         this.track('generate-text-success', data);
       },
       error: (data: Pick<AIEventData, 'errorType'>) => {
         this.track('generate-text-error', data);
-      }
+      },
     },
 
     generateImage: {
@@ -114,48 +119,70 @@ class AnalyticsService {
       },
       error: (data: Pick<AIEventData, 'errorType'>) => {
         this.track('generate-image-error', data);
-      }
-    }
+      },
+    },
+
+    chat: {
+      send: (data: Pick<AIEventData, 'messageLength' | 'conversationLength'>) => {
+        this.track('chat-message-send', data);
+      },
+      success: (
+        data: Pick<AIEventData, 'responseLength' | 'conversationLength'>
+      ) => {
+        this.track('chat-response-received', data);
+      },
+      error: (data: Pick<AIEventData, 'errorType'>) => {
+        this.track('chat-error', data);
+      },
+      clear: (data: Pick<AIEventData, 'clearedMessageCount'>) => {
+        this.track('chat-conversation-cleared', data);
+      },
+    },
   };
 
   // File-specific tracking methods
   file = {
     upload: {
-      success: (data: Pick<FileEventData, 'uploadType' | 'fileCount' | 'totalSize' | 'fileTypes'>) => {
+      success: (
+        data: Pick<
+          FileEventData,
+          'uploadType' | 'fileCount' | 'totalSize' | 'fileTypes'
+        >
+      ) => {
         this.track('file-upload-success', data);
       },
       error: (data: Pick<FileEventData, 'uploadType' | 'errorMessage'>) => {
         this.track('file-upload-error', data);
-      }
+      },
     },
 
     download: (data: Pick<FileEventData, 'fileType' | 'fileSize'>) => {
       this.track('file-download', {
         action: 'download',
         file_type: data.fileType?.split('/')[0],
-        file_size: data.fileSize
+        file_size: data.fileSize,
       });
     },
 
     view: (data: Pick<FileEventData, 'fileType'>) => {
       this.track('file-view', {
         action: 'view',
-        file_type: data.fileType?.split('/')[0]
+        file_type: data.fileType?.split('/')[0],
       });
     },
 
     delete: (data?: Pick<FileEventData, 'fileName'>) => {
       this.track('file-delete', {
         action: 'delete',
-        ...(data?.fileName && { file_key: data.fileName })
+        ...(data?.fileName && { file_key: data.fileName }),
       });
     },
 
     clearAll: (data: Pick<FileEventData, 'fileCount'>) => {
       this.track('files-clear-all', {
-        cleared_count: data.fileCount
+        cleared_count: data.fileCount,
       });
-    }
+    },
   };
 
   // UI interaction tracking methods
@@ -171,7 +198,7 @@ class AnalyticsService {
     examplePrompt: (data: { promptIndex: number; promptType: string }) => {
       this.track('example-prompt-click', {
         prompt_index: data.promptIndex,
-        prompt_type: data.promptType
+        prompt_type: data.promptType,
       });
     },
 
@@ -181,7 +208,7 @@ class AnalyticsService {
 
     uploadMethodChange: (method: string) => {
       this.track('upload-method-change', { method });
-    }
+    },
   };
 
   // Utility methods for common patterns
@@ -192,7 +219,7 @@ class AnalyticsService {
     imageDownload: (format = 'png') => {
       this.track('image-download', {
         action: 'download',
-        format
+        format,
       });
     },
 
@@ -202,7 +229,7 @@ class AnalyticsService {
     error: (error: Error | string, context?: string) => {
       this.track('app-error', {
         error_message: typeof error === 'string' ? error : error.message,
-        context
+        context,
       });
     },
 
@@ -213,9 +240,9 @@ class AnalyticsService {
       this.track('performance-timing', {
         name,
         duration,
-        category
+        category,
       });
-    }
+    },
   };
 }
 
@@ -224,6 +251,3 @@ export const analytics = new AnalyticsService();
 
 // Export service class for testing or multiple instances
 export { AnalyticsService };
-
-// Export types for external use
-export type { AIEventData, FileEventData, UIEventData };

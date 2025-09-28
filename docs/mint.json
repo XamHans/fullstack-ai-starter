@@ -55,43 +55,27 @@
       "pages": ["introduction", "quickstart"]
     },
     {
-      "group": "AI SDK",
-      "icon": "robot",
+      "group": "Core Platform",
+      "icon": "server",
       "pages": [
-        "ai-sdk/overview",
-        "ai-sdk/getting-started",
-        {
-          "group": "Text Generation",
-          "icon": "message-square",
-          "pages": [
-            "ai-sdk/generate-text/overview",
-            "ai-sdk/generate-text/examples",
-            "ai-sdk/generate-text/api-reference"
-          ]
-        },
-        "ai-sdk/best-practices"
-      ]
-    },
-    {
-      "group": "Playground",
-      "icon": "folder",
-      "pages": [
+        "authentication",
+        "database",
+        "api-architecture",
         "file-uploads"
       ]
     },
     {
-      "group": "Architecture",
-      "icon": "sitemap",
+      "group": "AI Capabilities",
+      "icon": "robot",
       "pages": [
-        "architecture/code-architecture",
-        "architecture/api-architecture",
-        "architecture/database",
-        "architecture/authentication",
-        "architecture/testing-strategy"
+        "ai-overview",
+        "text-generation",
+        "ai-chat",
+        "ai-best-practices"
       ]
     },
     {
-      "group": "Observability",
+      "group": "Monitoring & Analytics",
       "icon": "chart-line",
       "pages": [
         "observability",
@@ -99,7 +83,7 @@
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "API Reference",
       "icon": "book-open",
       "pages": ["api-reference/introduction"]
     }

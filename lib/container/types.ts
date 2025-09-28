@@ -3,6 +3,7 @@ import type * as schema from '@/lib/db';
 import type { CustomLogger } from '@/lib/logger';
 import type { PostService } from '@/modules/posts/services/post.service';
 import type { UserService } from '@/modules/users/services/user.service';
+import type { EmailService } from '@/lib/services/email';
 
 export interface DatabaseConnection {
   db: PostgresJsDatabase<typeof schema>;
@@ -15,6 +16,7 @@ export interface ExternalServices {
 export interface BusinessServices {
   userService: UserService;
   postService: PostService;
+  emailService: EmailService;
 }
 
 // Flattened container structure for easier access
@@ -26,17 +28,18 @@ export interface Container {
   // Business services (flattened for direct access)
   userService: UserService;
   postService: PostService;
+  emailService: EmailService;
 }
 
 export interface ServiceDependencies {
   db: PostgresJsDatabase<typeof schema>;
   logger: CustomLogger;
   // Add reference to services for composition
-  services?: Pick<Container, 'userService' | 'postService'>;
+  services?: Pick<Container, 'userService' | 'postService' | 'emailService'>;
 }
 
 // Service extraction types for better DX
-export type Services = Pick<Container, 'userService' | 'postService'>;
+export type Services = Pick<Container, 'userService' | 'postService' | 'emailService'>;
 export type ServiceName = keyof Services;
 export type ServiceInstance<T extends ServiceName> = Services[T];
 

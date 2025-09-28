@@ -1,6 +1,5 @@
 'use client';
 
-import { analytics } from '@/lib/services/analytics';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { analytics } from '@/lib/services/analytics';
 import { Book, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useId, useState } from 'react';
@@ -37,7 +37,7 @@ export default function GenerateTextPage() {
     // Track text generation request
     analytics.ai.generateText.submit({
       promptLength: prompt.length,
-      promptWords: prompt.trim().split(/\s+/).length
+      promptWords: prompt.trim().split(/\s+/).length,
     });
 
     try {
@@ -54,20 +54,24 @@ export default function GenerateTextPage() {
       }
 
       const data = await response.json();
-      setResult(data.text);
+      console.log('Generated text:', JSON.stringify(data));
+      setResult(data?.data.text);
 
       // Track successful generation
       analytics.ai.generateText.success({
         responseLength: data.text?.length || 0,
-        responseWords: data.text ? data.text.trim().split(/\s+/).length : 0
+        responseWords: data.text ? data.text.trim().split(/\s+/).length : 0,
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Something went wrong';
       setError(errorMessage);
 
       // Track generation error
       analytics.ai.generateText.error({
-        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error'
+        errorType: errorMessage.includes('Failed to generate')
+          ? 'api_error'
+          : 'unknown_error',
       });
     } finally {
       setLoading(false);
@@ -89,7 +93,12 @@ export default function GenerateTextPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => analytics.ui.docsLink({ page: 'generate-text', section: 'overview' })}
+                onClick={() =>
+                  analytics.ui.docsLink({
+                    page: 'generate-text',
+                    section: 'overview',
+                  })
+                }
               >
                 <Book className="h-4 w-4 mr-2" />
                 See Documentation

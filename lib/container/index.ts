@@ -4,6 +4,7 @@ import * as schema from '@/lib/db';
 import { createLogger } from '@/lib/logger';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
+import { EmailService } from '@/lib/services/email';
 import type {
   Container,
   DatabaseConnection,
@@ -48,9 +49,10 @@ export function createContainer(overrides?: Partial<Container>): Container {
 
   const userService = overrides?.userService || new UserService(serviceDependencies);
   const postService = overrides?.postService || new PostService(serviceDependencies);
+  const emailService = overrides?.emailService || new EmailService();
 
   // Update service dependencies with service references for composition
-  const services: Services = { userService, postService };
+  const services: Services = { userService, postService, emailService };
   serviceDependencies.services = services;
 
   return {
@@ -62,6 +64,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     // Flattened services for direct access
     userService,
     postService,
+    emailService,
   };
 }
 
@@ -70,6 +73,7 @@ export function getServices(container: Container): Services {
   return {
     userService: container.userService,
     postService: container.postService,
+    emailService: container.emailService,
   };
 }
 

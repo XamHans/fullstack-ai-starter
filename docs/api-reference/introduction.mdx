@@ -1,59 +1,80 @@
 ---
 title: "API Reference"
-description: "Complete API reference for the Fullstack AI Starter, including authentication, error handling, and endpoint documentation."
+description: "Complete REST API documentation with authentication, error handling, and standardized response patterns"
 ---
 
 # API Reference
 
-The Fullstack AI Starter provides a robust REST API built with Next.js 15 Route Handlers. All endpoints follow standardized patterns for authentication, error handling, and response formatting.
+## What
 
-## Base URL
+A complete REST API built with Next.js 15 Route Handlers featuring standardized error handling, authentication wrappers, and consistent response formatting. All endpoints follow the same patterns for predictable integration.
+
+## Why
+
+- **Consistency**: All endpoints return standardized JSON responses
+- **Security**: Built-in authentication and authorization patterns
+- **Reliability**: Comprehensive error handling and validation
+- **Developer Experience**: Predictable API behavior and clear documentation
+
+## How
+
+### Base URL
 
 ```
-https://yourapp.com/api
+Production: https://yourapp.com/api
+Development: http://localhost:3000/api
 ```
 
-For local development:
-```
-http://localhost:3000/api
-```
+### Authentication
 
-## Authentication
+Most endpoints require authentication via session or API key:
 
-Most API endpoints require authentication using session-based auth powered by better-auth.
+```javascript
+// Using session (browser)
+const response = await fetch('/api/posts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ title: 'My Post', content: 'Content' }),
+  credentials: 'include'
+});
 
-### Authentication Methods
-
-<CardGroup cols={2}>
-  <Card title="Session-based" icon="cookie">
-    Automatic session handling through HTTP-only cookies
-  </Card>
-  <Card title="OAuth Providers" icon="shield">
-    Google OAuth integration for seamless sign-in
-  </Card>
-</CardGroup>
-
-### Making Authenticated Requests
-
-For browser-based requests, authentication is handled automatically through cookies. For API clients, you'll need to include the session cookie:
-
-```bash
-curl -X GET "https://yourapp.com/api/posts" \
-  -H "Cookie: better-auth.session_token=your-session-token"
+// Using API key (server-to-server)
+const response = await fetch('/api/posts', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer your-api-key'
+  },
+  body: JSON.stringify({ title: 'My Post', content: 'Content' })
+});
 ```
 
-## Response Format
+### Response Format
 
-All API responses follow a standardized format:
+All API responses follow this structure:
+
+```typescript
+{
+  success: boolean;
+  data?: T;           // Response data (on success)
+  error?: string;     // Error message (on failure)
+  message?: string;   // Optional success message
+  code?: string;      // Optional error code
+}
+```
+
+## Example
 
 ### Success Response
 ```json
 {
   "success": true,
   "data": {
-    // Your data here
-  },
-  "message": "Optional success message"
+    "id": "post-123",
+    "title": "My Post",
+    "content": "Post content",
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
 }
 ```
 
@@ -61,179 +82,56 @@ All API responses follow a standardized format:
 ```json
 {
   "success": false,
-  "error": "Human-readable error message",
-  "code": "ERROR_CODE"
+  "error": "Post not found",
+  "code": "POST_NOT_FOUND"
 }
 ```
 
-## Status Codes
+## Available Endpoints
 
-| Code | Description |
-|------|-------------|
-| `200` | Success |
-| `201` | Created |
-| `400` | Bad Request |
-| `401` | Unauthorized |
-| `403` | Forbidden |
-| `404` | Not Found |
-| `429` | Too Many Requests |
-| `500` | Internal Server Error |
+### AI Generation
+- `POST /api/ai/generate-text` - Generate text with AI models
+- `POST /api/ai/chat` - Chat completions with streaming
+
+### File Management
+- `POST /api/upload` - Upload files to R2 storage
+- `GET /api/upload` - Generate presigned upload URLs
+- `DELETE /api/upload` - Delete uploaded files
+
+### Authentication
+- `POST /api/auth/sign-in` - Sign in with email/password
+- `POST /api/auth/sign-up` - Create new account
+- `POST /api/auth/sign-out` - Sign out current session
+- `GET /api/auth/session` - Get current session
+
+### Content Management
+- `GET /api/posts` - List posts (public)
+- `POST /api/posts` - Create post (authenticated)
+- `GET /api/posts/[id]` - Get specific post
+- `PUT /api/posts/[id]` - Update post (owner only)
+- `DELETE /api/posts/[id]` - Delete post (owner only)
 
 ## Error Codes
-
-Common error codes you might encounter:
 
 | Code | Description |
 |------|-------------|
 | `UNAUTHORIZED` | Authentication required |
 | `FORBIDDEN` | Insufficient permissions |
-| `INVALID_JSON` | Malformed request body |
-| `MISSING_FIELDS` | Required fields missing |
-| `POST_NOT_FOUND` | Requested post doesn't exist |
-| `USER_NOT_FOUND` | User doesn't exist |
+| `NOT_FOUND` | Resource not found |
+| `VALIDATION_ERROR` | Invalid request data |
+| `RATE_LIMITED` | Too many requests |
+| `INTERNAL_ERROR` | Server error |
 
 ## Rate Limiting
 
-API endpoints are rate-limited to ensure fair usage:
-
-- **Public endpoints**: 100 requests per minute per IP
-- **Authenticated endpoints**: 1000 requests per minute per user
+API endpoints are rate limited:
+- **Authenticated users**: 1000 requests/hour
+- **Anonymous users**: 100 requests/hour
+- **AI endpoints**: 50 requests/hour
 
 Rate limit headers are included in responses:
-
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1609459200
 ```
-
-## Pagination
-
-List endpoints support pagination using query parameters:
-
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
 ```
-GET /api/posts?limit=20&offset=0
-```
-
-### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `limit` | integer | 20 | Number of items to return (max 100) |
-| `offset` | integer | 0 | Number of items to skip |
-
-### Response
-
-Paginated responses include metadata:
-
-```json
-{
-  "success": true,
-  "data": [...],
-  "pagination": {
-    "limit": 20,
-    "offset": 0,
-    "total": 150,
-    "hasMore": true
-  }
-}
-```
-
-## Filtering and Search
-
-Many endpoints support filtering and search:
-
-```
-GET /api/posts?search=hello&category=tech&published=true
-```
-
-## SDK and Client Libraries
-
-We provide official client libraries for popular languages:
-
-<CardGroup cols={3}>
-  <Card title="JavaScript/TypeScript" icon="js">
-    ```bash
-    npm install @yourapp/client
-    ```
-  </Card>
-  <Card title="Python" icon="python">
-    ```bash
-    pip install yourapp-client
-    ```
-  </Card>
-  <Card title="Go" icon="golang">
-    ```bash
-    go get github.com/yourapp/go-client
-    ```
-  </Card>
-</CardGroup>
-
-## Example Usage
-
-<CodeGroup>
-  ```javascript JavaScript
-  // Using fetch
-  const response = await fetch('/api/posts', {
-    method: 'GET',
-    credentials: 'include' // Important for session cookies
-  });
-
-  const result = await response.json();
-
-  if (result.success) {
-    console.log('Posts:', result.data);
-  } else {
-    console.error('Error:', result.error);
-  }
-  ```
-
-  ```bash cURL
-  # Get all posts
-  curl -X GET "https://yourapp.com/api/posts" \
-    -H "Cookie: better-auth.session_token=your-session-token"
-
-  # Create a new post
-  curl -X POST "https://yourapp.com/api/posts" \
-    -H "Content-Type: application/json" \
-    -H "Cookie: better-auth.session_token=your-session-token" \
-    -d '{
-      "title": "My New Post",
-      "content": "This is the content of my post",
-      "published": true
-    }'
-  ```
-
-  ```python Python
-  import requests
-
-  # Configure session
-  session = requests.Session()
-  session.cookies.set('better-auth.session_token', 'your-session-token')
-
-  # Get all posts
-  response = session.get('https://yourapp.com/api/posts')
-
-  if response.json()['success']:
-      posts = response.json()['data']
-      print(f"Found {len(posts)} posts")
-  ```
-</CodeGroup>
-
-## Webhooks
-
-For real-time updates, consider using webhooks:
-
-```json
-{
-  "url": "https://your-app.com/webhook",
-  "events": ["post.created", "post.updated", "post.deleted"],
-  "secret": "your-webhook-secret"
-}
-```
-
-## Support
-
-- **Documentation**: You're reading it!
-- **GitHub Issues**: [Report bugs and request features](https://github.com/yourcompany/fullstack-ai-starter/issues)
-- **Support Email**: [support@yourcompany.com](mailto:support@yourcompany.com)

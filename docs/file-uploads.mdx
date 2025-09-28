@@ -1,66 +1,48 @@
 ---
-title: "File Uploads with Uppy"
-description: "Complete file upload solution with Uppy 5.0, R2 storage, security features, and reusable components."
+title: 'File Uploads'
+description: 'Secure file upload system with Shadcn UI components and R2 storage'
 ---
 
-# File Uploads with Uppy
+# File Uploads
 
-This starter kit includes a comprehensive file upload solution powered by [Uppy 5.0](https://uppy.io/), featuring secure file handling, multiple upload methods, and reusable components.
+## What
 
-## Overview
+A comprehensive file upload system built with Shadcn UI components, featuring secure file handling, R2 storage integration, and multiple upload interfaces.
 
-The file upload system provides:
-- **Secure file uploads** to Cloudflare R2 storage
-- **Multiple upload interfaces** (Dashboard, Dropzone, Button)
-- **Comprehensive validation** and security features
-- **Resumable uploads** support via TUS protocol
-- **Reusable hooks and services** for easy integration
+## Why
 
-## Quick Start
+- **Security**: Built-in validation, sanitization, and malware detection patterns
+- **Flexibility**: Multiple upload methods (Dashboard, Dropzone, Button) for different use cases
+- **Performance**: Direct R2 uploads with presigned URLs reduce server load
+- **Developer Experience**: Reusable components with TypeScript support
 
-Visit the playground at `/playground/file-upload` to test all upload features interactively.
+## How
 
-## Components
+### 1. Environment Setup
 
-### UppyDashboard
+```env
+R2_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret_key
+R2_BUCKET_NAME=your_bucket_name
+```
 
-Full-featured upload interface with drag & drop, progress tracking, and file management.
+### 2. Basic Implementation
+
+Import and use the upload components in your application:
 
 ```tsx
-import { UppyDashboard } from '@/components/file-upload';
+import { FileUploadDropzone } from '@/components/file-upload';
 
 function MyComponent() {
   return (
-    <UppyDashboard
+    <FileUploadDropzone
       uploadOptions={{
         maxFileSize: 10 * 1024 * 1024, // 10MB
         maxNumberOfFiles: 5,
         allowedFileTypes: ['image/*', 'video/*'],
-        compressionEnabled: true,
+        uploadMethod: 's3', // Direct upload to R2
       }}
-      onStateChange={(state) => console.log('Upload state:', state)}
-    />
-  );
-}
-```
-
-### UppyDropzone
-
-Minimalist drag & drop interface with file previews.
-
-```tsx
-import { UppyDropzone } from '@/components/file-upload';
-
-function ProfileUpload() {
-  return (
-    <UppyDropzone
-      uploadOptions={{
-        maxFileSize: 5 * 1024 * 1024, // 5MB
-        maxNumberOfFiles: 1,
-        allowedFileTypes: ['image/*'],
-        compressionEnabled: true,
-      }}
-      showPreview={true}
       onStateChange={(state) => {
         if (state.success) {
           console.log('Files uploaded:', state.uploadedFiles);
@@ -71,375 +53,64 @@ function ProfileUpload() {
 }
 ```
 
-### UppyButton
+### 3. Available Components
 
-Simple button interface for quick file uploads.
+- **FileUploadDashboard**: Full-featured upload interface with file management
+- **FileUploadDropzone**: Drag & drop interface with previews
+- **FileUploadButton**: Simple button for quick uploads
 
-```tsx
-import { UppyButton } from '@/components/file-upload';
+## Example
 
-function QuickUpload() {
-  return (
-    <UppyButton
-      uploadOptions={{
-        maxFileSize: 20 * 1024 * 1024, // 20MB
-        allowedFileTypes: ['application/pdf'],
-      }}
-      variant="outline"
-      onStateChange={(state) => {
-        if (state.error) {
-          console.error('Upload failed:', state.error);
-        }
-      }}
-    >
-      Upload PDF
-    </UppyButton>
-  );
-}
-```
-
-## Hooks
-
-### useFileUpload
-
-React hook for custom upload implementations.
+Complete working file upload with validation:
 
 ```tsx
-import { useFileUpload } from '@/lib/hooks/useFileUpload';
+'use client';
 
-function CustomUploader() {
-  const { uppy, state, addFiles, upload, reset } = useFileUpload({
-    maxFileSize: 10 * 1024 * 1024,
-    maxNumberOfFiles: 3,
-    uploadMethod: 'xhr', // 'xhr' | 's3' | 'tus'
-    compressionEnabled: true,
-  });
+import { useState } from 'react';
+import { FileUploadDropzone } from '@/components/file-upload';
 
-  const handleFileSelect = (files: File[]) => {
-    addFiles(files);
-  };
+export function ProfileImageUpload() {
+  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 
   return (
-    <div>
-      <input
-        type="file"
-        multiple
-        onChange={(e) => e.target.files && handleFileSelect(Array.from(e.target.files))}
+    <div className="space-y-4">
+      <FileUploadDropzone
+        uploadOptions={{
+          maxFileSize: 5 * 1024 * 1024, // 5MB
+          maxNumberOfFiles: 1,
+          allowedFileTypes: ['image/*'],
+          uploadMethod: 's3',
+        }}
+        showPreviews={true}
+        dropzoneText="Upload your profile picture"
+        onStateChange={(state) => {
+          if (state.success && state.uploadedFiles[0]) {
+            setUploadedFile(state.uploadedFiles[0].url);
+          }
+          if (state.error) {
+            console.error('Upload failed:', state.error);
+          }
+        }}
       />
 
-      {state.uploading && <div>Progress: {state.progress}%</div>}
-      {state.error && <div>Error: {state.error}</div>}
-      {state.success && <div>Upload successful!</div>}
-
-      <button onClick={upload} disabled={state.uploading}>
-        Upload Files
-      </button>
-      <button onClick={reset}>Reset</button>
+      {uploadedFile && (
+        <div>
+          <p>Profile picture uploaded successfully!</p>
+          <img src={uploadedFile} alt="Profile" className="w-32 h-32 rounded-full" />
+        </div>
+      )}
     </div>
   );
 }
 ```
 
-## Services
-
-### FileUploadService
-
-Service class for programmatic file uploads and validation.
-
-```tsx
-import { fileUploadService } from '@/lib/services/file-upload';
-
-// Upload single file
-const result = await fileUploadService.uploadFile(file, {
-  onProgress: (progress) => console.log(`Progress: ${progress.percentage}%`),
-  metadata: { userId: '123', category: 'profile' },
-  validationRules: {
-    maxFileSize: 5 * 1024 * 1024,
-    allowedMimeTypes: ['image/jpeg', 'image/png'],
-  },
-});
-
-// Upload multiple files
-const results = await fileUploadService.uploadFiles(files, {
-  onProgress: (fileIndex, progress) => console.log(`File ${fileIndex}: ${progress.percentage}%`),
-  onFileComplete: (fileIndex, result) => console.log(`File ${fileIndex} completed:`, result),
-});
-
-// Generate presigned URL
-const { presignedUrl, key } = await fileUploadService.getPresignedUrl(
-  'profile.jpg',
-  'image/jpeg'
-);
-
-// Delete file
-await fileUploadService.deleteFile(fileKey);
-
-// Validate files
-const validation = fileUploadService.validateFiles(files, {
-  maxFileSize: 10 * 1024 * 1024,
-  allowedMimeTypes: ['image/*'],
-  maxFiles: 5,
-});
-```
-
 ## Security Features
 
-### File Validation
+- Filename sanitization and path traversal prevention
+- MIME type validation and extension filtering
+- File size limits and malware detection patterns
+- Secure filename generation with timestamps
 
-Comprehensive validation with security checks:
+## Playground
 
-```tsx
-import { FileValidator } from '@/lib/middleware/file-validation';
-
-const validator = new FileValidator({
-  maxFileSize: 50 * 1024 * 1024, // 50MB
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-  allowedExtensions: ['.jpg', '.png', '.pdf'],
-  maxFiles: 10,
-});
-
-// Validate single file
-const result = validator.validateFile(file);
-if (!result.isValid) {
-  console.error('Validation errors:', result.errors);
-}
-
-// Generate secure filename
-const secureFilename = validator.generateSecureFilename('user input.pdf');
-// Output: "1704067200000_abc123_user_input.pdf"
-```
-
-### Security Features
-
-- **Filename sanitization** - Removes dangerous characters and path traversal attempts
-- **MIME type validation** - Prevents executable file uploads
-- **File size limits** - Configurable per upload type
-- **Extension filtering** - Whitelist approach for allowed file types
-- **Malware detection patterns** - Blocks potentially dangerous files
-- **Request validation** - Checks headers and origin
-- **Secure filename generation** - Timestamped and randomized filenames
-
-## Upload Methods
-
-### XHR Upload (Default)
-
-Direct upload to your API endpoint with full control.
-
-```tsx
-const uploadOptions = {
-  uploadMethod: 'xhr',
-  endpoint: '/api/upload',
-};
-```
-
-### S3-Compatible Upload
-
-Direct upload to R2/S3 using presigned URLs.
-
-```tsx
-const uploadOptions = {
-  uploadMethod: 's3',
-  endpoint: '/api/upload', // For presigned URL generation
-};
-```
-
-### TUS Resumable Upload
-
-For large files with resume capability.
-
-```tsx
-const uploadOptions = {
-  uploadMethod: 'tus',
-  endpoint: '/api/upload/tus',
-};
-```
-
-## Configuration
-
-### Environment Variables
-
-Configure your R2 storage credentials:
-
-```env
-R2_ACCOUNT_ID=your_account_id
-R2_ACCESS_KEY_ID=your_access_key
-R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET_NAME=your_bucket_name
-```
-
-### R2 CORS Configuration
-
-Configure your R2 bucket CORS settings:
-
-```json
-[
-  {
-    "AllowedOrigins": ["https://yourdomain.com", "http://localhost:3000"],
-    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
-    "AllowedHeaders": [
-      "Content-Type",
-      "Authorization",
-      "x-amz-date",
-      "x-amz-content-sha256",
-      "tus-resumable",
-      "upload-metadata",
-      "upload-length",
-      "upload-offset"
-    ],
-    "ExposeHeaders": [
-      "ETag",
-      "Location",
-      "tus-resumable",
-      "upload-offset"
-    ],
-    "MaxAgeSeconds": 3600
-  }
-]
-```
-
-## API Endpoints
-
-### POST /api/upload
-
-Upload files directly to the server.
-
-**Request:**
-```
-Content-Type: multipart/form-data
-
-file: [File object]
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "url": "https://bucket.account.r2.cloudflarestorage.com/uploads/file.jpg",
-  "key": "uploads/1704067200000_abc123_filename.jpg",
-  "filename": "original-filename.jpg",
-  "size": 1024000,
-  "contentType": "image/jpeg",
-  "warnings": []
-}
-```
-
-### GET /api/upload
-
-Generate presigned upload URL.
-
-**Query Parameters:**
-- `filename`: Original filename
-- `contentType`: MIME type
-
-**Response:**
-```json
-{
-  "presignedUrl": "https://...",
-  "key": "uploads/secure-filename.jpg",
-  "filename": "original.jpg",
-  "contentType": "image/jpeg"
-}
-```
-
-### DELETE /api/upload
-
-Delete uploaded file.
-
-**Query Parameters:**
-- `key`: File key to delete
-
-## Best Practices
-
-### 1. Choose the Right Component
-
-- **UppyDashboard**: Complex uploads with multiple files and management
-- **UppyDropzone**: Simple drag & drop with previews
-- **UppyButton**: Minimal interface for single files
-
-### 2. Configure Security
-
-```tsx
-// Restrict file types and sizes
-const secureOptions = {
-  maxFileSize: 10 * 1024 * 1024, // 10MB
-  allowedFileTypes: ['image/jpeg', 'image/png'], // Specific types
-  maxNumberOfFiles: 5,
-};
-
-// Use compression for images
-const compressionOptions = {
-  compressionEnabled: true,
-  // Uppy compressor will automatically optimize images
-};
-```
-
-### 3. Handle Upload States
-
-```tsx
-const handleStateChange = (state: FileUploadState) => {
-  if (state.uploading) {
-    // Show progress UI
-    setProgress(state.progress);
-  }
-
-  if (state.error) {
-    // Handle errors gracefully
-    toast.error(state.error);
-  }
-
-  if (state.success) {
-    // Process uploaded files
-    state.uploadedFiles.forEach(file => {
-      // Save file information to your database
-      saveToDB(file);
-    });
-  }
-};
-```
-
-### 4. Optimize for Performance
-
-```tsx
-// Use appropriate upload method
-const options = {
-  // Small files: XHR
-  uploadMethod: 'xhr',
-
-  // Large files: TUS for resumability
-  uploadMethod: 'tus',
-
-  // Direct to storage: S3
-  uploadMethod: 's3',
-};
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **CORS Errors**: Check R2 bucket CORS configuration
-2. **File Size Limits**: Verify both client and server limits
-3. **MIME Type Rejections**: Ensure file types are in allowed list
-4. **Upload Failures**: Check network connectivity and server logs
-
-### Debug Mode
-
-Enable debug logging:
-
-```tsx
-const uploadOptions = {
-  // ... other options
-  meta: { debug: true },
-};
-```
-
-## Migration from v4
-
-If upgrading from Uppy v4:
-
-1. Update import paths for CSS
-2. Replace deprecated plugins
-3. Use new component props
-4. Update event handlers
-
-See the [Uppy 5.0 migration guide](https://uppy.io/blog/uppy-5.0/) for detailed instructions.
+Visit `/playground/file-upload` to test all upload features interactively with different file types and configurations.

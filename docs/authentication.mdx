@@ -1,0 +1,153 @@
+---
+title: "Authentication"
+description: "Secure authentication system using better-auth with social providers and session management"
+---
+
+# Authentication
+
+## What
+
+A secure authentication system built with better-auth, supporting email/password and social provider authentication with session management and database integration.
+
+## Why
+
+- **Security**: Built-in protection against common authentication vulnerabilities
+- **Flexibility**: Support for multiple authentication methods (email, social providers)
+- **Session Management**: Secure session handling with automatic renewal
+- **Database Integration**: Seamless integration with Drizzle ORM
+
+## How
+
+### Setup and Configuration
+
+1. **Install Dependencies**
+```bash
+npm install better-auth
+```
+
+2. **Environment Variables**
+```env
+BETTER_AUTH_SECRET=your-secret-key
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+3. **Authentication Configuration**
+```typescript
+// lib/auth.ts
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/lib/db";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "pg",
+  }),
+  emailAndPassword: {
+    enabled: true,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+});
+```
+
+### Integration Steps
+
+1. Create authentication tables in your database
+2. Configure better-auth with your database adapter
+3. Set up social provider credentials
+4. Implement authentication middleware
+5. Use authentication in API routes
+
+## Example
+
+### 1. Protected API Route
+```typescript
+// app/api/profile/route.ts
+import { withAuthentication } from "@/lib/api/base";
+
+export const GET = withAuthentication(async (session, request) => {
+  // User is authenticated, session contains user data
+  return {
+    user: session.user,
+    message: "Profile data retrieved successfully"
+  };
+});
+```
+
+### 2. Client-Side Authentication
+```typescript
+// components/auth/login-form.tsx
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+export function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    const response = await fetch('/api/auth/sign-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (response.ok) {
+      window.location.href = '/dashboard';
+    }
+  };
+
+  return (
+    <form>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+      />
+      <Button onClick={handleLogin}>Sign In</Button>
+    </form>
+  );
+}
+```
+
+### 3. Session Management
+```typescript
+// lib/auth-utils.ts
+import { auth } from "@/lib/auth";
+
+export async function getCurrentUser(request: Request) {
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  return session?.user || null;
+}
+
+export async function requireAuth(request: Request) {
+  const user = await getCurrentUser(request);
+  if (!user) {
+    throw new Error('Authentication required');
+  }
+  return user;
+}
+```
+
+## Key Features
+
+- **Multiple Auth Methods**: Email/password and social provider authentication
+- **Session Security**: Automatic session renewal and secure cookie handling
+- **API Integration**: Easy integration with API routes through wrappers
+- **Database Sync**: User data automatically synced with your database

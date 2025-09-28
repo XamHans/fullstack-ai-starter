@@ -31,6 +31,7 @@ const navigationItems = [
 const playgroundItems = [
   { label: 'Generate Text', href: '/playground/generate-text' },
   { label: 'Generate Images', href: '/playground/generate-image' },
+  { label: 'Chat', href: '/playground/chat' },
 ];
 
 const settingsItems = [

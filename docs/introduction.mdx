@@ -1,6 +1,6 @@
 ---
 title: "Introduction"
-description: "Welcome to the Fullstack AI Starter documentation. This comprehensive guide covers the architecture, API patterns, and best practices for building scalable AI-powered applications."
+description: "Production-ready Next.js 15 starter for building scalable AI-powered applications with modern architecture patterns"
 ---
 
 <img
@@ -14,104 +14,88 @@ description: "Welcome to the Fullstack AI Starter documentation. This comprehens
   alt="Hero Dark"
 />
 
-## What is Fullstack AI Starter?
+Build production-ready AI applications in minutes, not months. This Next.js 15 starter provides everything you need: AI SDK integration, authentication, file uploads, and monitoring - all pre-configured and battle-tested.
 
-Fullstack AI Starter is a production-ready Next.js 15 application template that provides a robust foundation for building AI-powered applications. It combines modern web development practices with scalable architecture patterns.
+**Ship AI features faster with:**
+- **Multiple AI Providers** - OpenAI, Anthropic, Google AI ready to use
+- **Complete Auth System** - Email, social login, and session management
+- **Production Architecture** - Type-safe APIs, error handling, and observability
+- **Modern Stack** - Next.js 15, TypeScript, Tailwind CSS, and shadcn/ui
 
 ## Key Features
 
 <CardGroup cols={2}>
   <Card
-    title="Robust API Architecture"
-    icon="code"
-    href="/architecture/api-architecture"
+    title="AI SDK Integration"
+    icon="robot"
+    href="/ai-overview"
   >
-    Standardized error handling, authentication, and response formatting with higher-order functions.
+    Vercel AI SDK with text generation, chat interfaces, and streaming support.
   </Card>
   <Card
-    title="Dependency Injection"
-    icon="plug"
-    href="/architecture/code-architecture"
+    title="Robust API Architecture"
+    icon="code"
+    href="/api-architecture"
   >
-    Clean, testable architecture with proper separation of concerns and dependency management.
+    Standardized error handling, authentication, and response formatting.
+  </Card>
+  <Card
+    title="File Upload System"
+    icon="upload"
+    href="/file-uploads"
+  >
+    Secure file uploads with R2 storage, validation, and multiple interfaces.
   </Card>
   <Card
     title="Authentication & Security"
     icon="shield"
-    href="/architecture/authentication"
+    href="/authentication"
   >
-    Better-auth integration with email/password and OAuth providers.
-  </Card>
-  <Card
-    title="Database & ORM"
-    icon="database"
-    href="/architecture/database"
-  >
-    Drizzle ORM with PostgreSQL, type-safe queries, and migrations.
+    Better-auth integration with email/password and social providers.
   </Card>
 </CardGroup>
 
-## Architecture Overview
+## Get Started Now
 
-The application follows a modular, domain-driven architecture:
+Ready to build your AI application? Get up and running in under 5 minutes.
 
-- **Modular Structure**: Business logic organized by domain (users, posts, etc.)
-- **Service Layer**: Encapsulated business logic with dependency injection
-- **API Layer**: Standardized REST endpoints with authentication and error handling
-- **Testing Strategy**: Unit, integration, and BDD testing with comprehensive coverage
+<Card
+  title="Quick Start Guide"
+  icon="rocket"
+  href="/quickstart"
+>
+  Complete setup instructions - from clone to running application with all features enabled.
+</Card>
 
-## Quick Start
-
-<Steps>
-  <Step title="Clone the repository">
-    ```bash
-    git clone <your-repo-url>
-    cd fullstack-ai-starter
-    ```
-  </Step>
-  <Step title="Install dependencies">
-    ```bash
-    npm install
-    # or
-    pnpm install
-    ```
-  </Step>
-  <Step title="Set up environment variables">
-    Copy `.env.example` to `.env.local` and fill in your database and authentication credentials.
-  </Step>
-  <Step title="Run database migrations">
-    ```bash
-    npm run db:migrate
-    ```
-  </Step>
-  <Step title="Start the development server">
-    ```bash
-    npm run dev
-    ```
-  </Step>
-</Steps>
-
-## Next Steps
+## Explore Capabilities
 
 <CardGroup cols={2}>
   <Card
-    title="Explore the Architecture"
-    icon="sitemap"
-    href="/architecture/code-architecture"
+    title="AI Capabilities"
+    icon="robot"
+    href="/ai-overview"
   >
-    Learn about the modular architecture, dependency injection, and design patterns.
+    Text generation, chat interfaces, and streaming responses with multiple AI providers.
   </Card>
   <Card
-    title="API Documentation"
+    title="Core Platform"
+    icon="server"
+    href="/authentication"
+  >
+    Authentication, database, API architecture, and file uploads - all production-ready.
+  </Card>
+  <Card
+    title="Monitoring & Analytics"
+    icon="chart-line"
+    href="/observability"
+  >
+    Track AI usage, performance metrics, and user analytics with Langfuse and Umami.
+  </Card>
+  <Card
+    title="API Reference"
     icon="book-open"
     href="/api-reference/introduction"
   >
-    Discover the standardized API patterns with authentication and error handling.
+    Complete API documentation with examples and patterns.
   </Card>
 </CardGroup>
-
-## Community and Support
-
-- **GitHub**: [Report issues and contribute](https://github.com/yourcompany/fullstack-ai-starter)
-- **Documentation**: You're reading it!
-- **Support**: [Contact us](mailto:support@yourcompany.com) for help

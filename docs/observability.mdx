@@ -1,246 +1,167 @@
 ---
-title: 'Observability with Langfuse'
-description: 'Simple observability setup for AI SDK endpoints using Langfuse'
-references:
-  [
-    'https://ai-sdk.dev/docs/ai-sdk-core/telemetry',
-    'https://langfuse.com/integrations/frameworks/vercel-ai-sdk',
-  ]
+title: 'Observability'
+description: 'AI observability and analytics using Langfuse with automatic telemetry and performance tracking'
 ---
 
-# Observability with Langfuse
+# Observability
 
-This project integrates [Langfuse](https://langfuse.com/) for observability and analytics of AI model usage through the Vercel AI SDK.
+## What
 
-## What's Included
+Comprehensive observability setup using Langfuse for AI model usage tracking, performance monitoring, and analytics. Automatically captures AI SDK interactions with detailed telemetry and user attribution.
 
-### Automatic Telemetry
+## Why
 
-- **Request/Response Tracking**: All AI SDK calls are automatically traced
-- **Error Monitoring**: Failed requests are logged with full error details
-- **Performance Metrics**: Response times and token usage tracking
-- **User Attribution**: Traces linked to authenticated users
+- **Performance Monitoring**: Track response times, token usage, and costs
+- **Error Tracking**: Monitor failed requests and API issues
+- **User Analytics**: Understand usage patterns and popular features
+- **Cost Management**: Monitor AI usage and optimize spending
 
-### Covered Endpoints
+## How
 
-- `/api/ai/generate-text` - Text generation with OpenAI GPT-3.5-turbo
-- `/api/ai/generate-image` - Image generation with Google Gemini
+### Setup and Configuration
 
-## Environment Setup
-
-Add these environment variables to your `.env.local`:
-
-```bash
-# Langfuse Configuration
+1. **Environment Variables**
+```env
 LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_BASEURL=https://cloud.langfuse.com # or your self-hosted instance
+LANGFUSE_BASEURL=https://cloud.langfuse.com
 ```
 
-## How It Works
+2. **Instrumentation Setup**
+```typescript
+// instrumentation.ts
+import { registerOTel } from '@vercel/otel';
 
-### 1. OpenTelemetry Integration
+export function register() {
+  registerOTel({
+    serviceName: 'fullstack-ai-starter',
+    traceExporter: 'langfuse',
+  });
+}
+```
 
-The `instrumentation.ts` file sets up automatic tracing:
+3. **AI SDK Integration**
+```typescript
+// lib/api/ai-utils.ts
+export function withAITelemetry<T>(
+  config: T,
+  options: {
+    functionId: string;
+    metadata?: Record<string, any>;
+    recordInputs?: boolean;
+    recordOutputs?: boolean;
+  }
+) {
+  return {
+    ...config,
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: options.functionId,
+      metadata: options.metadata,
+    },
+  };
+}
+```
 
-- Filters out Next.js infrastructure spans to reduce noise
-- Configures Langfuse as the telemetry destination
-- Handles serverless environment optimizations
-
-### 2. AI SDK Native Telemetry
-
-The Vercel AI SDK provides comprehensive telemetry automatically:
+### Integration in API Routes
 
 ```typescript
-const { text } = await generateText(
-  withAITelemetry(
-    {
+// app/api/ai/generate-text/route.ts
+import { generateText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { withAuthentication, withAITelemetry } from '@/lib/api/base';
+
+export const POST = withAuthentication(async (session, req) => {
+  const { prompt } = await req.json();
+
+  const { text } = await generateText(
+    withAITelemetry({
       model: openai('gpt-3.5-turbo'),
-      prompt: body.prompt,
-    },
-    {
+      prompt,
+    }, {
       functionId: 'generate-text',
       metadata: {
         userId: session.userId,
         sessionId: session.id,
       },
-    }
-  )
-);
-```
-
-### 3. Automatic Rich Data Collection
-
-The AI SDK automatically captures:
-
-- **Performance Metrics**: Response times, tokens per second, time to first chunk
-- **Usage Data**: Prompt tokens, completion tokens, costs
-- **Model Information**: Provider, model ID, response ID, timestamps
-- **Input/Output**: Full request and response data (configurable)
-- **Error Handling**: Finish reasons, error spans
-- **Tool Calls**: Complete tool execution tracing (if using tools)
-
-## Viewing Your Data
-
-1. **Sign up** at [Langfuse Cloud](https://cloud.langfuse.com/)
-2. **Create a project** and get your API keys
-3. **Add environment variables** to your deployment
-4. **Make API calls** to your endpoints
-5. **View traces** in the Langfuse dashboard
-
-## What You'll See
-
-### Traces Dashboard
-
-- Request volume and response times
-- Success/failure rates
-- Token usage and costs
-- User activity patterns
-
-### Individual Traces
-
-- Complete request/response data
-- Model parameters and settings
-- Execution timeline
-- Error details (if any)
-
-### Analytics
-
-- Usage trends over time
-- Most active users
-- Popular prompts and patterns
-- Cost tracking
-
-## Simple Implementation
-
-### Clean Route Pattern
-
-Here's how simple your API routes become:
-
-```typescript
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
-import {
-  withAuthentication,
-  parseRequestBody,
-  validateRequiredFields,
-  withAITelemetry,
-} from '@/lib/api/base';
-
-export const POST = withAuthentication(async (session, req, params, logger) => {
-  const body = await parseRequestBody<{ prompt: string }>(req);
-  validateRequiredFields(body, ['prompt']);
-
-  const { text } = await generateText(
-    withAITelemetry(
-      {
-        model: openai('gpt-3.5-turbo'),
-        prompt: body.prompt,
-      },
-      {
-        functionId: 'generate-text',
-        metadata: {
-          userId: session.userId,
-          sessionId: session.id,
-        },
-      }
-    )
+    })
   );
 
   return { text };
 });
 ```
 
-## Best Practices
+## Example
 
-### Production Deployment
+Complete API route with observability:
 
-- Always set environment variables in your deployment platform
-- Monitor your Langfuse quota usage
-- The AI SDK handles all telemetry batching and flushing automatically
+```typescript
+// app/api/ai/chat/route.ts
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { withAuthentication, withAITelemetry } from '@/lib/api/base';
 
-### Development
+export const POST = withAuthentication(async (session, request) => {
+  const { messages } = await request.json();
 
-- Use a separate Langfuse project for development
-- Test with a few requests to verify integration
-- Check the Langfuse dashboard for incoming traces
+  const result = await streamText(
+    withAITelemetry({
+      model: openai('gpt-3.5-turbo'),
+      messages,
+    }, {
+      functionId: 'chat-completion',
+      metadata: {
+        userId: session.userId,
+        conversationLength: messages.length,
+        feature: 'ai-chat',
+      },
+      recordInputs: true,
+      recordOutputs: true,
+    })
+  );
 
-### Security
+  return result.toDataStreamResponse();
+});
+```
 
-- Never commit Langfuse keys to version control
-- Use environment-specific keys (dev/staging/prod)
-- Use `recordInputs: false` for sensitive data
-- Use `recordOutputs: false` to reduce data transfer
+## What You'll See
 
-## Troubleshooting
+### Dashboard Analytics
+- Request volume and success rates
+- Average response times and token usage
+- Cost tracking across different models
+- User activity and popular prompts
 
-### No Traces Appearing
+### Individual Traces
+- Complete request/response data
+- Model parameters and execution timeline
+- Error details and debugging information
+- Performance metrics and token counts
 
-1. Verify environment variables are set
-2. Check Langfuse project settings
-3. Ensure `experimental_telemetry: { isEnabled: true }` is present
-4. Look for errors in server logs
-
-### Missing Data
-
-- Traces may take a few minutes to appear
-- Check span filters in `instrumentation.ts`
-- AI SDK handles all flushing automatically
-
-### Performance Impact
-
-- AI SDK telemetry adds minimal overhead (~5-10ms)
-- Spans are batched and sent asynchronously
-- Failed telemetry doesn't affect API responses
-
-## Advanced Usage
-
-### Privacy Controls
+## Privacy Controls
 
 Control what data gets recorded:
 
 ```typescript
-withAITelemetry(
-  {
-    model: openai('gpt-3.5-turbo'),
-    prompt: sensitivePrompt,
+withAITelemetry({
+  model: openai('gpt-3.5-turbo'),
+  prompt: sensitivePrompt,
+}, {
+  functionId: 'sensitive-operation',
+  recordInputs: false,  // Don't log prompts
+  recordOutputs: false, // Don't log responses
+  metadata: {
+    userId: session.userId,
+    dataType: 'sensitive',
   },
-  {
-    functionId: 'sensitive-operation',
-    recordInputs: false, // Don't log the prompt
-    recordOutputs: false, // Don't log the response
-    metadata: {
-      userId: session.userId,
-      dataType: 'sensitive',
-    },
-  }
-);
+});
 ```
 
-### Custom Metadata
+## Automatic Features
 
-Add business context to your traces:
-
-```typescript
-withAITelemetry(
-  {
-    model: openai('gpt-3.5-turbo'),
-    prompt: body.prompt,
-  },
-  {
-    functionId: 'content-generation',
-    metadata: {
-      userId: session.userId,
-      contentType: 'blog-post',
-      version: '2.1.0',
-      feature: 'ai-writer',
-    },
-  }
-);
-```
-
-## Resources
-
-- [Langfuse Documentation](https://langfuse.com/docs)
-- [Vercel AI SDK Telemetry](https://sdk.vercel.ai/docs/ai-sdk-core/telemetry)
-- [OpenTelemetry Setup](https://opentelemetry.io/docs/)
+The AI SDK automatically captures:
+- Performance metrics (response times, tokens/second)
+- Usage data (prompt tokens, completion tokens, costs)
+- Model information (provider, model ID, timestamps)
+- Error handling (finish reasons, error spans)
+- Tool call tracing (if using function calling)
