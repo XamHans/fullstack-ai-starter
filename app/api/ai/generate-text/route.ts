@@ -1,11 +1,11 @@
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 import {
   parseRequestBody,
   validateRequiredFields,
   withAITelemetry,
   withAuthentication,
 } from '@/lib/api/base';
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
 
 export const POST = withAuthentication(async (session, req, params, logger) => {
   logger?.info('Generate text request received');
@@ -28,8 +28,8 @@ export const POST = withAuthentication(async (session, req, params, logger) => {
           userId: session.userId,
           sessionId: session.id,
         },
-      }
-    )
+      },
+    ),
   );
 
   logger?.info('Text generated successfully');

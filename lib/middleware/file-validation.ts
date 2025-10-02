@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export interface FileValidationConfig {
   maxFileSize: number;
@@ -29,10 +29,16 @@ export const DEFAULT_FILE_VALIDATION: FileValidationConfig = {
     'application/json',
   ],
   allowedExtensions: [
-    '.jpg', '.jpeg', '.png', '.gif', '.webp',
-    '.mp4', '.webm',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.mp4',
+    '.webm',
     '.pdf',
-    '.txt', '.json'
+    '.txt',
+    '.json',
   ],
   maxFiles: 10,
   scanForMalware: false,
@@ -55,7 +61,9 @@ export class FileValidator {
 
     // Check file size
     if (file.size > this.config.maxFileSize) {
-      errors.push(`File size ${this.formatBytes(file.size)} exceeds maximum allowed size ${this.formatBytes(this.config.maxFileSize)}`);
+      errors.push(
+        `File size ${this.formatBytes(file.size)} exceeds maximum allowed size ${this.formatBytes(this.config.maxFileSize)}`,
+      );
     }
 
     // Check MIME type
@@ -100,14 +108,18 @@ export class FileValidator {
 
     // Check number of files
     if (files.length > this.config.maxFiles) {
-      errors.push(`Number of files (${files.length}) exceeds maximum allowed (${this.config.maxFiles})`);
+      errors.push(
+        `Number of files (${files.length}) exceeds maximum allowed (${this.config.maxFiles})`,
+      );
     }
 
     // Check total size
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
     const maxTotalSize = this.config.maxFileSize * this.config.maxFiles;
     if (totalSize > maxTotalSize) {
-      errors.push(`Total files size ${this.formatBytes(totalSize)} exceeds maximum allowed ${this.formatBytes(maxTotalSize)}`);
+      errors.push(
+        `Total files size ${this.formatBytes(totalSize)} exceeds maximum allowed ${this.formatBytes(maxTotalSize)}`,
+      );
     }
 
     // Validate each file
@@ -176,7 +188,7 @@ export class FileValidator {
     // Limit length
     if (sanitized.length > 255) {
       const extension = this.getFileExtension(sanitized);
-      const nameWithoutExt = sanitized.slice(0, -(extension.length));
+      const nameWithoutExt = sanitized.slice(0, -extension.length);
       sanitized = nameWithoutExt.slice(0, 255 - extension.length) + extension;
     }
 
@@ -194,7 +206,7 @@ export class FileValidator {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8);
     const sanitizedBasename = this.sanitizeFilename(
-      originalFilename.slice(0, -(extension.length))
+      originalFilename.slice(0, -extension.length),
     ).slice(0, 50);
 
     return `${timestamp}_${random}_${sanitizedBasename}${extension}`;
@@ -202,7 +214,7 @@ export class FileValidator {
 
   // Private helper methods
   private isAllowedMimeType(mimeType: string): boolean {
-    return this.config.allowedMimeTypes.some(allowed => {
+    return this.config.allowedMimeTypes.some((allowed) => {
       if (allowed.endsWith('/*')) {
         return mimeType.startsWith(allowed.slice(0, -1));
       }
@@ -221,9 +233,24 @@ export class FileValidator {
 
   private isPotentiallyDangerous(file: File): boolean {
     const dangerousExtensions = [
-      '.exe', '.bat', '.cmd', '.scr', '.pif', '.com',
-      '.js', '.vbs', '.vbe', '.jse', '.ws', '.wsf',
-      '.sh', '.bash', '.ps1', '.app', '.dmg', '.pkg'
+      '.exe',
+      '.bat',
+      '.cmd',
+      '.scr',
+      '.pif',
+      '.com',
+      '.js',
+      '.vbs',
+      '.vbe',
+      '.jse',
+      '.ws',
+      '.wsf',
+      '.sh',
+      '.bash',
+      '.ps1',
+      '.app',
+      '.dmg',
+      '.pkg',
     ];
 
     const extension = this.getFileExtension(file.name).toLowerCase();
@@ -268,16 +295,9 @@ export class FileValidator {
   }
 
   private isSuspiciousUserAgent(userAgent: string): boolean {
-    const suspiciousPatterns = [
-      /bot/i,
-      /crawler/i,
-      /spider/i,
-      /scraper/i,
-      /curl/i,
-      /wget/i,
-    ];
+    const suspiciousPatterns = [/bot/i, /crawler/i, /spider/i, /scraper/i, /curl/i, /wget/i];
 
-    return suspiciousPatterns.some(pattern => pattern.test(userAgent));
+    return suspiciousPatterns.some((pattern) => pattern.test(userAgent));
   }
 
   private formatBytes(bytes: number): string {
@@ -285,7 +305,7 @@ export class FileValidator {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + ' ' + sizes[i];
   }
 }
 

@@ -1,6 +1,6 @@
 ---
-title: "AI Chat Interface"
-description: "Build engaging conversational AI experiences with real-time streaming, message history, and multi-turn conversations"
+title: 'AI Chat Interface'
+description: 'Build engaging conversational AI experiences with real-time streaming, message history, and multi-turn conversations'
 ---
 
 # AI Chat Interface
@@ -21,6 +21,7 @@ Create powerful conversational AI experiences with real-time streaming responses
 ### Quick Setup
 
 1. **Create Chat API Endpoint**
+
 ```typescript
 // app/api/ai/chat/route.ts
 import { streamText } from 'ai';
@@ -40,6 +41,7 @@ export const POST = withAuthentication(async (session, request) => {
 ```
 
 2. **Build Chat Component**
+
 ```tsx
 'use client';
 
@@ -48,9 +50,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/ai/chat',
-  });
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({
+      api: '/api/ai/chat',
+    });
 
   return (
     <div className="flex flex-col h-[600px] max-w-2xl mx-auto border rounded-lg">
@@ -119,7 +122,7 @@ export function PersistentChatInterface() {
     isLoading,
     setMessages,
     reload,
-    stop
+    stop,
   } = useChat({
     api: '/api/ai/chat',
     id: conversationId,
@@ -219,18 +222,11 @@ export function PersistentChatInterface() {
             disabled={isLoading}
             className="flex-1"
           />
-          <Button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-          >
+          <Button type="submit" disabled={isLoading || !input.trim()}>
             {isLoading ? 'Thinking...' : 'Send'}
           </Button>
           {isLoading && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={stop}
-            >
+            <Button type="button" variant="outline" onClick={stop}>
               Stop
             </Button>
           )}
@@ -253,7 +249,8 @@ export const POST = withAuthentication(async (session, request) => {
   // Add system prompt
   const systemMessage = {
     role: 'system' as const,
-    content: 'You are a helpful AI assistant specialized in web development. Provide clear, practical answers and code examples when appropriate.'
+    content:
+      'You are a helpful AI assistant specialized in web development. Provide clear, practical answers and code examples when appropriate.',
   };
 
   const result = await streamText({
@@ -281,7 +278,7 @@ export function AdvancedChatInterface() {
     handleSubmit,
     isLoading,
     reload,
-    stop
+    stop,
   } = useChat({
     api: '/api/ai/chat',
     onError: (error) => {
@@ -303,23 +300,23 @@ export function AdvancedChatInterface() {
 
   // Delete specific message
   const deleteMessage = (messageId: string) => {
-    setMessages(messages.filter(m => m.id !== messageId));
+    setMessages(messages.filter((m) => m.id !== messageId));
   };
 
   // Edit user message
   const editMessage = (messageId: string, newContent: string) => {
-    setMessages(messages.map(m =>
-      m.id === messageId ? { ...m, content: newContent } : m
-    ));
+    setMessages(
+      messages.map((m) =>
+        m.id === messageId ? { ...m, content: newContent } : m
+      )
+    );
   };
 
   return (
     <div className="space-y-4">
       {messages.map((message) => (
         <div key={message.id} className="group relative">
-          <div className={`message ${message.role}`}>
-            {message.content}
-          </div>
+          <div className={`message ${message.role}`}>{message.content}</div>
 
           {/* Message actions */}
           <div className="opacity-0 group-hover:opacity-100 absolute top-0 right-0">
@@ -355,35 +352,38 @@ export function AdvancedChatInterface() {
 ## Chat Patterns
 
 ### Customer Support Bot
+
 ```tsx
 const supportSystemPrompt = {
   role: 'system' as const,
   content: `You are a helpful customer support agent for our SaaS platform.
-  Always be polite, provide accurate information, and escalate complex issues to human support when needed.`
+  Always be polite, provide accurate information, and escalate complex issues to human support when needed.`,
 };
 ```
 
 ### Code Assistant
+
 ```tsx
 const codeSystemPrompt = {
   role: 'system' as const,
   content: `You are a senior software engineer specialized in TypeScript, React, and Next.js.
-  Provide clear explanations and working code examples. Always follow best practices.`
+  Provide clear explanations and working code examples. Always follow best practices.`,
 };
 ```
 
 ### Creative Writing Partner
+
 ```tsx
 const creativeSystemPrompt = {
   role: 'system' as const,
   content: `You are a creative writing assistant. Help users brainstorm ideas,
-  improve their writing, and provide constructive feedback. Be encouraging and imaginative.`
+  improve their writing, and provide constructive feedback. Be encouraging and imaginative.`,
 };
 ```
 
 ## Interactive Playground
 
-Experience the chat interface in action at `/playground/chat` where you can test different conversation flows and features.
+Experience the chat interface in action at `/playground/generate-text/chat` where you can test different conversation flows and features.
 
 ## Next Steps
 

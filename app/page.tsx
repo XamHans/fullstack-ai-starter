@@ -1,31 +1,6 @@
 'use client';
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Cover } from '@/components/ui/cover';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
-import { LinkPreview } from '@/components/ui/link-preview';
-import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
-import { Separator } from '@/components/ui/separator';
-import {
   AlertTriangle,
   Bot,
   Check,
@@ -46,6 +21,21 @@ import {
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Cover } from '@/components/ui/cover';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { LinkPreview } from '@/components/ui/link-preview';
+import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
+import { Separator } from '@/components/ui/separator';
 
 export default function LandingPage() {
   return (
@@ -69,13 +59,11 @@ export default function LandingPage() {
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">
-                        Professional AI SaaS
-                      </h4>
+                      <h4 className="text-sm font-semibold">Professional AI SaaS</h4>
                       <p className="text-sm text-muted-foreground">
-                        Building AI-powered Software as a Service applications
-                        with enterprise-grade architecture, proper testing, and
-                        maintainable code that scales with your business.
+                        Building AI-powered Software as a Service applications with enterprise-grade
+                        architecture, proper testing, and maintainable code that scales with your
+                        business.
                       </p>
                     </div>
                   </HoverCardContent>
@@ -85,23 +73,18 @@ export default function LandingPage() {
                 Not just vibe-driven demos.
               </h1>
               <p className="text-xl leading-8 text-muted-foreground">
-                For developers building serious AI SaaS businesses. This
-                spec-driven starter kit provides the architectural foundation to
-                ensure your product is scalable, maintainable, and secure from
-                day one.
+                For developers building serious AI SaaS businesses. This spec-driven starter kit
+                provides the architectural foundation to ensure your product is scalable,
+                maintainable, and secure from day one.
               </p>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Button asChild size="lg" className="h-14 px-8 text-lg">
-                  <Link href="/dashboard">
+                  <Link href="/playground/generate-text">
                     Get Started for Free
                     <Rocket className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="h-14 px-8 text-lg"
-                >
+                <Button variant="outline" size="lg" className="h-14 px-8 text-lg">
                   Explore the Architecture
                 </Button>
               </div>
@@ -163,8 +146,7 @@ export default function LandingPage() {
                 The Two Paths of AI-Assisted Development
               </h2>
               <p className="text-lg text-muted-foreground">
-                Choose the foundation that will support your business, not just
-                your demo.
+                Choose the foundation that will support your business, not just your demo.
               </p>
             </motion.div>
 
@@ -196,29 +178,28 @@ export default function LandingPage() {
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Hours</strong> spent debugging inconsistent,
-                          AI-generated code.
+                          <strong>Hours</strong> spent debugging inconsistent, AI-generated code.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Days</strong> lost fixing features when AI
-                          creates conflicting implementations.
+                          <strong>Days</strong> lost fixing features when AI creates conflicting
+                          implementations.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Weeks</strong> refactoring "spaghetti code"
-                          that lacks a coherent structure.
+                          <strong>Weeks</strong> refactoring "spaghetti code" that lacks a coherent
+                          structure.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Months</strong> wrestling with untestable and
-                          unmaintainable legacy code.
+                          <strong>Months</strong> wrestling with untestable and unmaintainable
+                          legacy code.
                         </span>
                       </div>
                     </div>
@@ -260,29 +241,29 @@ export default function LandingPage() {
                       <div className="flex items-start gap-3">
                         <Target className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>BDD workflows:</strong> Define specs once, AI
-                          implements perfectly every time.
+                          <strong>BDD workflows:</strong> Define specs once, AI implements perfectly
+                          every time.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <Wrench className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Dependency injection:</strong> Clean,
-                          testable, and scalable architecture.
+                          <strong>Dependency injection:</strong> Clean, testable, and scalable
+                          architecture.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <TestTube className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Vitest testing:</strong> Catch issues before
-                          they reach production.
+                          <strong>Vitest testing:</strong> Catch issues before they reach
+                          production.
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
                         <Bot className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
                         <span>
-                          <strong>Claude Code MCP:</strong> Context-aware AI
-                          with full codebase understanding.
+                          <strong>Claude Code MCP:</strong> Context-aware AI with full codebase
+                          understanding.
                         </span>
                       </div>
                     </div>
@@ -305,12 +286,9 @@ export default function LandingPage() {
               viewport={{ once: true }}
               className="mt-12 text-center"
             >
-              <div className="text-2xl font-bold mb-4">
-                There's a smarter way to build.
-              </div>
+              <div className="text-2xl font-bold mb-4">There's a smarter way to build.</div>
               <div className="text-lg text-muted-foreground">
-                Stop building fragile apps. Start building bulletproof
-                businesses.
+                Stop building fragile apps. Start building bulletproof businesses.
               </div>
             </motion.div>
           </div>
@@ -330,8 +308,8 @@ export default function LandingPage() {
             Production-Ready Tech Stack
           </h4>
           <p className="text-sm lg:text-base max-w-2xl my-4 mx-auto text-neutral-500 text-center font-normal dark:text-neutral-300">
-            Every component battle-tested and chosen for long-term
-            maintainability. Deploy in minutes, scale for years.
+            Every component battle-tested and chosen for long-term maintainability. Deploy in
+            minutes, scale for years.
           </p>
         </motion.div>
 
@@ -344,9 +322,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-12"
           >
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Core Architecture
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">Core Architecture</h5>
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -366,12 +342,10 @@ export default function LandingPage() {
                       <i className="devicon-cucumber-plain text-4xl text-green-600 dark:text-green-400"></i>
                     </div>
                     <div>
-                      <h6 className="font-semibold text-lg">
-                        Spec-Driven Workflows
-                      </h6>
+                      <h6 className="font-semibold text-lg">Spec-Driven Workflows</h6>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Gherkin specifications for clear requirements and AI
-                        implementation guidance.
+                        Gherkin specifications for clear requirements and AI implementation
+                        guidance.
                       </p>
                     </div>
                   </div>
@@ -390,12 +364,10 @@ export default function LandingPage() {
                       <Wrench className="h-8 w-8 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <h6 className="font-semibold text-lg">
-                        Dependency Injection
-                      </h6>
+                      <h6 className="font-semibold text-lg">Dependency Injection</h6>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Clean, testable architecture with proper separation of
-                        concerns and dependency management.
+                        Clean, testable architecture with proper separation of concerns and
+                        dependency management.
                       </p>
                     </div>
                   </div>
@@ -414,12 +386,10 @@ export default function LandingPage() {
                       <Layout className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <h6 className="font-semibold text-lg">
-                        Modular Domain Architecture
-                      </h6>
+                      <h6 className="font-semibold text-lg">Modular Domain Architecture</h6>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Business logic organized by domain with scalable
-                        patterns and clear boundaries.
+                        Business logic organized by domain with scalable patterns and clear
+                        boundaries.
                       </p>
                     </div>
                   </div>
@@ -447,8 +417,8 @@ export default function LandingPage() {
                         </LinkPreview>
                       </h6>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Full type safety with strict configuration and
-                        exceptional developer experience.
+                        Full type safety with strict configuration and exceptional developer
+                        experience.
                       </p>
                     </div>
                   </div>
@@ -459,9 +429,7 @@ export default function LandingPage() {
 
           {/* Frontend & Framework Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Frontend & Framework
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">Frontend & Framework</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -478,8 +446,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      React Server Components, streaming, and modern routing
-                      patterns for optimal performance.
+                      React Server Components, streaming, and modern routing patterns for optimal
+                      performance.
                     </p>
                   </div>
                 </div>
@@ -500,8 +468,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Beautiful, accessible UI components built on Tailwind CSS
-                      and Radix primitives.
+                      Beautiful, accessible UI components built on Tailwind CSS and Radix
+                      primitives.
                     </p>
                   </div>
                 </div>
@@ -522,8 +490,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Smooth animations and interactive user experiences with
-                      performance-optimized motion.
+                      Smooth animations and interactive user experiences with performance-optimized
+                      motion.
                     </p>
                   </div>
                 </div>
@@ -533,9 +501,7 @@ export default function LandingPage() {
 
           {/* AI & Intelligence Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              AI & Intelligence
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">AI & Intelligence</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -552,8 +518,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Multi-provider support (OpenAI, Anthropic, Google AI) with
-                      streaming responses.
+                      Multi-provider support (OpenAI, Anthropic, Google AI) with streaming
+                      responses.
                     </p>
                   </div>
                 </div>
@@ -565,12 +531,10 @@ export default function LandingPage() {
                     <FileCode className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
                   </div>
                   <div>
-                    <h6 className="font-semibold text-lg">
-                      Text & Image Generation
-                    </h6>
+                    <h6 className="font-semibold text-lg">Text & Image Generation</h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Complete AI content creation capabilities with multiple
-                      model providers and formats.
+                      Complete AI content creation capabilities with multiple model providers and
+                      formats.
                     </p>
                   </div>
                 </div>
@@ -591,8 +555,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Context-aware AI with full codebase understanding and
-                      specialized integrations.
+                      Context-aware AI with full codebase understanding and specialized
+                      integrations.
                     </p>
                   </div>
                 </div>
@@ -604,12 +568,9 @@ export default function LandingPage() {
                     <Users className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h6 className="font-semibold text-lg">
-                      Specialized AI Agents
-                    </h6>
+                    <h6 className="font-semibold text-lg">Specialized AI Agents</h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Multiple configured subagents for different workflows and
-                      development tasks.
+                      Multiple configured subagents for different workflows and development tasks.
                     </p>
                   </div>
                 </div>
@@ -619,9 +580,7 @@ export default function LandingPage() {
 
           {/* Database & Storage Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Database & Storage
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">Database & Storage</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -638,8 +597,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Serverless Postgres with database branching for safe
-                      development workflows.
+                      Serverless Postgres with database branching for safe development workflows.
                     </p>
                   </div>
                 </div>
@@ -660,8 +618,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Type-safe database queries with migrations and schema
-                      management built-in.
+                      Type-safe database queries with migrations and schema management built-in.
                     </p>
                   </div>
                 </div>
@@ -682,8 +639,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Object storage for file uploads and media management with
-                      S3-compatible API.
+                      Object storage for file uploads and media management with S3-compatible API.
                     </p>
                   </div>
                 </div>
@@ -693,9 +649,7 @@ export default function LandingPage() {
 
           {/* File Management Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              File Management
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">File Management</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -712,8 +666,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Complete upload solution with security validation,
-                      resumable uploads, and progress tracking.
+                      Complete upload solution with security validation, resumable uploads, and
+                      progress tracking.
                     </p>
                   </div>
                 </div>
@@ -725,12 +679,9 @@ export default function LandingPage() {
                     <Layout className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <h6 className="font-semibold text-lg">
-                      Multiple Upload Methods
-                    </h6>
+                    <h6 className="font-semibold text-lg">Multiple Upload Methods</h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Dashboard, dropzone, and button interfaces with file
-                      previews and validation.
+                      Dashboard, dropzone, and button interfaces with file previews and validation.
                     </p>
                   </div>
                 </div>
@@ -740,9 +691,7 @@ export default function LandingPage() {
 
           {/* Testing & Quality Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Testing & Quality
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">Testing & Quality</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -759,8 +708,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Modern unit and integration testing with fast execution
-                      and great developer experience.
+                      Modern unit and integration testing with fast execution and great developer
+                      experience.
                     </p>
                   </div>
                 </div>
@@ -772,12 +721,10 @@ export default function LandingPage() {
                     <Server className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
                   </div>
                   <div>
-                    <h6 className="font-semibold text-lg">
-                      Supertest API Testing
-                    </h6>
+                    <h6 className="font-semibold text-lg">Supertest API Testing</h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Comprehensive API endpoint testing with authentication and
-                      validation coverage.
+                      Comprehensive API endpoint testing with authentication and validation
+                      coverage.
                     </p>
                   </div>
                 </div>
@@ -798,8 +745,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Browser automation for reliable end-to-end testing across
-                      all platforms.
+                      Browser automation for reliable end-to-end testing across all platforms.
                     </p>
                   </div>
                 </div>
@@ -809,9 +755,7 @@ export default function LandingPage() {
 
           {/* Communication & Analytics Row */}
           <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Communication & Analytics
-            </h5>
+            <h5 className="text-xl font-semibold mb-6 text-center">Communication & Analytics</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="p-6 h-full">
                 <div className="flex flex-col items-center text-center space-y-4">
@@ -828,8 +772,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Professional email delivery with templates, automation,
-                      and deliverability tracking.
+                      Professional email delivery with templates, automation, and deliverability
+                      tracking.
                     </p>
                   </div>
                 </div>
@@ -850,8 +794,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Privacy-focused, open-source website analytics with
-                      real-time insights.
+                      Privacy-focused, open-source website analytics with real-time insights.
                     </p>
                   </div>
                 </div>
@@ -880,8 +823,8 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Zero-config deployments with edge functions, global CDN,
-                      and automatic scaling.
+                      Zero-config deployments with edge functions, global CDN, and automatic
+                      scaling.
                     </p>
                   </div>
                 </div>
@@ -902,8 +845,7 @@ export default function LandingPage() {
                       </LinkPreview>
                     </h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      AI operation tracking with comprehensive telemetry and
-                      performance analytics.
+                      AI operation tracking with comprehensive telemetry and performance analytics.
                     </p>
                   </div>
                 </div>
@@ -915,12 +857,9 @@ export default function LandingPage() {
                     <AlertTriangle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
                   </div>
                   <div>
-                    <h6 className="font-semibold text-lg">
-                      Pino Structured Logging
-                    </h6>
+                    <h6 className="font-semibold text-lg">Pino Structured Logging</h6>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Production-grade JSON logging for debugging, monitoring,
-                      and observability.
+                      Production-grade JSON logging for debugging, monitoring, and observability.
                     </p>
                   </div>
                 </div>
@@ -938,8 +877,8 @@ export default function LandingPage() {
               Get a Professional Architecture, Not Just a Boilerplate
             </h2>
             <p className="text-lg text-muted-foreground">
-              Why pay for patterns that create technical debt? Get a
-              production-ready foundation for free.
+              Why pay for patterns that create technical debt? Get a production-ready foundation for
+              free.
             </p>
           </div>
 
@@ -957,9 +896,7 @@ export default function LandingPage() {
                   Other Boilerplates
                 </CardTitle>
                 <div className="relative">
-                  <div className="text-5xl font-bold text-muted-foreground mb-2">
-                    $199-$299
-                  </div>
+                  <div className="text-5xl font-bold text-muted-foreground mb-2">$199-$299</div>
                 </div>
                 <CardDescription className="text-muted-foreground font-medium">
                   One-time payment • Endless refactoring
@@ -976,15 +913,11 @@ export default function LandingPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-start gap-2">
                         <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
-                        <span>
-                          Pre-configured services without a testing strategy.
-                        </span>
+                        <span>Pre-configured services without a testing strategy.</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
-                        <span>
-                          No production-grade logging or monitoring in place.
-                        </span>
+                        <span>No production-grade logging or monitoring in place.</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
@@ -992,16 +925,11 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-start gap-2">
                         <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
-                        <span>
-                          Maintenance overhead that accumulates from day one.
-                        </span>
+                        <span>Maintenance overhead that accumulates from day one.</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
-                        <span>
-                          A major refactor is required before you can truly
-                          scale.
-                        </span>
+                        <span>A major refactor is required before you can truly scale.</span>
                       </div>
                     </div>
                   </div>
@@ -1019,13 +947,9 @@ export default function LandingPage() {
               </div>
 
               <CardHeader className="text-center pt-10 pb-6">
-                <CardTitle className="text-xl text-primary mb-3">
-                  Spec-Driven Starter Kit
-                </CardTitle>
+                <CardTitle className="text-xl text-primary mb-3">Spec-Driven Starter Kit</CardTitle>
                 <div className="relative">
-                  <div className="text-6xl font-bold text-primary mb-2">
-                    FREE
-                  </div>
+                  <div className="text-6xl font-bold text-primary mb-2">FREE</div>
                   <div className="text-sm text-primary font-medium">
                     Open source forever • No hidden costs
                   </div>
@@ -1069,15 +993,11 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="h-3 w-3 text-primary mt-1 flex-shrink-0" />
-                        <span className="font-medium">
-                          Zero maintenance overhead, by design.
-                        </span>
+                        <span className="font-medium">Zero maintenance overhead, by design.</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="h-3 w-3 text-primary mt-1 flex-shrink-0" />
-                        <span className="font-medium">
-                          Production-ready from day one.
-                        </span>
+                        <span className="font-medium">Production-ready from day one.</span>
                       </div>
                     </div>
                   </div>
@@ -1087,7 +1007,7 @@ export default function LandingPage() {
                       asChild
                       className="w-full h-14 text-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <Link href="/dashboard">
+                      <Link href="/playground/generate-text">
                         Start Building for Free
                         <Rocket className="ml-2 h-6 w-6" />
                       </Link>
@@ -1117,8 +1037,7 @@ export default function LandingPage() {
               Frequently Asked Questions
             </h2>
             <p className="text-lg text-muted-foreground">
-              Everything you need to know about building a real business with
-              AI.
+              Everything you need to know about building a real business with AI.
             </p>
           </motion.div>
 
@@ -1128,28 +1047,20 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <Accordion
-              type="single"
-              collapsible
-              className="space-y-4"
-              defaultValue="item-1"
-            >
+            <Accordion type="single" collapsible className="space-y-4" defaultValue="item-1">
               <AccordionItem value="item-1" className="border rounded-lg px-6">
                 <AccordionTrigger className="text-left">
                   How is this different from other boilerplates?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Most boilerplates simply hand you a set of tools. We give you
-                  a methodology. Our foundation is domain-driven modules with
-                  dependency injection, so your business logic stays testable
-                  and independent. On top of that, Claude Code brings context
-                  awareness—direct access to your database, logs, and even
-                  deployments—so AI works with your actual system, not in
-                  isolation. Finally, our spec-driven workflow turns
-                  requirements into Gherkin specs, which become tests, then
-                  implementations. This guarantees that every feature is
-                  consistent, verifiable, and aligned with your specs from day
-                  one.
+                  Most boilerplates simply hand you a set of tools. We give you a methodology. Our
+                  foundation is domain-driven modules with dependency injection, so your business
+                  logic stays testable and independent. On top of that, Claude Code brings context
+                  awareness—direct access to your database, logs, and even deployments—so AI works
+                  with your actual system, not in isolation. Finally, our spec-driven workflow turns
+                  requirements into Gherkin specs, which become tests, then implementations. This
+                  guarantees that every feature is consistent, verifiable, and aligned with your
+                  specs from day one.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1158,12 +1069,11 @@ export default function LandingPage() {
                   How does the modular architecture scale?
                 </AccordionTrigger>
                 <AccordionContent>
-                  The domain-driven modular architecture organizes business
-                  logic into separate modules (users, posts, etc.). Each module
-                  has its own service layer, schema, and types. This approach
-                  allows teams to work independently on different features
-                  without conflicts, makes testing easier through isolation, and
-                  enables horizontal scaling as your business grows.
+                  The domain-driven modular architecture organizes business logic into separate
+                  modules (users, posts, etc.). Each module has its own service layer, schema, and
+                  types. This approach allows teams to work independently on different features
+                  without conflicts, makes testing easier through isolation, and enables horizontal
+                  scaling as your business grows.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1172,13 +1082,11 @@ export default function LandingPage() {
                   What makes this "spec-driven" development?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Instead of writing code directly, you first define
-                  requirements using Gherkin specifications. These clear,
-                  human-readable specs guide AI implementation, ensuring
-                  consistency across features. When you need to add
-                  functionality, you write the specification first, then use AI
-                  tools to implement it exactly according to your documented
-                  requirements.
+                  Instead of writing code directly, you first define requirements using Gherkin
+                  specifications. These clear, human-readable specs guide AI implementation,
+                  ensuring consistency across features. When you need to add functionality, you
+                  write the specification first, then use AI tools to implement it exactly according
+                  to your documented requirements.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1187,11 +1095,10 @@ export default function LandingPage() {
                   How do you handle email delivery and templates?
                 </AccordionTrigger>
                 <AccordionContent>
-                  We integrate with Resend for professional email delivery. This
-                  includes transactional emails, marketing campaigns, and
-                  automated workflows. Resend provides excellent deliverability
-                  rates, built-in analytics, and a developer-friendly API. Email
-                  templates are managed through their dashboard or
+                  We integrate with Resend for professional email delivery. This includes
+                  transactional emails, marketing campaigns, and automated workflows. Resend
+                  provides excellent deliverability rates, built-in analytics, and a
+                  developer-friendly API. Email templates are managed through their dashboard or
                   programmatically through their React Email integration.
                 </AccordionContent>
               </AccordionItem>
@@ -1201,12 +1108,11 @@ export default function LandingPage() {
                   Can multiple developers work on this effectively?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Absolutely. The dependency injection pattern and modular
-                  architecture enable team collaboration. Developers can work on
-                  different modules simultaneously without conflicts. The
-                  service layer abstracts business logic, making it easy to mock
-                  dependencies for testing. Clear specifications prevent
-                  miscommunication about requirements.
+                  Absolutely. The dependency injection pattern and modular architecture enable team
+                  collaboration. Developers can work on different modules simultaneously without
+                  conflicts. The service layer abstracts business logic, making it easy to mock
+                  dependencies for testing. Clear specifications prevent miscommunication about
+                  requirements.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1215,12 +1121,10 @@ export default function LandingPage() {
                   Is there comprehensive documentation?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Yes! Full documentation is available covering architecture
-                  patterns, API design, database strategies, testing approaches,
-                  and deployment guides. Each major component has detailed
-                  guides with examples, best practices, and troubleshooting
-                  tips. The documentation is continuously updated with new
-                  patterns and learnings.
+                  Yes! Full documentation is available covering architecture patterns, API design,
+                  database strategies, testing approaches, and deployment guides. Each major
+                  component has detailed guides with examples, best practices, and troubleshooting
+                  tips. The documentation is continuously updated with new patterns and learnings.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1229,13 +1133,11 @@ export default function LandingPage() {
                   How do you manage AI costs in production?
                 </AccordionTrigger>
                 <AccordionContent>
-                  The AI SDK supports multiple providers (OpenAI, Anthropic,
-                  Google AI), allowing you to switch based on cost and
-                  performance. Built-in telemetry tracks usage and costs per
-                  operation. You can implement rate limiting, caching for common
-                  requests, and use smaller models for development. The
-                  observability stack helps identify expensive operations for
-                  optimization.
+                  The AI SDK supports multiple providers (OpenAI, Anthropic, Google AI), allowing
+                  you to switch based on cost and performance. Built-in telemetry tracks usage and
+                  costs per operation. You can implement rate limiting, caching for common requests,
+                  and use smaller models for development. The observability stack helps identify
+                  expensive operations for optimization.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1244,12 +1146,11 @@ export default function LandingPage() {
                   What's the database strategy for scaling?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Neon provides serverless PostgreSQL with database branching
-                  for safe development. Each feature branch can have its own
-                  database branch. The connection pooling and auto-scaling
-                  handle traffic spikes automatically. Drizzle ORM provides
-                  type-safe queries and migration management. The modular
-                  service layer makes it easy to optimize queries per domain.
+                  Neon provides serverless PostgreSQL with database branching for safe development.
+                  Each feature branch can have its own database branch. The connection pooling and
+                  auto-scaling handle traffic spikes automatically. Drizzle ORM provides type-safe
+                  queries and migration management. The modular service layer makes it easy to
+                  optimize queries per domain.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1258,12 +1159,11 @@ export default function LandingPage() {
                   How do you handle file uploads securely?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Uppy 5.0 provides comprehensive file validation including MIME
-                  type checking, file size limits, extension filtering, and
-                  malware detection patterns. Files are uploaded to Cloudflare
-                  R2 with secure filename generation to prevent path traversal
-                  attacks. The validation layer blocks dangerous file types and
-                  provides detailed error messages for rejected uploads.
+                  Uppy 5.0 provides comprehensive file validation including MIME type checking, file
+                  size limits, extension filtering, and malware detection patterns. Files are
+                  uploaded to Cloudflare R2 with secure filename generation to prevent path
+                  traversal attacks. The validation layer blocks dangerous file types and provides
+                  detailed error messages for rejected uploads.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1272,13 +1172,11 @@ export default function LandingPage() {
                   What testing approach ensures code quality?
                 </AccordionTrigger>
                 <AccordionContent>
-                  A multi-layer testing strategy using Vitest for
-                  unit/integration tests, Supertest for API testing, and
-                  Playwright for end-to-end testing. The dependency injection
-                  pattern makes services easy to test in isolation. Gherkin
-                  specifications help ensure tests match requirements. Test
-                  containers provide real PostgreSQL for integration testing
-                  while maintaining speed.
+                  A multi-layer testing strategy using Vitest for unit/integration tests, Supertest
+                  for API testing, and Playwright for end-to-end testing. The dependency injection
+                  pattern makes services easy to test in isolation. Gherkin specifications help
+                  ensure tests match requirements. Test containers provide real PostgreSQL for
+                  integration testing while maintaining speed.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1287,12 +1185,11 @@ export default function LandingPage() {
                   How does authentication work across the stack?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Better-auth provides production-ready authentication with
-                  email/password and OAuth providers. Session management is
-                  handled automatically with secure cookies. API routes use
-                  higher-order functions for authentication checking. The system
-                  is tested against 100+ edge cases including session hijacking,
-                  CSRF attacks, and account enumeration.
+                  Better-auth provides production-ready authentication with email/password and OAuth
+                  providers. Session management is handled automatically with secure cookies. API
+                  routes use higher-order functions for authentication checking. The system is
+                  tested against 100+ edge cases including session hijacking, CSRF attacks, and
+                  account enumeration.
                 </AccordionContent>
               </AccordionItem>
 
@@ -1301,12 +1198,11 @@ export default function LandingPage() {
                   What's the deployment and monitoring strategy?
                 </AccordionTrigger>
                 <AccordionContent>
-                  Vercel provides zero-config deployments with automatic scaling
-                  and global CDN. Langfuse tracks AI operations with
-                  comprehensive telemetry including costs, performance, and
-                  error rates. Structured logging with Pino provides detailed
-                  debugging information. Umami analytics gives privacy-focused
-                  insights into user behavior without tracking personal data.
+                  Vercel provides zero-config deployments with automatic scaling and global CDN.
+                  Langfuse tracks AI operations with comprehensive telemetry including costs,
+                  performance, and error rates. Structured logging with Pino provides detailed
+                  debugging information. Umami analytics gives privacy-focused insights into user
+                  behavior without tracking personal data.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -1366,30 +1262,27 @@ export default function LandingPage() {
 
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  AI-generated code without proper instruction and leading can
-                  harm more than benefit. After suffering through this myself
-                  and drawing from my background in software engineering, I
-                  realized we needed a better approach.
+                  AI-generated code without proper instruction and leading can harm more than
+                  benefit. After suffering through this myself and drawing from my background in
+                  software engineering, I realized we needed a better approach.
                 </p>
                 <p>
-                  The challenge isn't AI itself—it's how we guide and structure
-                  its output. Without clear specifications and architectural
-                  guidelines, AI creates beautiful code that becomes a
-                  maintenance nightmare.
+                  The challenge isn't AI itself—it's how we guide and structure its output. Without
+                  clear specifications and architectural guidelines, AI creates beautiful code that
+                  becomes a maintenance nightmare.
                 </p>
                 <p>
-                  That's why I came up with this starter kit—to find a better
-                  way to use modern agentic coding systems. It provides the
-                  foundation to build real, scalable businesses with AI, not
-                  just fragile demos.
+                  That's why I came up with this starter kit—to find a better way to use modern
+                  agentic coding systems. It provides the foundation to build real, scalable
+                  businesses with AI, not just fragile demos.
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="text-sm text-muted-foreground">
-                  Join me in building the next generation of AI software—the
-                  right way. Your future self will thank you when you're scaling
-                  effortlessly while others are drowning in maintenance.
+                  Join me in building the next generation of AI software—the right way. Your future
+                  self will thank you when you're scaling effortlessly while others are drowning in
+                  maintenance.
                 </div>
 
                 <div className="pt-4 border-t border-border">

@@ -96,7 +96,11 @@ export function ProfileImageUpload() {
       {uploadedFile && (
         <div>
           <p>Profile picture uploaded successfully!</p>
-          <img src={uploadedFile} alt="Profile" className="w-32 h-32 rounded-full" />
+          <img
+            src={uploadedFile}
+            alt="Profile"
+            className="w-32 h-32 rounded-full"
+          />
         </div>
       )}
     </div>
@@ -113,4 +117,4 @@ export function ProfileImageUpload() {
 
 ## Playground
 
-Visit `/playground/file-upload` to test all upload features interactively with different file types and configurations.
+Visit `/playground/generate-text/file-upload` to test all upload features interactively with different file types and configurations.

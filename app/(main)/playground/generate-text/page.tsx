@@ -1,19 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { analytics } from '@/lib/services/analytics';
 import { Book, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useId, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { analytics } from '@/lib/services/analytics';
 
 export default function GenerateTextPage() {
   const [prompt, setPrompt] = useState('');
@@ -63,15 +57,12 @@ export default function GenerateTextPage() {
         responseWords: data.text ? data.text.trim().split(/\s+/).length : 0,
       });
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Something went wrong';
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
       setError(errorMessage);
 
       // Track generation error
       analytics.ai.generateText.error({
-        errorType: errorMessage.includes('Failed to generate')
-          ? 'api_error'
-          : 'unknown_error',
+        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error',
       });
     } finally {
       setLoading(false);
@@ -83,9 +74,7 @@ export default function GenerateTextPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Generate Text</h1>
-          <p className="text-muted-foreground mt-2">
-            Use AI to generate text based on your prompt
-          </p>
+          <p className="text-muted-foreground mt-2">Use AI to generate text based on your prompt</p>
 
           {/* Documentation Links */}
           <div className="flex flex-wrap gap-2 mt-4">
@@ -112,9 +101,7 @@ export default function GenerateTextPage() {
           <Card>
             <CardHeader>
               <CardTitle>Input</CardTitle>
-              <CardDescription>
-                Enter your prompt to generate text
-              </CardDescription>
+              <CardDescription>Enter your prompt to generate text</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,9 +118,7 @@ export default function GenerateTextPage() {
                 </div>
 
                 {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                    {error}
-                  </div>
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
                 )}
 
                 <Button type="submit" disabled={loading} className="w-full">
@@ -148,9 +133,7 @@ export default function GenerateTextPage() {
           <Card>
             <CardHeader>
               <CardTitle>Generated Text</CardTitle>
-              <CardDescription>
-                AI-generated response will appear here
-              </CardDescription>
+              <CardDescription>AI-generated response will appear here</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="min-h-[300px] p-4 bg-muted/50 rounded-lg">

@@ -1,10 +1,10 @@
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import {
-  withAuthentication,
   parseRequestBody,
   validateRequiredFields,
   withAITelemetry,
+  withAuthentication,
 } from '@/lib/api/base';
 
 export const POST = withAuthentication(async (session, req, params, logger) => {
@@ -17,61 +17,67 @@ export const POST = withAuthentication(async (session, req, params, logger) => {
   validateRequiredFields(body, ['prompt']);
 
   const result = await generateText(
-    withAITelemetry({
-      model: google('gemini-2.5-flash-image-preview'),
-      prompt: body.prompt,
-    }, {
-      functionId: 'generate-image',
-      metadata: {
-        userId: session.userId,
-        sessionId: session.id,
+    withAITelemetry(
+      {
+        model: google('gemini-2.5-flash-image-preview'),
+        prompt: body.prompt,
       },
-    })
+      {
+        functionId: 'generate-image',
+        metadata: {
+          userId: session.userId,
+          sessionId: session.id,
+        },
+      },
+    ),
   );
 
-    // Debug logging to see actual response structure
-    logger?.info('Gemini result structure:', {
-      hasFiles: !!result.files,
-      filesLength: result.files?.length || 0,
-      text: result.text,
-      keys: Object.keys(result)
-    });
+  // Debug logging to see actual response structure
+  logger?.info('Gemini result structure:', {
+    hasFiles: !!result.files,
+    filesLength: result.files?.length || 0,
+    text: result.text,
+    keys: Object.keys(result),
+  });
 
-    if (result.files) {
-      logger?.info('Files details:', result.files.map((file, i) => ({
+  if (result.files) {
+    logger?.info(
+      'Files details:',
+      result.files.map((file, i) => ({
         index: i,
         mediaType: file.mediaType,
         hasUint8Array: !!file.uint8Array,
-        uint8ArrayLength: file.uint8Array?.length || 0
-      })));
+        uint8ArrayLength: file.uint8Array?.length || 0,
+      })),
+    );
+  }
+
+  // Find the first image file
+  let imageUrl: string | null = null;
+
+  if (result.files) {
+    const imageFile = result.files.find((file) => file.mediaType.startsWith('image/'));
+    if (imageFile) {
+      // Convert Uint8Array to base64 data URL
+      const base64 = Buffer.from(imageFile.uint8Array).toString('base64');
+      imageUrl = `data:${imageFile.mediaType};base64,${base64}`;
+
+      logger?.info('Successfully created image URL:', {
+        mediaType: imageFile.mediaType,
+        base64Length: base64.length,
+        dataUrlLength: imageUrl.length,
+      });
     }
+  }
 
-    // Find the first image file
-    let imageUrl: string | null = null;
+  if (!imageUrl) {
+    logger?.error('No image generated or found in response');
+    throw new Error('No image was generated');
+  }
 
-    if (result.files) {
-      const imageFile = result.files.find(file => file.mediaType.startsWith('image/'));
-      if (imageFile) {
-        // Convert Uint8Array to base64 data URL
-        const base64 = Buffer.from(imageFile.uint8Array).toString('base64');
-        imageUrl = `data:${imageFile.mediaType};base64,${base64}`;
-
-        logger?.info('Successfully created image URL:', {
-          mediaType: imageFile.mediaType,
-          base64Length: base64.length,
-          dataUrlLength: imageUrl.length
-        });
-      }
-    }
-
-    if (!imageUrl) {
-      logger?.error('No image generated or found in response');
-      throw new Error('No image was generated');
-    }
-
-    logger?.info('Image generated successfully');
-    return {
-      imageUrl,
-      success: true
-    };
+  logger?.info('Image generated successfully');
+  return {
+    imageUrl,
+    success: true,
+  };
 });

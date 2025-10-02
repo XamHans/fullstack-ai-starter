@@ -120,8 +120,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
 
     const compute = () => {
       if (!canvas) return;
-      const dpr =
-        typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
 
       const displayWidth = width ?? img.naturalWidth;
       const displayHeight = height ?? img.naturalHeight;
@@ -238,8 +237,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
             return [r, g, b];
           }
           const m = c.match(/rgb\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/i);
-          if (m)
-            return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+          if (m) return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
           return null;
         };
         tintRGB = parse(tintColor) as any;
@@ -248,10 +246,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
       for (let y = 0; y < offscreen.height; y += cellSize) {
         const cy = Math.min(offscreen.height - 1, y + Math.floor(cellSize / 2));
         for (let x = 0; x < offscreen.width; x += cellSize) {
-          const cx = Math.min(
-            offscreen.width - 1,
-            x + Math.floor(cellSize / 2)
-          );
+          const cx = Math.min(offscreen.width - 1, x + Math.floor(cellSize / 2));
           let r = 0;
           let g = 0;
           let b = 0;
@@ -300,14 +295,9 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
           const Ly1 = luminanceAt(cx, cy - 1);
           const Ly2 = luminanceAt(cx, cy + 1);
           const grad =
-            Math.abs(Lx2 - Lx1) +
-            Math.abs(Ly2 - Ly1) +
-            Math.abs(Lc - (Lx1 + Lx2 + Ly1 + Ly2) / 4);
+            Math.abs(Lx2 - Lx1) + Math.abs(Ly2 - Ly1) + Math.abs(Lc - (Lx1 + Lx2 + Ly1 + Ly2) / 4);
           const gradientNorm = Math.max(0, Math.min(1, grad / 255));
-          const dropoutProb = Math.max(
-            0,
-            Math.min(1, (1 - gradientNorm) * dropoutStrength)
-          );
+          const dropoutProb = Math.max(0, Math.min(1, (1 - gradientNorm) * dropoutStrength));
           const drop = hash2D(cx, cy) < dropoutProb;
           const seed = hash2D(cx, cy);
 
@@ -342,20 +332,14 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
           if (shape === 'circle') {
             const radius = dims.dot / 2;
             ctx.beginPath();
-            ctx.arc(
-              s.x + cellSize / 2,
-              s.y + cellSize / 2,
-              radius,
-              0,
-              Math.PI * 2
-            );
+            ctx.arc(s.x + cellSize / 2, s.y + cellSize / 2, radius, 0, Math.PI * 2);
             ctx.fill();
           } else {
             ctx.fillRect(
               s.x + cellSize / 2 - dims.dot / 2,
               s.y + cellSize / 2 - dims.dot / 2,
               dims.dot,
-              dims.dot
+              dims.dot,
             );
           }
         }
@@ -412,8 +396,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
 
         if (fadeOnLeave) {
           activityRef.current =
-            activityRef.current +
-            (activityTargetRef.current - activityRef.current) * fadeSpeed;
+            activityRef.current + (activityTargetRef.current - activityRef.current) * fadeSpeed;
         } else {
           activityRef.current = pointerInsideRef.current ? 1 : 0;
         }
@@ -476,12 +459,7 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
             ctx.arc(drawX, drawY, radius, 0, Math.PI * 2);
             ctx.fill();
           } else {
-            ctx.fillRect(
-              drawX - dims.dot / 2,
-              drawY - dims.dot / 2,
-              dims.dot,
-              dims.dot
-            );
+            ctx.fillRect(drawX - dims.dot / 2, drawY - dims.dot / 2, dims.dot, dims.dot);
           }
         }
         ctx.globalAlpha = 1;

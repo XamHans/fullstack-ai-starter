@@ -2,9 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/lib/db';
 import { createLogger } from '@/lib/logger';
+import { EmailService } from '@/lib/services/email';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
-import { EmailService } from '@/lib/services/email';
 import type {
   Container,
   DatabaseConnection,

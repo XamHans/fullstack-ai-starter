@@ -1,6 +1,6 @@
 ---
-title: "AI Text Generation"
-description: "Build powerful text generation features with multiple AI providers, streaming responses, and production-ready patterns"
+title: 'AI Text Generation'
+description: 'Build powerful text generation features with multiple AI providers, streaming responses, and production-ready patterns'
 ---
 
 # AI Text Generation
@@ -21,6 +21,7 @@ Transform your application with AI-powered text generation capabilities. Create 
 ### Quick Setup
 
 1. **Add API Keys**
+
 ```env
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
@@ -28,6 +29,7 @@ GOOGLE_AI_API_KEY=...
 ```
 
 2. **Create API Endpoint**
+
 ```typescript
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
@@ -47,6 +49,7 @@ export const POST = withAuthentication(async (session, request) => {
 ```
 
 3. **Build Frontend Component**
+
 ```tsx
 'use client';
 
@@ -127,15 +130,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 export function StreamingTextGenerator() {
-  const {
-    completion,
-    input,
-    setInput,
-    handleSubmit,
-    isLoading,
-  } = useCompletion({
-    api: '/api/ai/generate-text-stream',
-  });
+  const { completion, input, setInput, handleSubmit, isLoading } =
+    useCompletion({
+      api: '/api/ai/generate-text-stream',
+    });
 
   return (
     <div className="space-y-4">
@@ -164,6 +162,7 @@ export function StreamingTextGenerator() {
 ### Advanced Features
 
 **Multiple AI Providers**
+
 ```typescript
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
@@ -188,6 +187,7 @@ export const POST = withAuthentication(async (session, request) => {
 ```
 
 **With Error Handling**
+
 ```tsx
 export function RobustTextGenerator() {
   const [prompt, setPrompt] = useState('');
@@ -259,15 +259,15 @@ export function RobustTextGenerator() {
 
 ## Supported Models
 
-| Provider | Models | Best For |
-|----------|--------|----------|
-| **OpenAI** | GPT-4, GPT-3.5-turbo | General purpose, coding, analysis |
-| **Anthropic** | Claude 3.5 Sonnet | Long-form content, research, creative writing |
-| **Google AI** | Gemini Pro | Multimodal tasks, reasoning, factual content |
+| Provider      | Models               | Best For                                      |
+| ------------- | -------------------- | --------------------------------------------- |
+| **OpenAI**    | GPT-4, GPT-3.5-turbo | General purpose, coding, analysis             |
+| **Anthropic** | Claude 3.5 Sonnet    | Long-form content, research, creative writing |
+| **Google AI** | Gemini Pro           | Multimodal tasks, reasoning, factual content  |
 
 ## Interactive Playground
 
-Test different prompts and models at `/playground/generate-text` to see text generation in action.
+Test different prompts and models at `/playground/generate-text/generate-text` to see text generation in action.
 
 ## Next Steps
 

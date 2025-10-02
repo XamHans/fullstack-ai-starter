@@ -1,34 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import {
+  BarChart3,
+  Bot,
+  Brain,
+  CheckCircle,
+  Cloud,
+  Code2,
+  Cpu,
+  Database,
+  Eye,
+  FileCode,
+  GitBranch,
+  Globe,
+  Layout,
+  MonitorSpeaker,
+  Rocket,
+  Server,
+  Shield,
+  TestTube,
+  TypeIcon as Type,
+  Upload,
+  Users,
+  Wrench,
+  Zap,
+} from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Bot,
-  Database,
-  FileCode,
-  TestTube,
-  Wrench,
-  TypeIcon as Type,
-  Shield,
-  MonitorSpeaker,
-  Server,
-  Layout,
-  Rocket,
-  Cloud,
-  Cpu,
-  BarChart3,
-  Upload,
-  Zap,
-  Globe,
-  Brain,
-  Code2,
-  GitBranch,
-  Users,
-  Eye,
-  CheckCircle,
-} from 'lucide-react';
 
 interface Feature {
   icon: React.ComponentType<any>;
@@ -42,75 +42,87 @@ const featuresData = {
     {
       icon: FileCode,
       title: 'Spec-Driven Architecture',
-      description: 'BDD specifications with Gherkin syntax. Define requirements once, implement perfectly every time with AI assistance.',
+      description:
+        'BDD specifications with Gherkin syntax. Define requirements once, implement perfectly every time with AI assistance.',
       color: 'blue',
     },
     {
       icon: Wrench,
       title: 'Dependency Injection',
-      description: 'Clean, testable, and scalable architecture with automatic dependency management that grows with your business.',
+      description:
+        'Clean, testable, and scalable architecture with automatic dependency management that grows with your business.',
       color: 'green',
     },
     {
       icon: TestTube,
       title: 'Comprehensive Testing',
-      description: 'Vitest unit tests, Cucumber BDD, and Playwright E2E testing for bulletproof code quality.',
+      description:
+        'Vitest unit tests, Cucumber BDD, and Playwright E2E testing for bulletproof code quality.',
       color: 'purple',
     },
     {
       icon: Type,
       title: 'Full TypeScript',
-      description: 'Complete type safety with exceptional developer experience, IntelliSense, and compile-time validation.',
+      description:
+        'Complete type safety with exceptional developer experience, IntelliSense, and compile-time validation.',
       color: 'orange',
     },
     {
       icon: Bot,
       title: 'Claude Code MCP',
-      description: 'Context-aware AI coding with specialized servers for Neon, Vercel, and Playwright integrations.',
+      description:
+        'Context-aware AI coding with specialized servers for Neon, Vercel, and Playwright integrations.',
       color: 'indigo',
     },
     {
       icon: Shield,
       title: 'Better-Auth Security',
-      description: 'Production-ready authentication with email/password and OAuth providers, tested with 100+ edge cases.',
+      description:
+        'Production-ready authentication with email/password and OAuth providers, tested with 100+ edge cases.',
       color: 'emerald',
     },
     {
       icon: Database,
       title: 'Neon PostgreSQL',
-      description: 'Serverless Postgres with database branching for safe development workflows and instant scaling.',
+      description:
+        'Serverless Postgres with database branching for safe development workflows and instant scaling.',
       color: 'teal',
     },
     {
       icon: Cloud,
       title: 'Vercel Deployment',
-      description: 'Zero-config deployments with edge functions, global CDN, and automatic HTTPS certificates.',
+      description:
+        'Zero-config deployments with edge functions, global CDN, and automatic HTTPS certificates.',
       color: 'gray',
     },
   ],
-  'architecture': [
+  architecture: [
     {
       icon: FileCode,
       title: 'Spec-Driven Development',
-      description: 'BDD workflows with Gherkin syntax ensure AI generates code that perfectly matches your requirements.',
+      description:
+        'BDD workflows with Gherkin syntax ensure AI generates code that perfectly matches your requirements.',
       color: 'blue',
     },
     {
       icon: Wrench,
       title: 'Dependency Injection',
-      description: 'Clean architecture with IoC container for testable, maintainable, and scalable code organization.',
+      description:
+        'Clean architecture with IoC container for testable, maintainable, and scalable code organization.',
       color: 'green',
     },
     {
       icon: Code2,
       title: 'Modular Design',
-      description: 'Domain-driven architecture with clear separation of concerns and business logic encapsulation.',
+      description:
+        'Domain-driven architecture with clear separation of concerns and business logic encapsulation.',
       color: 'violet',
     },
     {
       icon: Type,
       title: 'TypeScript First',
-      description: 'End-to-end type safety with strict configuration and comprehensive type definitions.',
+      description:
+        'End-to-end type safety with strict configuration and comprehensive type definitions.',
       color: 'orange',
     },
   ],
@@ -118,103 +130,119 @@ const featuresData = {
     {
       icon: Bot,
       title: 'Claude Code MCP',
-      description: 'Advanced AI coding assistant with full codebase context and specialized development servers.',
+      description:
+        'Advanced AI coding assistant with full codebase context and specialized development servers.',
       color: 'indigo',
     },
     {
       icon: Users,
       title: 'Specialized Agents',
-      description: 'Multiple AI agents configured for different workflows: BDD, testing, deployment, and code review.',
+      description:
+        'Multiple AI agents configured for different workflows: BDD, testing, deployment, and code review.',
       color: 'cyan',
     },
     {
       icon: Brain,
       title: 'AI SDK Integration',
-      description: 'Vercel AI SDK with support for OpenAI, Anthropic, and Google AI models with streaming capabilities.',
+      description:
+        'Vercel AI SDK with support for OpenAI, Anthropic, and Google AI models with streaming capabilities.',
       color: 'pink',
     },
     {
       icon: Eye,
       title: 'Langfuse Observability',
-      description: 'Complete AI request tracking, analytics, and performance monitoring for production applications.',
+      description:
+        'Complete AI request tracking, analytics, and performance monitoring for production applications.',
       color: 'amber',
     },
   ],
-  'infrastructure': [
+  infrastructure: [
     {
       icon: Database,
       title: 'Neon PostgreSQL',
-      description: 'Serverless database with instant scaling, connection pooling, and git-like branching workflows.',
+      description:
+        'Serverless database with instant scaling, connection pooling, and git-like branching workflows.',
       color: 'teal',
     },
     {
       icon: Server,
       title: 'Vercel Platform',
-      description: 'Global edge network with serverless functions, automatic deployments, and built-in monitoring.',
+      description:
+        'Global edge network with serverless functions, automatic deployments, and built-in monitoring.',
       color: 'gray',
     },
     {
       icon: Upload,
       title: 'File Upload System',
-      description: 'Uppy 5.0 with Cloudflare R2 storage, security validation, and multiple upload methods.',
+      description:
+        'Uppy 5.0 with Cloudflare R2 storage, security validation, and multiple upload methods.',
       color: 'blue',
     },
     {
       icon: Zap,
       title: 'Performance Optimized',
-      description: 'Built-in caching, image optimization, and minimal bundle size for lightning-fast user experiences.',
+      description:
+        'Built-in caching, image optimization, and minimal bundle size for lightning-fast user experiences.',
       color: 'yellow',
     },
   ],
-  'testing': [
+  testing: [
     {
       icon: TestTube,
       title: 'Vitest Framework',
-      description: 'Lightning-fast unit and integration testing with excellent TypeScript support and hot reload.',
+      description:
+        'Lightning-fast unit and integration testing with excellent TypeScript support and hot reload.',
       color: 'purple',
     },
     {
       icon: CheckCircle,
       title: 'BDD Testing',
-      description: 'Cucumber.js for behavior-driven development with plain-language feature specifications.',
+      description:
+        'Cucumber.js for behavior-driven development with plain-language feature specifications.',
       color: 'green',
     },
     {
       icon: Layout,
       title: 'Playwright E2E',
-      description: 'End-to-end browser automation testing across Chrome, Firefox, and Safari with visual comparisons.',
+      description:
+        'End-to-end browser automation testing across Chrome, Firefox, and Safari with visual comparisons.',
       color: 'violet',
     },
     {
       icon: BarChart3,
       title: 'Test Coverage',
-      description: 'Comprehensive coverage reporting with service-layer, API, and integration test strategies.',
+      description:
+        'Comprehensive coverage reporting with service-layer, API, and integration test strategies.',
       color: 'blue',
     },
   ],
-  'performance': [
+  performance: [
     {
       icon: Zap,
       title: 'Framer Motion',
-      description: 'Smooth animations and micro-interactions that enhance user experience without performance impact.',
+      description:
+        'Smooth animations and micro-interactions that enhance user experience without performance impact.',
       color: 'yellow',
     },
     {
       icon: Cpu,
       title: 'Optimized Rendering',
-      description: 'React Server Components and streaming for instant page loads and minimal JavaScript bundles.',
+      description:
+        'React Server Components and streaming for instant page loads and minimal JavaScript bundles.',
       color: 'red',
     },
     {
       icon: Globe,
       title: 'Edge Computing',
-      description: 'Global edge functions and CDN distribution for sub-100ms response times worldwide.',
+      description:
+        'Global edge functions and CDN distribution for sub-100ms response times worldwide.',
       color: 'blue',
     },
     {
       icon: MonitorSpeaker,
       title: 'Observability',
-      description: 'Pino structured logging with OpenTelemetry for comprehensive production monitoring.',
+      description:
+        'Pino structured logging with OpenTelemetry for comprehensive production monitoring.',
       color: 'rose',
     },
   ],
@@ -261,9 +289,7 @@ function FeatureCard({ feature, index }: { feature: Feature; index: number }) {
               <h3 className="font-semibold text-base mb-2 group-hover:text-primary transition-colors">
                 {feature.title}
               </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </div>
           </div>
         </CardContent>
@@ -332,11 +358,7 @@ export function PowerfulFeaturesSection() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             >
               {features.map((feature, index) => (
-                <FeatureCard
-                  key={`${key}-${index}`}
-                  feature={feature}
-                  index={index}
-                />
+                <FeatureCard key={`${key}-${index}`} feature={feature} index={index} />
               ))}
             </motion.div>
           </TabsContent>

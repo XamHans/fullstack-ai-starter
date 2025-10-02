@@ -1,6 +1,6 @@
 ---
-title: "Authentication"
-description: "Secure authentication system using better-auth with social providers and session management"
+title: 'Authentication'
+description: 'Secure authentication system using better-auth with social providers and session management'
 ---
 
 # Authentication
@@ -21,11 +21,13 @@ A secure authentication system built with better-auth, supporting email/password
 ### Setup and Configuration
 
 1. **Install Dependencies**
+
 ```bash
 npm install better-auth
 ```
 
 2. **Environment Variables**
+
 ```env
 BETTER_AUTH_SECRET=your-secret-key
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -33,15 +35,16 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 3. **Authentication Configuration**
+
 ```typescript
 // lib/auth.ts
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@/lib/db";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { db } from '@/lib/db';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
   }),
   emailAndPassword: {
     enabled: true,
@@ -66,20 +69,22 @@ export const auth = betterAuth({
 ## Example
 
 ### 1. Protected API Route
+
 ```typescript
 // app/api/profile/route.ts
-import { withAuthentication } from "@/lib/api/base";
+import { withAuthentication } from '@/lib/api/base';
 
 export const GET = withAuthentication(async (session, request) => {
   // User is authenticated, session contains user data
   return {
     user: session.user,
-    message: "Profile data retrieved successfully"
+    message: 'Profile data retrieved successfully',
   };
 });
 ```
 
 ### 2. Client-Side Authentication
+
 ```typescript
 // components/auth/login-form.tsx
 'use client';
@@ -99,7 +104,7 @@ export function LoginForm() {
     });
 
     if (response.ok) {
-      window.location.href = '/dashboard';
+      window.location.href = '/playground/generate-text';
     }
   };
 
@@ -124,9 +129,10 @@ export function LoginForm() {
 ```
 
 ### 3. Session Management
+
 ```typescript
 // lib/auth-utils.ts
-import { auth } from "@/lib/auth";
+import { auth } from '@/lib/auth';
 
 export async function getCurrentUser(request: Request) {
   const session = await auth.api.getSession({

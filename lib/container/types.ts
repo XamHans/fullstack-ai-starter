@@ -1,9 +1,9 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/lib/db';
 import type { CustomLogger } from '@/lib/logger';
+import type { EmailService } from '@/lib/services/email';
 import type { PostService } from '@/modules/posts/services/post.service';
 import type { UserService } from '@/modules/users/services/user.service';
-import type { EmailService } from '@/lib/services/email';
 
 export interface DatabaseConnection {
   db: PostgresJsDatabase<typeof schema>;

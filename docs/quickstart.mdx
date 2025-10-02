@@ -1,6 +1,6 @@
 ---
-title: "Quick Start Guide"
-description: "Get your AI-powered application running in minutes with this step-by-step setup guide"
+title: 'Quick Start Guide'
+description: 'Get your AI-powered application running in minutes with this step-by-step setup guide'
 ---
 
 Get from zero to a fully functional AI application in under 5 minutes. This guide walks you through installation, configuration, and verification.
@@ -52,15 +52,13 @@ Get from zero to a fully functional AI application in under 5 minutes. This guid
     NEXT_PUBLIC_UMAMI_WEBSITE_ID="your-umami-id"
     LANGFUSE_SECRET_KEY="sk-lf-..."
     ```
+
   </Step>
 
-  <Step title="Database setup">
-    Run migrations to create tables:
-    ```bash
-    npm run db:generate
-    npm run db:migrate
-    ```
-  </Step>
+<Step title="Database setup">
+  Run migrations to create tables: ```bash npm run db:generate npm run
+  db:migrate ```
+</Step>
 
   <Step title="Start development">
     ```bash
@@ -76,32 +74,20 @@ Test each feature to confirm everything works:
 
 1. **Homepage**: Visit http://localhost:3000
 2. **Authentication**: Sign up/login with email or Google
-3. **AI Generation**: Visit `/playground/generate-text`
-4. **File Uploads**: Visit `/playground/file-upload`
-5. **Chat Interface**: Visit `/playground/chat`
+3. **AI Generation**: Visit `/playground/generate-text/generate-text`
+4. **File Uploads**: Visit `/playground/generate-text/file-upload`
+5. **Chat Interface**: Visit `/playground/generate-text/chat`
 
 ## Next Steps
 
 <CardGroup cols={3}>
-  <Card
-    title="Build AI Features"
-    icon="robot"
-    href="/ai-overview"
-  >
+  <Card title="Build AI Features" icon="robot" href="/ai-overview">
     Add text generation, chat interfaces, and streaming responses to your app.
   </Card>
-  <Card
-    title="Configure Platform"
-    icon="server"
-    href="/authentication"
-  >
+  <Card title="Configure Platform" icon="server" href="/authentication">
     Set up authentication, database connections, and file uploads.
   </Card>
-  <Card
-    title="Monitor & Analyze"
-    icon="chart-line"
-    href="/observability"
-  >
+  <Card title="Monitor & Analyze" icon="chart-line" href="/observability">
     Track AI usage, performance, and user analytics in production.
   </Card>
 </CardGroup>

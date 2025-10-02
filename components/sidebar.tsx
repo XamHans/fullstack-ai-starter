@@ -1,36 +1,23 @@
 'use client';
+import { Bot, ChevronRight, FileText, LogOut, MessageCircle, Moon, Sun } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { signOut } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
-import {
-  Bot,
-  ChevronRight,
-  FileText,
-  LayoutGrid,
-  LogOut,
-  MessageCircle,
-  Moon,
-  Sun,
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
-const navigationItems = [
-  { icon: LayoutGrid, label: 'Dashboard', href: '/dashboard' },
-  { icon: FileText, label: 'Posts', href: '/posts' },
-];
+const navigationItems = [{ icon: FileText, label: 'CRUD Operations', href: '/posts' }];
 
 const playgroundItems = [
-  { label: 'Generate Text', href: '/playground/generate-text' },
-  { label: 'Generate Images', href: '/playground/generate-image' },
+  { label: 'Generate Text', href: '/playground/generate-text/' },
+  {
+    label: 'Generate Images',
+    href: '/playground/generate-image',
+  },
   { label: 'Chat', href: '/playground/chat' },
 ];
 
@@ -64,9 +51,7 @@ export function Sidebar() {
     <div className="w-64 border-r bg-card/50 flex flex-col">
       {/* Navigation Section */}
       <div className="p-4">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          Navigate
-        </h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3">Navigate</h2>
         <nav className="space-y-1">
           {navigationItems.map((item) => (
             <Link key={item.label} href={item.href}>
@@ -74,7 +59,7 @@ export function Sidebar() {
                 variant={pathname === item.href ? 'secondary' : 'ghost'}
                 className={cn(
                   'w-full justify-start gap-3 h-9',
-                  pathname === item.href && 'bg-secondary'
+                  pathname === item.href && 'bg-secondary',
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -102,7 +87,7 @@ export function Sidebar() {
               <ChevronRight
                 className={cn(
                   'h-4 w-4 transition-transform duration-200',
-                  playgroundOpen && 'rotate-90'
+                  playgroundOpen && 'rotate-90',
                 )}
               />
             </Button>
@@ -114,7 +99,7 @@ export function Sidebar() {
                   variant={pathname === item.href ? 'secondary' : 'ghost'}
                   className={cn(
                     'w-full justify-start gap-3 h-9 pl-6',
-                    pathname === item.href && 'bg-secondary'
+                    pathname === item.href && 'bg-secondary',
                   )}
                 >
                   {item.label}
@@ -129,9 +114,7 @@ export function Sidebar() {
 
       {/* Settings Section */}
       <div className="p-4">
-        <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          Settings
-        </h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3">Settings</h2>
         <nav className="space-y-1">
           {settingsItems.map((item) => (
             <Button

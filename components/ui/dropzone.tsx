@@ -1,10 +1,10 @@
 'use client';
 
+import { AlertCircle, CheckCircle, File, Image, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, File, Image, CheckCircle, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -43,7 +43,9 @@ export function Dropzone({
 }: DropzoneProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>(
+    'idle',
+  );
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -53,19 +55,19 @@ export function Dropzone({
     maxSize,
     disabled: disabled || uploadStatus === 'uploading',
     onDrop: (acceptedFiles) => {
-      const filesWithPreview = acceptedFiles.map(file =>
+      const filesWithPreview = acceptedFiles.map((file) =>
         Object.assign(file, {
-          preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
-        })
+          preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+        }),
       );
 
-      setFiles(prev => [...prev, ...filesWithPreview]);
+      setFiles((prev) => [...prev, ...filesWithPreview]);
       onFilesChange?.(acceptedFiles);
     },
   });
 
   const removeFile = (index: number) => {
-    setFiles(prev => {
+    setFiles((prev) => {
       const newFiles = [...prev];
       if (newFiles[index].preview) {
         URL.revokeObjectURL(newFiles[index].preview!);
@@ -98,24 +100,24 @@ export function Dropzone({
         }
 
         const result = await response.json();
-        setUploadProgress((prev) => prev + (100 / files.length));
+        setUploadProgress((prev) => prev + 100 / files.length);
         return result;
       });
 
       const uploadResults = await Promise.all(uploadPromises);
 
       // Store uploaded files
-      const newUploadedFiles = uploadResults.map(result => ({
+      const newUploadedFiles = uploadResults.map((result) => ({
         url: result.url,
         key: result.key,
         filename: result.filename,
         secureFilename: result.secureFilename,
         size: result.size,
         contentType: result.contentType,
-        warnings: result.warnings || []
+        warnings: result.warnings || [],
       }));
 
-      setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+      setUploadedFiles((prev) => [...prev, ...newUploadedFiles]);
       setUploadStatus('success');
 
       // Clear selected files after successful upload
@@ -131,7 +133,7 @@ export function Dropzone({
   };
 
   const clearAll = () => {
-    files.forEach(file => {
+    files.forEach((file) => {
       if (file.preview) {
         URL.revokeObjectURL(file.preview);
       }
@@ -144,7 +146,7 @@ export function Dropzone({
   };
 
   const removeUploadedFile = (index: number) => {
-    setUploadedFiles(prev => {
+    setUploadedFiles((prev) => {
       const newFiles = [...prev];
       newFiles.splice(index, 1);
       return newFiles;
@@ -156,7 +158,7 @@ export function Dropzone({
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -168,7 +170,7 @@ export function Dropzone({
           isDragActive ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400',
           disabled || uploadStatus === 'uploading' ? 'opacity-50 cursor-not-allowed' : '',
           uploadStatus === 'success' ? 'border-green-500 bg-green-50' : '',
-          uploadStatus === 'error' ? 'border-red-500 bg-red-50' : ''
+          uploadStatus === 'error' ? 'border-red-500 bg-red-50' : '',
         )}
       >
         <input {...getInputProps()} />
@@ -216,7 +218,8 @@ export function Dropzone({
         <div className="mt-4 space-y-2">
           {fileRejections.map(({ file, errors }, index) => (
             <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
-              <span className="font-medium">{file.name}</span>: {errors.map(e => e.message).join(', ')}
+              <span className="font-medium">{file.name}</span>:{' '}
+              {errors.map((e) => e.message).join(', ')}
             </div>
           ))}
         </div>
@@ -288,18 +291,17 @@ export function Dropzone({
         <div className="mt-6 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Uploaded Files ({uploadedFiles.length})</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setUploadedFiles([])}
-            >
+            <Button variant="outline" size="sm" onClick={() => setUploadedFiles([])}>
               Clear Uploaded
             </Button>
           </div>
 
           <div className="grid gap-3">
             {uploadedFiles.map((file, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg"
+              >
                 <div className="flex-shrink-0">
                   {file.contentType?.startsWith('image/') ? (
                     <img
@@ -307,7 +309,8 @@ export function Dropzone({
                       alt={file.filename}
                       className="h-16 w-16 object-cover rounded border"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDlWN0MgMjEgNS45IDIwLjEgNSAxOSA1SDVDMy45IDUgMyA1LjkgMyA3VjlNMjEgOVYxN0MgMjEgMTguMSAyMC4xIDE5IDE5IDE5SDVDIDMuOSAxOSAzIDE4LjEgMyAxN1Y5TTIxIDlMMTMuNSAxNC41QyAxMy4xIDE0LjggMTIuOSAxNC44IDEyLjUgMTQuNUwzIDkiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K';
+                        (e.target as HTMLImageElement).src =
+                          'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIxIDlWN0MgMjEgNS45IDIwLjEgNSAxOSA1SDVDMy45IDUgMyA1LjkgMyA3VjlNMjEgOVYxN0MgMjEgMTguMSAyMC4xIDE5IDE5IDE5SDVDIDMuOSAxOSAzIDE4LjEgMyAxN1Y5TTIxIDlMMTMuNSAxNC41QyAxMy4xIDE0LjggMTIuOSAxNC44IDEyLjUgMTQuNUwzIDkiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K';
                       }}
                     />
                   ) : (
@@ -321,14 +324,17 @@ export function Dropzone({
                     {formatFileSize(file.size)} • {file.contentType}
                   </p>
                   <p className="text-xs text-blue-600 truncate">
-                    <a href={file.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
                       View uploaded file ↗
                     </a>
                   </p>
                   {file.warnings && file.warnings.length > 0 && (
-                    <p className="text-xs text-orange-600">
-                      Warnings: {file.warnings.join(', ')}
-                    </p>
+                    <p className="text-xs text-orange-600">Warnings: {file.warnings.join(', ')}</p>
                   )}
                 </div>
 

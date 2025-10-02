@@ -1,6 +1,6 @@
 ---
-title: "AI SDK Overview"
-description: "Build AI-powered applications with Vercel AI SDK integration, streaming responses, and multiple provider support"
+title: 'AI SDK Overview'
+description: 'Build AI-powered applications with Vercel AI SDK integration, streaming responses, and multiple provider support'
 ---
 
 <img
@@ -34,15 +34,18 @@ The Vercel AI SDK integration provides a complete foundation for building AI-pow
 Choose your preferred AI provider and get API keys:
 
 **OpenAI** (Recommended for getting started)
+
 1. Visit [OpenAI Platform](https://platform.openai.com/)
 2. Create account and add billing information
 3. Generate API key in the API Keys section
 
 **Anthropic Claude**
+
 1. Visit [Anthropic Console](https://console.anthropic.com/)
 2. Create account and generate API key
 
 **Google AI**
+
 1. Visit [Google AI Studio](https://makersuite.google.com/)
 2. Create project and generate API key
 
@@ -64,11 +67,16 @@ LANGFUSE_PUBLIC_KEY=pk-lf-...
 ### 3. Create Your First AI Feature
 
 **API Route Implementation**
+
 ```typescript
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication, parseRequestBody, validateRequiredFields } from '@/lib/api/base';
+import {
+  withAuthentication,
+  parseRequestBody,
+  validateRequiredFields,
+} from '@/lib/api/base';
 
 export const POST = withAuthentication(async (session, request) => {
   const body = await parseRequestBody<{ prompt: string }>(request);
@@ -84,6 +92,7 @@ export const POST = withAuthentication(async (session, request) => {
 ```
 
 **Frontend Component**
+
 ```tsx
 'use client';
 
@@ -150,9 +159,10 @@ Complete streaming chat implementation:
 import { useChat } from 'ai/react';
 
 export function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/ai/chat',
-  });
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({
+      api: '/api/ai/chat',
+    });
 
   return (
     <div className="flex flex-col h-[600px]">
@@ -191,21 +201,25 @@ export function ChatInterface() {
 ## Key Features
 
 ### Text Generation
+
 - Single prompts with any AI model
 - Custom parameters and settings
 - Error handling and validation
 
 ### Chat Interfaces
+
 - Multi-turn conversations
 - Message history management
 - Real-time streaming responses
 
 ### Streaming Support
+
 - Token-by-token streaming
 - Progressive response rendering
 - Optimized user experience
 
 ### Multiple Providers
+
 - **OpenAI**: GPT-4, GPT-3.5-turbo
 - **Anthropic**: Claude 3.5 Sonnet
 - **Google AI**: Gemini Pro
@@ -216,32 +230,17 @@ export function ChatInterface() {
 Explore the full range of AI features available:
 
 <CardGroup cols={2}>
-  <Card
-    title="Text Generation"
-    icon="magic"
-    href="/text-generation"
-  >
-    Build AI-powered content generation with streaming responses and multiple models.
+  <Card title="Text Generation" icon="magic" href="/text-generation">
+    Build AI-powered content generation with streaming responses and multiple
+    models.
   </Card>
-  <Card
-    title="Chat Interfaces"
-    icon="messages"
-    href="/ai-chat"
-  >
+  <Card title="Chat Interfaces" icon="messages" href="/ai-chat">
     Create conversational AI experiences with persistent message history.
   </Card>
-  <Card
-    title="Best Practices"
-    icon="star"
-    href="/ai-best-practices"
-  >
+  <Card title="Best Practices" icon="star" href="/ai-best-practices">
     Optimize performance, costs, and user experience with proven patterns.
   </Card>
-  <Card
-    title="File Uploads"
-    icon="upload"
-    href="/file-uploads"
-  >
+  <Card title="File Uploads" icon="upload" href="/file-uploads">
     Handle file uploads securely with AI processing capabilities.
   </Card>
 </CardGroup>
@@ -249,9 +248,10 @@ Explore the full range of AI features available:
 ## Interactive Playground
 
 Test AI features interactively:
-- **Text Generation**: `/playground/generate-text`
-- **Chat Interface**: `/playground/chat`
-- **File Uploads**: `/playground/file-upload`
+
+- **Text Generation**: `/playground/generate-text/generate-text`
+- **Chat Interface**: `/playground/generate-text/chat`
+- **File Uploads**: `/playground/generate-text/file-upload`
 
 ## Next Steps
 

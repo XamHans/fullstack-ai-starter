@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { auth } from '@/lib/auth';
+import { convertToModelMessages, streamText, type UIMessage } from 'ai';
 import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -13,10 +13,7 @@ export async function POST(req: Request) {
   });
 
   if (!session) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { messages }: { messages: UIMessage[] } = await req.json();

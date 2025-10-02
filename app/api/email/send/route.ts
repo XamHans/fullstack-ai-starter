@@ -1,6 +1,11 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import {
+  ApiError,
+  parseRequestBody,
+  validateRequiredFields,
+  withAuthentication,
+} from '@/lib/api/base';
 import { getContainer } from '@/lib/container';
-import { withAuthentication, parseRequestBody, validateRequiredFields, ApiError } from '@/lib/api/base';
 import type { EmailTemplateName } from '@/lib/email/templates';
 
 interface SendEmailRequest {
@@ -29,6 +34,6 @@ export const POST = withAuthentication(async (session, request: NextRequest) => 
 
   return {
     message: 'Email sent successfully',
-    emailId: result.id
+    emailId: result.id,
   };
 });

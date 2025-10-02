@@ -1,9 +1,9 @@
-import { withErrorHandling } from '@/lib/api/base';
-import { r2Storage } from '@/lib/storage/r2-client';
-import { fileValidator } from '@/lib/middleware/file-validation';
-import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { withErrorHandling } from '@/lib/api/base';
+import { fileValidator } from '@/lib/middleware/file-validation';
+import { r2Storage } from '@/lib/storage/r2-client';
 
 const uploadSchema = z.object({
   filename: z.string().min(1),
@@ -98,10 +98,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     const fileExtension = filename.split('.').pop();
     const fileKey = `uploads/${nanoid()}.${fileExtension}`;
 
-    const presignedUrl = await r2Storage.getPresignedUploadUrl(
-      fileKey,
-      contentType
-    );
+    const presignedUrl = await r2Storage.getPresignedUploadUrl(fileKey, contentType);
 
     return {
       presignedUrl,

@@ -10,7 +10,8 @@ export function WelcomeEmail({ name, loginUrl }: WelcomeEmailProps) {
         Welcome to our platform, {name}!
       </h1>
       <p style={{ fontSize: '16px', lineHeight: '24px', color: '#666', marginBottom: '24px' }}>
-        Thank you for signing up. We're excited to have you on board and can't wait to see what you'll build with our AI-powered platform.
+        Thank you for signing up. We're excited to have you on board and can't wait to see what
+        you'll build with our AI-powered platform.
       </p>
       {loginUrl && (
         <a
@@ -23,7 +24,7 @@ export function WelcomeEmail({ name, loginUrl }: WelcomeEmailProps) {
             borderRadius: '6px',
             textDecoration: 'none',
             fontWeight: '500',
-            marginBottom: '24px'
+            marginBottom: '24px',
           }}
         >
           Get Started

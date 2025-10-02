@@ -1,11 +1,11 @@
-import { Footer } from '@/components/footer';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import type React from 'react';
+import { Footer } from '@/components/footer';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -21,7 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+        <link
+          rel="stylesheet"
+          type="text/css"
+          href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+        />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};
@@ -38,12 +42,7 @@ html {
         )}
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <main className="flex flex-col min-h-screen">
             {children}
             <Footer />

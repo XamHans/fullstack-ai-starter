@@ -52,7 +52,7 @@ export class FileUploadService {
 
     // Check MIME type
     if (validationRules.allowedMimeTypes) {
-      const isValidMimeType = validationRules.allowedMimeTypes.some(mimeType => {
+      const isValidMimeType = validationRules.allowedMimeTypes.some((mimeType) => {
         if (mimeType.endsWith('/*')) {
           return file.type.startsWith(mimeType.slice(0, -1));
         }
@@ -84,7 +84,10 @@ export class FileUploadService {
   /**
    * Validate multiple files
    */
-  validateFiles(files: File[], rules: FileValidationRules = {}): { valid: boolean; errors: string[] } {
+  validateFiles(
+    files: File[],
+    rules: FileValidationRules = {},
+  ): { valid: boolean; errors: string[] } {
     const validationRules = { ...this.defaultRules, ...rules };
     const errors: string[] = [];
 
@@ -114,7 +117,7 @@ export class FileUploadService {
       signal?: AbortSignal;
       metadata?: Record<string, string>;
       validationRules?: FileValidationRules;
-    } = {}
+    } = {},
   ): Promise<UploadResult> {
     const { onProgress, signal, metadata = {}, validationRules = {} } = options;
 
@@ -165,7 +168,7 @@ export class FileUploadService {
       signal?: AbortSignal;
       metadata?: Record<string, string>;
       validationRules?: FileValidationRules;
-    } = {}
+    } = {},
   ): Promise<UploadResult[]> {
     const { onProgress, onFileComplete, signal, metadata = {}, validationRules = {} } = options;
 
@@ -185,7 +188,7 @@ export class FileUploadService {
 
       const file = files[i];
       const result = await this.uploadFile(file, {
-        onProgress: progress => onProgress?.(i, progress),
+        onProgress: (progress) => onProgress?.(i, progress),
         signal,
         metadata,
         validationRules,
@@ -206,7 +209,10 @@ export class FileUploadService {
   /**
    * Get a presigned URL for direct client upload
    */
-  async getPresignedUrl(filename: string, contentType: string): Promise<{
+  async getPresignedUrl(
+    filename: string,
+    contentType: string,
+  ): Promise<{
     success: boolean;
     presignedUrl?: string;
     key?: string;
@@ -221,7 +227,9 @@ export class FileUploadService {
       const response = await fetch(`${this.baseUrl}?${params}`);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to get presigned URL' }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: 'Failed to get presigned URL' }));
         return { success: false, error: errorData.error };
       }
 
@@ -260,7 +268,7 @@ export class FileUploadService {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + ' ' + sizes[i];
   }
 
   /**
@@ -291,7 +299,7 @@ export class FileUploadService {
     file: File,
     maxWidth = 200,
     maxHeight = 200,
-    quality = 0.8
+    quality = 0.8,
   ): Promise<Blob | null> {
     if (!this.isImage(file)) return null;
 

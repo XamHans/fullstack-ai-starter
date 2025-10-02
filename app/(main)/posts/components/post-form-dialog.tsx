@@ -92,16 +92,19 @@ export function PostFormDialog({
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} post`);
+        throw new Error(data.error || `Failed to ${isEditing ? 'update' : 'create'} post`);
       }
 
-      const data = await response.json();
       if (data.success) {
         onSuccess(data.data);
         onOpenChange(false);
-      } else {
-        throw new Error(data.error || 'Unknown error occurred');
+        toast({
+          title: 'Success',
+          description: `Post ${isEditing ? 'updated' : 'created'} successfully`,
+        });
       }
     } catch (error) {
       toast({

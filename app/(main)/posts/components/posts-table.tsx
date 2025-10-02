@@ -89,11 +89,12 @@ export function PostsTable({ userId }: PostsTableProps) {
         method: 'DELETE',
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to delete post');
+        throw new Error(data.error || 'Failed to delete post');
       }
 
-      const data = await response.json();
       if (data.success) {
         setPosts(posts.filter((post) => post.id !== postId));
         toast({
@@ -104,7 +105,7 @@ export function PostsTable({ userId }: PostsTableProps) {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete post',
+        description: error instanceof Error ? error.message : 'Failed to delete post',
         variant: 'destructive',
       });
     }
@@ -122,11 +123,12 @@ export function PostsTable({ userId }: PostsTableProps) {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to update post');
+        throw new Error(data.error || 'Failed to update post');
       }
 
-      const data = await response.json();
       if (data.success) {
         setPosts(
           posts.map((post) =>
@@ -141,7 +143,7 @@ export function PostsTable({ userId }: PostsTableProps) {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to update post',
+        description: error instanceof Error ? error.message : 'Failed to update post',
         variant: 'destructive',
       });
     }

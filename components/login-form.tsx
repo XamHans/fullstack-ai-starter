@@ -17,7 +17,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
       setIsSigningIn(true);
       await authClient.signIn.social({
         provider: 'google',
-        callbackURL: '/dashboard',
+        callbackURL: '/playground/generate-text',
       });
     } catch (error) {
       console.error('Failed to sign in with Google:', error);

@@ -1,21 +1,15 @@
 'use client';
 
-import { analytics } from '@/lib/services/analytics';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { type ApiResponse } from '@/lib/api/base';
-import { type GenerateImageResponseData } from '@/lib/api/types';
 import { Book, Download, ImageIcon, Lightbulb, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useId, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import type { ApiResponse } from '@/lib/api/base';
+import type { GenerateImageResponseData } from '@/lib/api/types';
+import { analytics } from '@/lib/services/analytics';
 
 export default function GenerateImagePage() {
   const [prompt, setPrompt] = useState('');
@@ -39,7 +33,7 @@ export default function GenerateImagePage() {
     // Track image generation request
     analytics.ai.generateImage.submit({
       promptLength: prompt.length,
-      promptWords: prompt.trim().split(/\s+/).length
+      promptWords: prompt.trim().split(/\s+/).length,
     });
 
     try {
@@ -55,8 +49,7 @@ export default function GenerateImagePage() {
         throw new Error('Failed to generate image');
       }
 
-      const result: ApiResponse<GenerateImageResponseData> =
-        await response.json();
+      const result: ApiResponse<GenerateImageResponseData> = await response.json();
       console.log('API Response:', result);
 
       if (result.success && result.data) {
@@ -70,7 +63,7 @@ export default function GenerateImagePage() {
 
         // Track generation error
         analytics.ai.generateImage.error({
-          errorType: 'api_response_error'
+          errorType: 'api_response_error',
         });
       }
     } catch (err) {
@@ -79,7 +72,7 @@ export default function GenerateImagePage() {
 
       // Track generation error
       analytics.ai.generateImage.error({
-        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error'
+        errorType: errorMessage.includes('Failed to generate') ? 'api_error' : 'unknown_error',
       });
     } finally {
       setLoading(false);
@@ -123,7 +116,9 @@ export default function GenerateImagePage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => analytics.ui.docsLink({ page: 'generate-image', section: 'gemini-guide' })}
+                onClick={() =>
+                  analytics.ui.docsLink({ page: 'generate-image', section: 'gemini-guide' })
+                }
               >
                 <Book className="h-4 w-4 mr-2" />
                 Documentation
@@ -137,9 +132,7 @@ export default function GenerateImagePage() {
           <Card>
             <CardHeader>
               <CardTitle>Input</CardTitle>
-              <CardDescription>
-                Enter your prompt to generate images
-              </CardDescription>
+              <CardDescription>Enter your prompt to generate images</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,7 +163,7 @@ export default function GenerateImagePage() {
                           // Track example prompt usage
                           analytics.ui.examplePrompt({
                             promptIndex: index,
-                            promptType: 'image_generation'
+                            promptType: 'image_generation',
                           });
                         }}
                         type="button"
@@ -182,9 +175,7 @@ export default function GenerateImagePage() {
                 </div>
 
                 {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
-                    {error}
-                  </div>
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
                 )}
 
                 <Button type="submit" disabled={loading} className="w-full">
@@ -199,9 +190,7 @@ export default function GenerateImagePage() {
           <Card>
             <CardHeader>
               <CardTitle>Generated Image</CardTitle>
-              <CardDescription>
-                AI-generated image will appear here
-              </CardDescription>
+              <CardDescription>AI-generated image will appear here</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="min-h-[400px]">
@@ -233,12 +222,9 @@ export default function GenerateImagePage() {
                   <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4">
                     <ImageIcon className="h-12 w-12" />
                     <div className="text-center">
-                      <p className="font-medium">
-                        Generated image will appear here
-                      </p>
+                      <p className="font-medium">Generated image will appear here</p>
                       <p className="text-sm">
-                        Enter a detailed prompt and click "Generate Image" to
-                        get started
+                        Enter a detailed prompt and click "Generate Image" to get started
                       </p>
                     </div>
                   </div>
@@ -258,24 +244,23 @@ export default function GenerateImagePage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              • <strong>Be specific:</strong> Include details about style,
-              lighting, colors, and composition
+              • <strong>Be specific:</strong> Include details about style, lighting, colors, and
+              composition
             </p>
             <p>
-              • <strong>Set the scene:</strong> Describe the environment, mood,
-              and atmosphere
+              • <strong>Set the scene:</strong> Describe the environment, mood, and atmosphere
             </p>
             <p>
-              • <strong>Mention art styles:</strong> Reference specific artistic
-              movements or techniques
+              • <strong>Mention art styles:</strong> Reference specific artistic movements or
+              techniques
             </p>
             <p>
-              • <strong>Include technical details:</strong> Camera angles,
-              lighting conditions, or artistic mediums
+              • <strong>Include technical details:</strong> Camera angles, lighting conditions, or
+              artistic mediums
             </p>
             <p>
-              • <strong>Iterate and refine:</strong> Experiment with different
-              prompt variations for best results
+              • <strong>Iterate and refine:</strong> Experiment with different prompt variations for
+              best results
             </p>
           </CardContent>
         </Card>

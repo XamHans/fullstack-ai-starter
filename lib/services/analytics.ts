@@ -100,9 +100,7 @@ class AnalyticsService {
       submit: (data: Pick<AIEventData, 'promptLength' | 'promptWords'>) => {
         this.track('generate-text-submit', data);
       },
-      success: (
-        data: Pick<AIEventData, 'responseLength' | 'responseWords'>
-      ) => {
+      success: (data: Pick<AIEventData, 'responseLength' | 'responseWords'>) => {
         this.track('generate-text-success', data);
       },
       error: (data: Pick<AIEventData, 'errorType'>) => {
@@ -126,9 +124,7 @@ class AnalyticsService {
       send: (data: Pick<AIEventData, 'messageLength' | 'conversationLength'>) => {
         this.track('chat-message-send', data);
       },
-      success: (
-        data: Pick<AIEventData, 'responseLength' | 'conversationLength'>
-      ) => {
+      success: (data: Pick<AIEventData, 'responseLength' | 'conversationLength'>) => {
         this.track('chat-response-received', data);
       },
       error: (data: Pick<AIEventData, 'errorType'>) => {
@@ -144,10 +140,7 @@ class AnalyticsService {
   file = {
     upload: {
       success: (
-        data: Pick<
-          FileEventData,
-          'uploadType' | 'fileCount' | 'totalSize' | 'fileTypes'
-        >
+        data: Pick<FileEventData, 'uploadType' | 'fileCount' | 'totalSize' | 'fileTypes'>,
       ) => {
         this.track('file-upload-success', data);
       },

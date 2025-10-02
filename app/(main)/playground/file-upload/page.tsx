@@ -8,12 +8,9 @@ export default function FileUploadPlayground() {
       <div className="space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold tracking-tight">
-            File Upload Playground
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">File Upload Playground</h1>
           <p className="text-lg text-muted-foreground">
-            Test file upload functionality with drag & drop interface and R2
-            storage integration
+            Test file upload functionality with drag & drop interface and R2 storage integration
           </p>
         </div>
 
@@ -22,8 +19,7 @@ export default function FileUploadPlayground() {
           <div className="bg-card border rounded-lg p-6 shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Upload Files</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Drag and drop files or click to select. Files are uploaded to
-              Cloudflare R2 storage.
+              Drag and drop files or click to select. Files are uploaded to Cloudflare R2 storage.
             </p>
             <Dropzone
               maxFiles={5}
@@ -70,9 +66,7 @@ export default function FileUploadPlayground() {
 
           {/* Technical Details */}
           <div className="bg-card border rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold mb-3">
-              Technical Implementation
-            </h3>
+            <h3 className="text-lg font-semibold mb-3">Technical Implementation</h3>
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <h4 className="font-medium mb-2">Frontend</h4>

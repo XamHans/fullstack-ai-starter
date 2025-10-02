@@ -1,25 +1,31 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Check R2 environment variables - only throw in runtime, not during build
-const isBuilding = process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL && !process.env.CF_PAGES;
+const isBuilding =
+  process.env.NODE_ENV === 'production' && !process.env.VERCEL_URL && !process.env.CF_PAGES;
 if (
   !isBuilding &&
-  (!process.env.R2_ACCOUNT_ID ||
-  !process.env.R2_ACCESS_KEY_ID ||
-  !process.env.R2_SECRET_ACCESS_KEY)
+  (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY)
 ) {
   console.warn('R2 environment variables are not configured. File uploads will not work.');
 }
 
-const r2Client = process.env.R2_ACCOUNT_ID ? new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-}) : null;
+const r2Client = process.env.R2_ACCOUNT_ID
+  ? new S3Client({
+      region: 'auto',
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+      },
+    })
+  : null;
 
 export class R2StorageClient {
   private bucketName = process.env.R2_BUCKET_NAME || 'default';

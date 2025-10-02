@@ -1,9 +1,9 @@
-import { LangfuseSpanProcessor, ShouldExportSpan } from "@langfuse/otel";
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
+import { LangfuseSpanProcessor, type ShouldExportSpan } from '@langfuse/otel';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 
 // Optional: filter out NextJS infra spans to reduce noise
 const shouldExportSpan: ShouldExportSpan = (span) => {
-  return span.otelSpan.instrumentationScope.name !== "next.js";
+  return span.otelSpan.instrumentationScope.name !== 'next.js';
 };
 
 export const langfuseSpanProcessor = new LangfuseSpanProcessor({

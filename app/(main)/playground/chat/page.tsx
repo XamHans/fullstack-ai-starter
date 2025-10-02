@@ -1,23 +1,16 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { logger } from '@/lib/logger';
-import { analytics } from '@/lib/services/analytics';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { Book, Bot, Loader2, Send, Trash2, User } from 'lucide-react';
 import Link from 'next/link';
-
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { logger } from '@/lib/logger';
+import { analytics } from '@/lib/services/analytics';
 
 export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -40,7 +33,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
-        '[data-radix-scroll-area-viewport]'
+        '[data-radix-scroll-area-viewport]',
       );
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
@@ -84,9 +77,7 @@ export default function ChatPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  analytics.ui.docsLink({ page: 'chat', section: 'overview' })
-                }
+                onClick={() => analytics.ui.docsLink({ page: 'chat', section: 'overview' })}
               >
                 <Book className="h-4 w-4 mr-2" />
                 See Documentation
@@ -137,9 +128,7 @@ export default function ChatPage() {
                         <div
                           key={message.id}
                           className={`flex gap-3 ${
-                            message.role === 'assistant'
-                              ? 'justify-start'
-                              : 'justify-end'
+                            message.role === 'assistant' ? 'justify-start' : 'justify-end'
                           }`}
                         >
                           {message.role === 'assistant' && (

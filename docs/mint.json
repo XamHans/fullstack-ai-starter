@@ -23,7 +23,7 @@
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://dashboard.yourapp.com"
+    "url": "https://playground/generate-text.yourapp.com"
   },
   "tabs": [
     {
@@ -77,10 +77,7 @@
     {
       "group": "Monitoring & Analytics",
       "icon": "chart-line",
-      "pages": [
-        "observability",
-        "umami-analytics"
-      ]
+      "pages": ["observability", "umami-analytics"]
     },
     {
       "group": "API Reference",
