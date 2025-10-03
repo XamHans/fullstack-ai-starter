@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { schema } from '@/lib/db';
+import schema from '@/lib/db/schema';
 
 let testDb: any;
 let testClient: postgres.Sql | null = null;
