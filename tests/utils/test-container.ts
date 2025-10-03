@@ -4,6 +4,9 @@ import type { DatabaseConnection, ServiceDependencies } from '@/lib/container/ty
 import { createLogger } from '@/lib/logger';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
+import { WorkflowService } from '@/modules/workflow/services/workflow.service';
+import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
+import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
 import { getTestDb } from './test-database';
 
 export function createTestContainer(): Container & {
@@ -32,9 +35,18 @@ export function createTestContainer(): Container & {
   // Create services manually with test dependencies
   const userService = new UserService(serviceDependencies);
   const postService = new PostService(serviceDependencies);
+  const workflowService = new WorkflowService(serviceDependencies);
+  const specSyncService = new SpecSyncService(serviceDependencies, workflowService);
+  const specGeneratorService = new SpecGeneratorService(serviceDependencies, workflowService);
 
   // Update service dependencies with service references
-  serviceDependencies.services = { userService, postService };
+  serviceDependencies.services = {
+    userService,
+    postService,
+    workflowService,
+    specSyncService,
+    specGeneratorService,
+  };
 
   const container: Container = {
     database: testDatabase,
@@ -50,6 +62,9 @@ export function createTestContainer(): Container & {
     },
     userService,
     postService,
+    workflowService,
+    specSyncService,
+    specGeneratorService,
   };
 
   return {

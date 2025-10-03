@@ -1,5 +1,5 @@
 ---
-name: 'plan-spec'
+name: 'plan'
 description: 'Creates an implementation plan from a Gherkin spec before coding.'
 argument-hint: '[path/to/spec-file.md]'
 ---
@@ -25,10 +25,10 @@ $ARGUMENTS
      - API features → Read `docs/architecture/api-architecture.mdx`
      - Database changes → Read `docs/architecture/database.mdx`
      - Auth features → Read `docs/architecture/authentication.mdx`
+     - AI/LLM features → Reference https://ai-sdk.dev/llms.txt for SDK patterns
 
 3. **Strategic Test Layer Selection**:
    For each Gherkin scenario, determine the optimal test type:
-
    - **Unit Test** → Pure business logic, validation rules, data transformations
    - **API Test** → HTTP contracts, endpoint behavior, authentication/authorization
    - **E2E Test** → Full user journeys spanning multiple modules (rare, use sparingly)
@@ -47,16 +47,19 @@ $ARGUMENTS
 # Implementation Plan: {Feature Name}
 
 ## Specification
+
 `specs/{domain}/{feature-name}.md`
 
 ## Test Strategy
 
 ### Scenario: {Scenario 1 Name}
+
 - **Test Type**: Unit | API | E2E
 - **Rationale**: {Why this test layer is most efficient}
 - **Test Location**: `modules/{domain}/tests/{unit|integration|e2e}/{file-name}.test.ts`
 
 ### Scenario: {Scenario 2 Name}
+
 - **Test Type**: Unit | API | E2E
 - **Rationale**: {Why this test layer is most efficient}
 - **Test Location**: `modules/{domain}/tests/{unit|integration|e2e}/{file-name}.test.ts`
@@ -64,19 +67,23 @@ $ARGUMENTS
 ## Files to Create
 
 ### Services
+
 - `modules/{domain}/services/{service-name}.service.ts`
   - Methods: {list key methods}
   - Purpose: {brief description}
 
 ### Types
+
 - `modules/{domain}/types/{type-name}.ts` (if needed)
   - Types/Interfaces needed for this feature
 
 ### API Routes
+
 - `app/api/{route}/route.ts` (if needed)
   - Endpoints: {list HTTP methods and paths}
 
 ### Tests
+
 - `modules/{domain}/tests/unit/{name}.test.ts`
 - `modules/{domain}/tests/integration/{name}.api.test.ts`
 
@@ -88,6 +95,7 @@ $ARGUMENTS
 ## Database Changes
 
 **Schema Modifications:**
+
 - {Table/field additions}
 - {Migrations needed}
 
@@ -120,6 +128,7 @@ OR
    - Run full test suite
 
 ## Estimated Complexity
+
 - **Simple**: Single service method, no database changes, 1-2 tests
 - **Medium**: Multiple methods, some database changes, 3-5 tests
 - **Complex**: Multiple services, schema changes, API + frontend, 6+ tests
@@ -127,7 +136,8 @@ OR
 **This feature is**: {Simple|Medium|Complex}
 
 ---
-*Ready to implement? Run: `/implement specs/{domain}/{feature-name}.md`*
+
+_Ready to implement? Run: `/implement specs/{domain}/{feature-name}.md`_
 ```
 
 **After Generating Plan:**

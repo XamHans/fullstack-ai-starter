@@ -5,6 +5,9 @@ import { createLogger } from '@/lib/logger';
 import { EmailService } from '@/lib/services/email';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
+import { WorkflowService } from '@/modules/workflow/services/workflow.service';
+import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
+import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
 import type {
   Container,
   DatabaseConnection,
@@ -50,9 +53,22 @@ export function createContainer(overrides?: Partial<Container>): Container {
   const userService = overrides?.userService || new UserService(serviceDependencies);
   const postService = overrides?.postService || new PostService(serviceDependencies);
   const emailService = overrides?.emailService || new EmailService();
+  const workflowService = overrides?.workflowService || new WorkflowService(serviceDependencies);
+  const specSyncService =
+    overrides?.specSyncService || new SpecSyncService(serviceDependencies, workflowService);
+  const specGeneratorService =
+    overrides?.specGeneratorService ||
+    new SpecGeneratorService(serviceDependencies, workflowService);
 
   // Update service dependencies with service references for composition
-  const services: Services = { userService, postService, emailService };
+  const services: Services = {
+    userService,
+    postService,
+    emailService,
+    workflowService,
+    specSyncService,
+    specGeneratorService,
+  };
   serviceDependencies.services = services;
 
   return {
@@ -65,6 +81,9 @@ export function createContainer(overrides?: Partial<Container>): Container {
     userService,
     postService,
     emailService,
+    workflowService,
+    specSyncService,
+    specGeneratorService,
   };
 }
 
@@ -74,6 +93,9 @@ export function getServices(container: Container): Services {
     userService: container.userService,
     postService: container.postService,
     emailService: container.emailService,
+    workflowService: container.workflowService,
+    specSyncService: container.specSyncService,
+    specGeneratorService: container.specGeneratorService,
   };
 }
 

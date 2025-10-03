@@ -36,6 +36,12 @@ After understanding the idea, automatically create a lightweight specification f
 ## Domain
 `modules/{domain}/`
 
+## Implementation Progress
+<!-- Track scenario implementation below -->
+<!-- Update after each scenario is implemented via /implement -->
+
+⏳ All scenarios pending
+
 ## Scenarios
 
 ### Happy Path: {Main Success Scenario}

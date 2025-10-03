@@ -52,30 +52,44 @@ $ARGUMENTS
    npm test
    ```
 
-5. **Update Feature Documentation** (Optional but recommended):
+5. **Update Spec File with Scenario Status**:
+   After successful implementation, update the spec file to track progress:
+   - For each implemented scenario, add status metadata below the scenario header:
+
+     ```markdown
+     #### Scenario X.X: {Scenario Name}
+
+     **Status**: ✅ Completed | **Branch**: `feature/{domain}/{feature-name}` | **Date**: {YYYY-MM-DD}
+     ```
+
+   - Update the "Implementation Progress" section at the top of the spec
+   - This helps track which scenarios are complete in large specs with multiple scenarios
+   - Commit the updated spec file with the implementation
+
+6. **Update Feature Documentation** (Optional but recommended):
    Create or update `modules/{domain}/features.md`:
 
    ```markdown
    ### {Feature Name}
+
    **Spec**: `specs/{domain}/{feature-name}.md`
    **Date**: {date}
 
    **What was built:**
+
    - {Brief bullet points of key functionality}
 
    **Tests added:**
+
    - {List test files created}
    ```
 
-**Success Criteria:**
-- ✅ All tests pass (`npm test` returns green)
-- ✅ Code is formatted and linted
-- ✅ Feature branch created with meaningful commits
-- ✅ Implementation matches Gherkin scenarios
-
 **Next Steps After Success:**
 Tell the user:
+
 1. Feature has been implemented on branch `feature/{domain}/{feature-name}`
 2. All tests are passing
 3. They can review the changes and merge when ready
 4. Suggest: `git diff main` to see all changes
+
+After all done run /clear
