@@ -8,9 +8,32 @@ Visualize and track the BDD 3-phase workflow (Spec → Plan → Implement) using
 
 ## Implementation Progress
 <!-- Track scenario implementation below -->
-<!-- Update after each scenario is implemented via /implement -->
+<!-- Updated: 2025-10-03 -->
 
-⏳ All scenarios pending
+### Backend Layer (Partially Complete)
+✅ **Database Schema** - Created `specs` table with migrations (`modules/workflow/schema.ts`)
+✅ **Types** - Defined all necessary types (`modules/workflow/types.ts`)
+✅ **Services** - Implemented WorkflowService, SpecSyncService, SpecGeneratorService
+✅ **Tests** - Unit and integration tests written for all services
+✅ **Container** - Services registered in dependency injection (`lib/container/`)
+✅ **Test Infrastructure** - Refactored to use real PostgreSQL with `test` schema (no mocks/Docker)
+
+### API Layer (Not Started)
+⏳ API routes pending implementation:
+- `/api/workflow/specs` (GET, POST)
+- `/api/workflow/specs/[id]` (GET, PUT)
+- `/api/workflow/specs/[id]/content` (GET)
+- `/api/workflow/sync` (POST)
+
+### Frontend Layer (Not Started)
+⏳ UI components and pages pending implementation:
+- `/workflow` page
+- Kanban board components
+- Drag-and-drop functionality (@dnd-kit not yet installed)
+
+### Scenario Status
+- **All scenarios**: Backend logic and tests written, but not yet integrated with API/UI
+- **Next step**: Implement API routes to connect services with frontend
 
 ## Scenarios
 
