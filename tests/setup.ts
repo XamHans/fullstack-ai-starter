@@ -2,18 +2,32 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 import { handlers } from './mocks/handlers';
 import '@testing-library/jest-dom';
+import { setupTestDatabase, teardownTestDatabase, cleanTestDatabase } from './utils/test-database';
 
 // Setup MSW server for API mocking
 export const server = setupServer(...handlers);
 
-beforeAll(() => {
+// Global setup for all tests
+beforeAll(async () => {
+  // Start MSW server
   server.listen({ onUnhandledRequest: 'bypass' });
+
+  // Setup test database (create schema, run migrations)
+  await setupTestDatabase();
 });
 
-afterAll(() => {
+afterAll(async () => {
+  // Stop MSW server
   server.close();
+
+  // Cleanup test database
+  await teardownTestDatabase();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Reset MSW handlers
   server.resetHandlers();
+
+  // Clean test database tables before each test
+  await cleanTestDatabase();
 });

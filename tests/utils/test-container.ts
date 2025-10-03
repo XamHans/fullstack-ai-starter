@@ -12,8 +12,14 @@ import { getTestDb } from './test-database';
 export function createTestContainer(): Container & {
   dependencies: { db: any };
 } {
-  // Use real test database if available, otherwise use simple mock database
+  // Use real test database
   const testDb = getTestDb();
+
+  if (!testDb) {
+    throw new Error(
+      'Test database not initialized. Make sure to call setupTestDatabase() in beforeAll()',
+    );
+  }
 
   const testDatabase: DatabaseConnection = {
     db: testDb,

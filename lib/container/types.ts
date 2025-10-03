@@ -4,9 +4,9 @@ import type { CustomLogger } from '@/lib/logger';
 import type { EmailService } from '@/lib/services/email';
 import type { PostService } from '@/modules/posts/services/post.service';
 import type { UserService } from '@/modules/users/services/user.service';
-import type { WorkflowService } from '@/modules/workflow/services/workflow.service';
-import type { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
 import type { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
+import type { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
+import type { WorkflowService } from '@/modules/workflow/services/workflow.service';
 
 export interface DatabaseConnection {
   db: PostgresJsDatabase<typeof schema>;

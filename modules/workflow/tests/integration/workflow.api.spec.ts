@@ -1,14 +1,9 @@
 // Specification: /specs/workflow/spec-kanban-board.md
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  cleanTestDatabase,
-  setupTestDatabase,
-  teardownTestDatabase,
-} from '@/tests/utils/test-database';
+import * as fs from 'node:fs/promises';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestContainer } from '@/tests/utils/test-container';
 import type { WorkflowService } from '../../services/workflow.service';
-import * as fs from 'node:fs/promises';
 
 // Mock filesystem for spec generation tests
 vi.mock('node:fs/promises');
@@ -28,28 +23,7 @@ describe('Feature: Spec Kanban Board - API Integration Tests', () => {
     params: Promise.resolve(params),
   });
 
-  beforeAll(async () => {
-    try {
-      await setupTestDatabase();
-    } catch (error) {
-      console.warn('Docker not available, using mock database');
-    }
-  });
-
-  afterAll(async () => {
-    try {
-      await teardownTestDatabase();
-    } catch (error) {
-      // Ignore teardown errors
-    }
-  });
-
-  beforeEach(async () => {
-    try {
-      await cleanTestDatabase();
-    } catch (error) {
-      // Ignore cleanup errors
-    }
+  beforeEach(() => {
     testContainer = createTestContainer();
     workflowService = testContainer.workflowService;
     vi.clearAllMocks();

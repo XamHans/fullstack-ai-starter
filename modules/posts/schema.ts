@@ -1,6 +1,12 @@
-import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, pgSchema, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
-export const posts = pgTable('posts', {
+// Use 'test' schema for test environment, 'public' for production
+const isTest = process.env.NODE_ENV === 'test';
+const testSchema = pgSchema('test');
+
+const tableHelper = isTest ? testSchema.table : pgTable;
+
+export const posts = tableHelper('posts', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),

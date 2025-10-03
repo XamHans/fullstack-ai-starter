@@ -5,9 +5,9 @@ import { createLogger } from '@/lib/logger';
 import { EmailService } from '@/lib/services/email';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
-import { WorkflowService } from '@/modules/workflow/services/workflow.service';
-import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
 import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
+import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
+import { WorkflowService } from '@/modules/workflow/services/workflow.service';
 import type {
   Container,
   DatabaseConnection,

@@ -1,38 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestContainer } from '@/tests/utils/test-container';
-import {
-  cleanTestDatabase,
-  setupTestDatabase,
-  teardownTestDatabase,
-} from '@/tests/utils/test-database';
 import type { UserService } from '../services/user.service';
 
 describe('UserService', () => {
   let userService: UserService;
   let testContainer: ReturnType<typeof createTestContainer>;
 
-  beforeAll(async () => {
-    try {
-      await setupTestDatabase();
-    } catch (error) {
-      console.warn('Docker not available, using mock database');
-    }
-  });
-
-  afterAll(async () => {
-    try {
-      await teardownTestDatabase();
-    } catch (error) {
-      // Ignore teardown errors when using mock database
-    }
-  });
-
-  beforeEach(async () => {
-    try {
-      await cleanTestDatabase();
-    } catch (error) {
-      // Ignore cleanup errors when using mock database
-    }
+  beforeEach(() => {
     testContainer = createTestContainer();
     // Use the flattened container structure
     userService = testContainer.userService;

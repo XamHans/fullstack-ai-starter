@@ -1,6 +1,11 @@
-import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core';
+import { integer, pgSchema, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
-export const specs = pgTable('specs', {
+// Use 'test' schema for test environment, 'public' for production
+const isTest = process.env.NODE_ENV === 'test';
+const testSchema = pgSchema('test');
+const tableHelper = isTest ? testSchema.table : pgTable;
+
+export const specs = tableHelper('specs', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),

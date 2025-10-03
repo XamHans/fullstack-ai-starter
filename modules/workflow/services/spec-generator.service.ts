@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import type { ServiceDependencies } from '@/lib/container/types';
-import type { WorkflowService } from './workflow.service';
 import type { CreateSpecInput } from '../types';
+import type { WorkflowService } from './workflow.service';
 
 export class SpecGeneratorService {
   constructor(

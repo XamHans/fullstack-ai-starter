@@ -1,54 +1,90 @@
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { readFileSync } from 'node:fs';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { schema } from '@/lib/db';
 
-let container: PostgreSqlContainer;
 let testDb: any;
+let testClient: postgres.Sql | null = null;
 
 export async function setupTestDatabase() {
-  // Start PostgreSQL container
-  container = await new PostgreSqlContainer('postgres:15')
-    .withDatabase('test_db')
-    .withUsername('test_user')
-    .withPassword('test_password')
-    .start();
+  const connectionString = process.env.DATABASE_URL;
 
-  // Create database connection
-  const connectionString = container.getConnectionUri();
-  const client = postgres(connectionString);
-  testDb = drizzle(client, { schema });
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required for tests');
+  }
+
+  // Create connection
+  testClient = postgres(connectionString);
+  testDb = drizzle(testClient, { schema });
 
   try {
-    await migrate(testDb, { migrationsFolder: './lib/db/migrations' });
+    // Create test schema if it doesn't exist
+    await testClient`CREATE SCHEMA IF NOT EXISTS test`;
+
+    // Set search path to test schema for migrations
+    await testClient`SET search_path TO test`;
+
+    // Read and execute migration SQL in test schema
+    const migrationSQL = readFileSync('./lib/db/migrations/0000_stormy_dark_beast.sql', 'utf-8');
+
+    // Execute each statement in the test schema
+    const statements = migrationSQL
+      .split('-->')
+      .map((s) => s.trim())
+      .filter((s) => s && !s.startsWith('statement-breakpoint'));
+
+    for (const statement of statements) {
+      if (statement) {
+        try {
+          await testClient.unsafe(statement);
+        } catch (error: any) {
+          // Ignore "already exists" errors on subsequent runs
+          if (!error.message?.includes('already exists')) {
+            console.warn('Migration statement warning:', error.message);
+          }
+        }
+      }
+    }
+
+    // Reset search path
+    await testClient`SET search_path TO public`;
+
+    console.log('✅ Test database schema created successfully');
   } catch (error) {
-    console.warn('No migrations found, continuing with empty database');
+    console.error('Failed to setup test database:', error);
+    throw error;
   }
 
   return testDb;
 }
 
 export async function teardownTestDatabase() {
-  if (container) {
-    await container.stop();
+  if (testClient) {
+    // Optional: Drop test schema (commented out to keep schema for faster subsequent runs)
+    // await testClient`DROP SCHEMA IF EXISTS test CASCADE`;
+
+    await testClient.end();
+    testClient = null;
+    testDb = null;
   }
 }
 
 export function getTestDb() {
-  if (!testDb) {
-    console.warn('Test database not initialized, using mock database');
-    return null;
-  }
   return testDb;
 }
 
 export async function cleanTestDatabase() {
-  if (testDb) {
-    // Clean all tables in reverse dependency order
-    await testDb.delete(schema.videos);
-    await testDb.delete(schema.galleries);
-    await testDb.delete(schema.users);
-    await testDb.delete(schema.promptTemplates);
+  if (!testDb || !testClient) {
+    throw new Error('Test database not initialized');
+  }
+
+  try {
+    // Truncate all tables in test schema with CASCADE to handle foreign keys
+    await testClient`SET search_path TO test`;
+    await testClient`TRUNCATE TABLE specs, posts, "user", "session", "account", verification CASCADE`;
+    await testClient`SET search_path TO public`;
+  } catch (error) {
+    console.error('Failed to clean test database:', error);
+    throw error;
   }
 }

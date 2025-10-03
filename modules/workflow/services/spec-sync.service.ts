@@ -1,8 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { ServiceDependencies } from '@/lib/container/types';
-import type { WorkflowService } from './workflow.service';
 import type { SpecMetadata, SyncResult } from '../types';
+import type { WorkflowService } from './workflow.service';
 
 export class SpecSyncService {
   constructor(

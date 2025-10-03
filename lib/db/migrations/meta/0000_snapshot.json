@@ -211,9 +211,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -298,9 +296,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -424,9 +420,7 @@
         "specs_file_path_unique": {
           "name": "specs_file_path_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "file_path"
-          ]
+          "columns": ["file_path"]
         }
       },
       "policies": {},
