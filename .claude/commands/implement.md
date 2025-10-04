@@ -18,27 +18,48 @@ $ARGUMENTS
    - Load the spec file from the provided path
    - Extract domain, scenarios, and context
 
-2. **Create Feature Branch**:
-   - Extract feature name from spec file
-   - Create branch: `git checkout -b feature/{domain}/{feature-name}`
-   - Example: `feature/posts/archive-posts`
+2. **Parse Scenarios from Spec**:
+   - Parse spec file to identify all scenarios
+   - Check which scenarios are already completed (look for "**Status**: ✅ Completed" in spec)
+   - List available scenarios and prompt user to select one
+   - Accept optional scenario selection via argument (e.g., scenario number or name)
 
-3. **Delegate to bdd-dev Agent**:
-   Use the Task tool to invoke the `bdd-dev` agent with the complete spec content:
+3. **Create Scenario-Specific Branch**:
+   - Extract feature name and selected scenario from spec file
+   - Create branch: `git checkout -b feature/{domain}/{feature-name}/{scenario-slug}`
+   - Example: `feature/workflow/spec-kanban-board/sync-specs-filesystem`
+   - Use kebab-case scenario slug derived from scenario title
+
+4. **Extract Selected Scenario**:
+   - Extract ONLY the selected scenario from the spec file
+   - Include: Context, Domain, Dependencies sections
+   - Include: Only the selected scenario's Gherkin (not all scenarios)
+   - Include: Relevant notes for that scenario
+
+5. **Delegate to bdd-dev Agent**:
+   Use the Task tool to invoke the `bdd-dev` agent with the SINGLE scenario:
 
    ```
    Task tool parameters:
    - subagent_type: "bdd-dev"
-   - description: "Implement feature from Gherkin spec"
-   - prompt: "Implement the following Gherkin specification using test-first BDD:
+   - description: "Implement single scenario from Gherkin spec"
+   - prompt: "Implement the following Gherkin scenario using test-first BDD:
 
-   [PASTE COMPLETE SPEC FILE CONTENT HERE]
+   [PASTE EXTRACTED SCENARIO CONTENT HERE - SINGLE SCENARIO ONLY]
 
-   Follow the testing pyramid: choose the most efficient test layer (Unit/API/E2E) for each scenario.
-   Co-locate tests within the appropriate module structure at modules/{domain}/tests/."
+   IMPORTANT: Implement this scenario with VERTICAL SLICING:
+   - Create/update API routes needed for this scenario
+   - Create/update UI components needed for this scenario
+   - Write integration tests for the API endpoints
+   - Ensure end-to-end functionality for THIS scenario only
+
+   Follow the testing pyramid: choose the most efficient test layer (Unit/API/E2E).
+   Co-locate tests within the appropriate module structure at modules/{domain}/tests/.
+
+   Backend services and unit tests may already exist - focus on API routes and frontend if so."
    ```
 
-4. **Post-Implementation Quality Checks**:
+6. **Post-Implementation Quality Checks**:
    After the agent completes, run in sequence:
 
    ```bash
@@ -52,21 +73,26 @@ $ARGUMENTS
    npm test
    ```
 
-5. **Update Spec File with Scenario Status**:
+7. **Update Spec File with Scenario Status**:
    After successful implementation, update the spec file to track progress:
-   - For each implemented scenario, add status metadata below the scenario header:
+   - Add status metadata directly below the implemented scenario's title:
 
      ```markdown
-     #### Scenario X.X: {Scenario Name}
-
-     **Status**: ✅ Completed | **Branch**: `feature/{domain}/{feature-name}` | **Date**: {YYYY-MM-DD}
+     ### Scenario Name Here
+     **Status**: ✅ Completed | **Branch**: `feature/{domain}/{feature-name}/{scenario-slug}` | **Date**: {YYYY-MM-DD}
      ```
 
    - Update the "Implementation Progress" section at the top of the spec
-   - This helps track which scenarios are complete in large specs with multiple scenarios
+   - List which specific scenario was completed
    - Commit the updated spec file with the implementation
 
-6. **Update Feature Documentation** (Optional but recommended):
+8. **Prompt for Next Scenario** (Optional):
+   After completing one scenario:
+   - Ask user: "Scenario X completed. Continue with next scenario? (y/n)"
+   - If yes, return to step 2 and repeat for next incomplete scenario
+   - If no, proceed to next steps
+
+9. **Update Feature Documentation** (Optional but recommended):
    Create or update `modules/{domain}/features.md`:
 
    ```markdown
@@ -87,9 +113,10 @@ $ARGUMENTS
 **Next Steps After Success:**
 Tell the user:
 
-1. Feature has been implemented on branch `feature/{domain}/{feature-name}`
+1. Scenario has been implemented on branch `feature/{domain}/{feature-name}/{scenario-slug}`
 2. All tests are passing
 3. They can review the changes and merge when ready
 4. Suggest: `git diff main` to see all changes
+5. If more scenarios remain, offer to continue with next scenario
 
 After all done run /clear
