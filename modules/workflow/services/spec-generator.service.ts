@@ -92,8 +92,11 @@ export class SpecGeneratorService {
    * Create a human-readable title from the feature name
    */
   private createTitle(featureName: string): string {
-    // Remove special characters except spaces
-    const cleaned = featureName.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    // Replace hyphens and underscores with spaces, then remove other special characters
+    const cleaned = featureName
+      .replace(/[-_]/g, ' ') // Convert hyphens and underscores to spaces
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove other special characters
+      .trim();
 
     // Capitalize each word
     return cleaned

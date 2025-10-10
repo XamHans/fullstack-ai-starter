@@ -28,10 +28,11 @@ export async function setupTestDatabase() {
     const migrationSQL = readFileSync('./lib/db/migrations/0000_stormy_dark_beast.sql', 'utf-8');
 
     // Execute each statement in the test schema
+    // Split by statement-breakpoint comments
     const statements = migrationSQL
-      .split('-->')
+      .split('--> statement-breakpoint')
       .map((s) => s.trim())
-      .filter((s) => s && !s.startsWith('statement-breakpoint'));
+      .filter((s) => s && s.length > 0);
 
     for (const statement of statements) {
       if (statement) {

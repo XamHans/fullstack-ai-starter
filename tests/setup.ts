@@ -2,7 +2,7 @@ import { setupServer } from 'msw/node';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 import { handlers } from './mocks/handlers';
 import '@testing-library/jest-dom';
-import { setupTestDatabase, teardownTestDatabase, cleanTestDatabase } from './utils/test-database';
+import { cleanTestDatabase, setupTestDatabase, teardownTestDatabase } from './utils/test-database';
 
 // Setup MSW server for API mocking
 export const server = setupServer(...handlers);

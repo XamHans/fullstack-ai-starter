@@ -18,11 +18,37 @@ $ARGUMENTS
    - Load the spec file from the provided path
    - Extract domain, scenarios, and context
 
+1.5. **Verify Groundwork Exists**:
+   - Extract feature name from spec file
+   - Check if `modules/{domain}/GROUNDWORK-{feature-name}.md` exists
+   - If NOT found:
+     - Inform user: "⚠️  No groundwork found. For best results, run /groundwork first."
+     - Ask: "Continue without groundwork? (y/n)"
+     - If no: Exit and suggest running /groundwork
+     - If yes: Note that minimal infrastructure will be created as needed
+
 2. **Parse Scenarios from Spec**:
    - Parse spec file to identify all scenarios
    - Check which scenarios are already completed (look for "**Status**: ✅ Completed" in spec)
-   - List available scenarios and prompt user to select one
-   - Accept optional scenario selection via argument (e.g., scenario number or name)
+   - Display scenario list with status:
+
+   ```
+   Available scenarios in {feature-name}:
+
+   1. ⏳ View Specs Organized by Workflow Stage
+   2. ⏳ Drag Spec Card Between Stages
+   3. ✅ Create New Spec from Kanban Board (completed)
+   4. ⏳ View Spec Details from Card
+   5. ⏳ Sync Specs from Filesystem
+   6. ⏳ Handle Empty Workflow Stages
+
+   Select scenario to implement (1-6):
+   ```
+
+   - Accept scenario selection via:
+     - User input at prompt
+     - CLI argument: --scenario 2
+     - CLI argument: --scenario "drag-spec-card"
 
 3. **Create Scenario-Specific Branch**:
    - Extract feature name and selected scenario from spec file
@@ -86,11 +112,43 @@ $ARGUMENTS
    - List which specific scenario was completed
    - Commit the updated spec file with the implementation
 
-8. **Prompt for Next Scenario** (Optional):
+8. **Prompt for Next Scenario with Context Management**:
    After completing one scenario:
-   - Ask user: "Scenario X completed. Continue with next scenario? (y/n)"
-   - If yes, return to step 2 and repeat for next incomplete scenario
-   - If no, proceed to next steps
+
+   Show completion summary:
+   ```
+   ✅ Scenario {N} completed: "{Scenario Name}"
+
+   What was built:
+   - API routes: {list routes created/modified}
+   - UI components: {list components created/modified}
+   - Tests: {X} tests added, all passing ✅
+   - Files modified: {count}
+
+   Remaining scenarios: {count}
+   ```
+
+   Ask: "Continue with next scenario? (y/n)"
+
+   If yes:
+   - Ask: "Clear context with /clear before continuing? (Recommended for better performance) (y/n)"
+     - If yes to clear:
+       ```
+       👉 Please run /clear now, then restart with:
+       /implement specs/{domain}/{feature-name}.md --scenario {next-number}
+
+       This keeps context focused and improves AI performance.
+       ```
+     - If no to clear:
+       ```
+       ⚠️  Continuing without clearing context.
+       Performance may degrade with large context windows.
+
+       Proceeding to next scenario...
+       ```
+       Return to step 2 for next incomplete scenario
+
+   If no: Proceed to documentation step
 
 9. **Update Feature Documentation** (Optional but recommended):
    Create or update `modules/{domain}/features.md`:

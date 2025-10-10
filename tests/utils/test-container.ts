@@ -4,9 +4,9 @@ import type { DatabaseConnection, ServiceDependencies } from '@/lib/container/ty
 import { createLogger } from '@/lib/logger';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
-import { WorkflowService } from '@/modules/workflow/services/workflow.service';
-import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
 import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
+import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
+import { WorkflowService } from '@/modules/workflow/services/workflow.service';
 import { getTestDb } from './test-database';
 
 export function createTestContainer(): Container & {

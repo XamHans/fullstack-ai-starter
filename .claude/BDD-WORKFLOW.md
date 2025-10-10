@@ -1,11 +1,13 @@
 # BDD Workflow Guide
 
-This project uses a **3-phase BDD workflow** to guide feature development from idea to implementation.
+This project uses a **4-phase BDD workflow** to guide feature development from idea to implementation.
 
-## 🎯 The Three Phases
+## 🎯 The Four Phases
 
 ```
-User Idea → [Phase 1: Spec] → [Phase 2: Plan] → [Phase 3: Implement] → Working Feature
+User Idea → [Phase 1: Spec] → [Phase 2: Groundwork] → [Phase 3: Implement] → [Phase 4: Polish] → Working Feature
+                                                              ↑_______________|
+                                                              (Loop per scenario)
 ```
 
 ### Phase 1: Create Specification (Required)
@@ -32,7 +34,50 @@ Creates: `specs/posts/archive-posts.md` with scenarios like:
 
 ---
 
-### Phase 2: Create Implementation Plan (Optional)
+### Phase 2: Establish Groundwork (Recommended)
+**Command**: `/groundwork specs/{domain}/{feature-name}.md`
+
+**What it does**:
+- Analyzes ALL scenarios to identify shared infrastructure
+- Creates database schema, types, and service shells
+- Sets up test infrastructure
+- Registers services in dependency injection
+- Documents what foundation was built
+
+**Output**:
+- Database tables and migrations
+- Type definitions for domain entities
+- Service classes with empty method stubs (no logic)
+- Test utilities and helpers
+- Groundwork documentation file
+
+**When to use**:
+- For any feature with database changes (recommended)
+- When multiple scenarios share infrastructure
+- For complex features touching multiple layers
+
+**When to skip**:
+- Simple features with no database changes
+- Single-file utilities or helpers
+- When prototyping and speed matters most
+
+**Example**:
+```bash
+/groundwork specs/workflow/spec-kanban-board.md
+```
+
+Creates:
+- `modules/workflow/schema.ts` (specs table)
+- `modules/workflow/types.ts` (Spec, WorkflowStage types)
+- `modules/workflow/services/*.service.ts` (empty shells)
+- Test infrastructure setup
+- Commits as: "chore(workflow): establish groundwork for spec-kanban-board"
+
+**After groundwork**: Run `/clear` to reset context, then start implementing scenarios.
+
+---
+
+### Phase 3: Create Implementation Plan (Optional)
 **Command**: `/plan-spec specs/{domain}/{feature-name}.md`
 
 **What it does**:
@@ -68,23 +113,33 @@ Shows:
 
 ---
 
-### Phase 3: Implement Feature (Required)
+### Phase 4: Implement Scenarios One-by-One (Required)
 **Command**: `/implement specs/{domain}/{feature-name}.md`
 
 **What it does**:
-- Reads the Gherkin spec file
-- Creates a feature branch
-- Delegates to the `bdd-dev` agent for test-first implementation
-- Runs quality checks (format, lint, tests)
-- Documents what was built
+- Shows list of scenarios with completion status
+- Prompts you to select ONE scenario
+- Creates scenario-specific branch
+- Implements ONLY that scenario (API + UI)
+- Runs quality checks
+- Updates spec with completion status
+- Prompts to continue with next scenario OR clear context
 
-**Output**:
-- Working feature with passing tests
-- Code formatted and linted
-- Feature branch ready for review
+**What changed**:
+- ✨ Now implements ONE scenario at a time (not all at once)
+- ✨ Prompts to /clear context between scenarios
+- ✨ Better progress tracking in spec file
+- ✨ Smaller, focused implementations
+
+**Output per scenario**:
+- Scenario-specific branch: `feature/{domain}/{feature}/{scenario-slug}`
+- API routes for that scenario
+- UI components for that scenario
+- Tests for that scenario
+- Updated spec file with completion status
 
 **What the bdd-dev agent does**:
-1. Analyzes each Gherkin scenario
+1. Analyzes the selected Gherkin scenario
 2. Chooses optimal test layer (Unit/API/E2E)
 3. Writes failing test first (Red)
 4. Implements minimal code to pass (Green)
@@ -93,15 +148,22 @@ Shows:
 
 **Example**:
 ```bash
-/implement specs/posts/archive-posts.md
+# First scenario
+/implement specs/workflow/spec-kanban-board.md
+# Select scenario 1, implement, then /clear
+
+# Second scenario (fresh context)
+/implement specs/workflow/spec-kanban-board.md --scenario 2
+# Implement, then /clear
+
+# Continue until all scenarios done...
 ```
 
-Creates:
-- `modules/posts/services/post.service.ts` (adds archive methods)
-- `modules/posts/tests/unit/post-archive.test.ts` (unit tests)
-- `modules/posts/tests/integration/post-archive.api.test.ts` (API tests)
-- Database migration for `archivedAt` field
-- Feature branch: `feature/posts/archive-posts`
+Creates (per scenario):
+- `app/api/workflow/specs/route.ts` (API for that scenario)
+- `app/(main)/workflow/page.tsx` (UI for that scenario)
+- `modules/workflow/tests/integration/*.api.test.ts` (tests)
+- Scenario-specific branch: `feature/workflow/kanban/view-by-stage`
 
 ---
 
@@ -227,8 +289,9 @@ git diff main
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `/create-specs [idea]` | Generate Gherkin scenarios | Always (Phase 1) |
-| `/plan-spec [spec-path]` | Create implementation plan | For complex features or when you want a roadmap |
-| `/implement [spec-path]` | Build the feature | Always (Phase 3) |
+| `/groundwork [spec-path]` | Build shared infrastructure | Recommended for features with DB changes (Phase 2) |
+| `/plan-spec [spec-path]` | Create implementation plan | Optional, for complex features (Phase 3) |
+| `/implement [spec-path]` | Implement scenarios one-by-one | Always (Phase 4) |
 
 ---
 
@@ -236,15 +299,25 @@ git diff main
 
 1. **Start small**: Write 2-3 scenarios, not 10. Add more later if needed.
 
-2. **Review specs before implementing**: Ensure scenarios are clear and testable.
+2. **Use groundwork for shared infrastructure**: Prevents rebuilding foundation per scenario.
 
-3. **Skip planning for simple features**: Go directly from spec to implement.
+3. **Clear context between scenarios**: Keeps AI focused and performant - use `/clear`.
 
-4. **Use planning for complex features**: Understand impact before writing code.
+4. **One scenario at a time**: Smaller increments = better code quality.
 
-5. **Trust the BDD agent**: It will choose appropriate test layers and patterns.
+5. **Review groundwork before scenarios**: Ensures foundation is correct.
 
-6. **Iterate**: Specs can be refined based on implementation learnings.
+6. **Skip groundwork for simple features**: Don't over-engineer.
+
+7. **Skip planning for simple features**: Go directly from spec to groundwork to implement.
+
+8. **Use planning for complex features**: Understand impact before writing code.
+
+9. **Trust the BDD agent**: It will choose appropriate test layers and patterns.
+
+10. **Document as you go**: GROUNDWORK.md and spec status tracking helps.
+
+11. **Branch per scenario**: Easy to review, easy to rollback.
 
 ---
 

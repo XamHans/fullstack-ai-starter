@@ -294,10 +294,11 @@ Then result
 
       vi.mocked(fs.readdir).mockImplementation(async (dirPath: any) => {
         const pathStr = String(dirPath);
-        if (pathStr.endsWith('specs')) {
+        // Handle both 'specs' and 'specs/test' paths
+        if (pathStr === 'specs' || pathStr.endsWith('/specs')) {
           return [{ name: 'test', isDirectory: () => true } as any];
         }
-        if (pathStr.endsWith('test')) {
+        if (pathStr.includes('specs/test') || pathStr.includes('specs\\test')) {
           return [{ name: 'test-spec.md', isDirectory: () => false } as any];
         }
         return [];
