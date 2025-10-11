@@ -14,11 +14,21 @@ $ARGUMENTS
 
 **Workflow:**
 
-1. **Read Specification File**:
+1. **Read Constitution**:
+   - Load `.claude/constitution.md` to understand architectural principles
+   - Pay attention to Articles I (Simplicity), III (Integration-First), IV (Test-First), VIII (Vertical Slicing)
+
+2. **Read Specification File**:
    - Load the spec file from the provided path
    - Extract domain, scenarios, and context
 
-1.5. **Verify Groundwork Exists**:
+3. **Check for Uncertainties**:
+   - **BLOCK if `[NEEDS CLARIFICATION]` markers exist in spec**
+   - Cannot implement scenarios with ambiguities
+   - Inform user: "❌ Specification has unresolved ambiguities. Please resolve all `[NEEDS CLARIFICATION]` markers before implementing."
+   - Exit and suggest updating spec file
+
+4. **Verify Groundwork Exists**:
    - Extract feature name from spec file
    - Check if `modules/{domain}/GROUNDWORK-{feature-name}.md` exists
    - If NOT found:
@@ -27,7 +37,7 @@ $ARGUMENTS
      - If no: Exit and suggest running /groundwork
      - If yes: Note that minimal infrastructure will be created as needed
 
-2. **Parse Scenarios from Spec**:
+5. **Parse Scenarios from Spec**:
    - Parse spec file to identify all scenarios
    - Check which scenarios are already completed (look for "**Status**: ✅ Completed" in spec)
    - Display scenario list with status:
@@ -50,19 +60,20 @@ $ARGUMENTS
      - CLI argument: --scenario 2
      - CLI argument: --scenario "drag-spec-card"
 
-3. **Create Scenario-Specific Branch**:
+6. **Create Scenario-Specific Branch**:
    - Extract feature name and selected scenario from spec file
    - Create branch: `git checkout -b feature/{domain}/{feature-name}/{scenario-slug}`
    - Example: `feature/workflow/spec-kanban-board/sync-specs-filesystem`
    - Use kebab-case scenario slug derived from scenario title
 
-4. **Extract Selected Scenario**:
+7. **Extract Selected Scenario**:
    - Extract ONLY the selected scenario from the spec file
    - Include: Context, Domain, Dependencies sections
    - Include: Only the selected scenario's Gherkin (not all scenarios)
    - Include: Relevant notes for that scenario
+   - Include: Constitutional principles from `.claude/constitution.md`
 
-5. **Delegate to bdd-dev Agent**:
+8. **Delegate to bdd-dev Agent**:
    Use the Task tool to invoke the `bdd-dev` agent with the SINGLE scenario:
 
    ```
@@ -73,6 +84,15 @@ $ARGUMENTS
 
    [PASTE EXTRACTED SCENARIO CONTENT HERE - SINGLE SCENARIO ONLY]
 
+   CONSTITUTIONAL PRINCIPLES:
+   You must adhere to the following principles from `.claude/constitution.md`:
+
+   - **Simplicity First (Article I)**: Minimal complexity, no future-proofing
+   - **Anti-Abstraction (Article II)**: Use frameworks directly, no wrappers
+   - **Integration-First Testing (Article III)**: Real database, contract tests mandatory
+   - **Test-First (Article IV)**: Write tests before code, Red-Green-Refactor
+   - **Vertical Slicing (Article VIII)**: End-to-end functionality (API + UI + tests)
+
    IMPORTANT: Implement this scenario with VERTICAL SLICING:
    - Create/update API routes needed for this scenario
    - Create/update UI components needed for this scenario
@@ -82,10 +102,12 @@ $ARGUMENTS
    Follow the testing pyramid: choose the most efficient test layer (Unit/API/E2E).
    Co-locate tests within the appropriate module structure at modules/{domain}/tests/.
 
-   Backend services and unit tests may already exist - focus on API routes and frontend if so."
+   Backend services and unit tests may already exist - focus on API routes and frontend if so.
+
+   If you encounter ambiguities or need to make assumptions, STOP and ask for clarification instead of guessing."
    ```
 
-6. **Post-Implementation Quality Checks**:
+9. **Post-Implementation Quality Checks**:
    After the agent completes, run in sequence:
 
    ```bash
@@ -99,7 +121,7 @@ $ARGUMENTS
    npm test
    ```
 
-7. **Update Spec File with Scenario Status**:
+10. **Update Spec File with Scenario Status**:
    After successful implementation, update the spec file to track progress:
    - Add status metadata directly below the implemented scenario's title:
 
@@ -112,7 +134,7 @@ $ARGUMENTS
    - List which specific scenario was completed
    - Commit the updated spec file with the implementation
 
-8. **Prompt for Next Scenario with Context Management**:
+11. **Prompt for Next Scenario with Context Management**:
    After completing one scenario:
 
    Show completion summary:
@@ -150,7 +172,7 @@ $ARGUMENTS
 
    If no: Proceed to documentation step
 
-9. **Update Feature Documentation** (Optional but recommended):
+12. **Update Feature Documentation** (Optional but recommended):
    Create or update `modules/{domain}/features.md`:
 
    ```markdown

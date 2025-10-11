@@ -288,10 +288,11 @@ git diff main
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/create-specs [idea]` | Generate Gherkin scenarios | Always (Phase 1) |
-| `/groundwork [spec-path]` | Build shared infrastructure | Recommended for features with DB changes (Phase 2) |
+| `/create-specs [idea]` | Generate Gherkin scenarios with quality gates | Always (Phase 1) |
+| `/create-tasks [spec-path]` | Generate executable task list from spec | Optional, to see task breakdown |
+| `/groundwork [spec-path]` | Build shared infrastructure with constitutional gates | Recommended for features with DB changes (Phase 2) |
 | `/plan-spec [spec-path]` | Create implementation plan | Optional, for complex features (Phase 3) |
-| `/implement [spec-path]` | Implement scenarios one-by-one | Always (Phase 4) |
+| `/implement [spec-path]` | Implement scenarios one-by-one with constitutional principles | Always (Phase 4) |
 
 ---
 
@@ -323,7 +324,100 @@ git diff main
 
 ## 📚 Further Reading
 
+- `.claude/constitution.md` - **NEW**: Architectural principles and phase gates
+- `.claude/commands/create-specs.md` - Spec generation with SDD quality constraints
+- `.claude/commands/create-tasks.md` - **NEW**: Task decomposition with parallelization
+- `.claude/commands/groundwork.md` - Infrastructure setup with constitutional gates
+- `.claude/commands/implement.md` - Scenario implementation with uncertainty handling
 - `docs/architecture/testing-strategy.mdx` - Testing patterns and philosophy
 - `docs/architecture/code-architecture.mdx` - Module structure and organization
 - `docs/architecture/api-architecture.mdx` - API design patterns
 - `.claude/agents/bdd-dev.md` - BDD agent implementation details
+
+---
+
+## 🆕 What's New: Constitutional BDD
+
+This workflow now includes a **constitutional foundation** inspired by Specification-Driven Development (SDD) that systematically prevents common failure modes:
+
+### Constitutional Principles
+
+The `.claude/constitution.md` defines 11 immutable articles that govern development:
+
+1. **Simplicity First** - Minimal complexity, no future-proofing
+2. **Anti-Abstraction** - Use frameworks directly, avoid wrappers
+3. **Integration-First Testing** - Real databases, contract tests mandatory
+4. **Test-First Imperative** - No code before tests (Red-Green-Refactor)
+5. **Module Structure** - Domain-driven organization
+6. **Specification Quality** - Explicit uncertainties, what/how separation
+7. **Complexity Tracking** - Document justified exceptions
+8. **Vertical Slicing** - End-to-end functionality per scenario
+9. **Groundwork Separation** - Infrastructure only, no business logic
+10. **Context Management** - /clear between phases for AI performance
+11. **Bidirectional Feedback** - Production learnings update specs
+
+### Quality Gates
+
+Each workflow phase now includes **phase gates** that check constitutional compliance:
+
+**In `/create-specs`**:
+- ✅ Requirement Completeness Checklist
+- ✅ What vs. How Separation
+- ✅ Scenario Quality (testable, independent, precise, minimal)
+- ✅ YAGNI Compliance
+- ✅ Explicit `[NEEDS CLARIFICATION]` markers for ambiguities
+
+**In `/groundwork`**:
+- ✅ Simplicity Gate (minimal complexity, no future-proofing)
+- ✅ Anti-Abstraction Gate (frameworks directly, single representation)
+- ✅ Groundwork Gate (justified upfront setup)
+- ✅ Blocks if spec has unresolved clarifications
+
+**In `/implement`**:
+- ✅ Blocks if `[NEEDS CLARIFICATION]` markers exist
+- ✅ Constitutional principles passed to bdd-dev agent
+- ✅ Vertical slicing enforced (API + UI + tests per scenario)
+- ✅ Test-first imperative (Red-Green-Refactor)
+
+### New Features
+
+1. **`/create-tasks` Command** - Generates executable task lists with:
+   - Tasks derived from Gherkin scenarios
+   - Parallelization markers `[P]` for independent work
+   - Constitutional gate checks
+   - Complexity tracking
+   - Dependency graphs
+
+2. **Uncertainty Handling** - Prevents guessing:
+   - Specs mark ambiguities with `[NEEDS CLARIFICATION]`
+   - Implementation blocked until resolved
+   - Forces clarifying questions instead of assumptions
+
+3. **Complexity Accountability**:
+   - Justified exceptions documented in specs
+   - Tracks when/why constitutional principles violated
+   - Creates technical debt visibility
+
+4. **Production Learnings** - Bidirectional feedback:
+   - Spec files track post-deployment insights
+   - Production issues → new edge case scenarios
+   - Performance metrics → non-functional requirements
+
+### Benefits
+
+✅ **Systematic quality** - Gates prevent common mistakes
+✅ **Less guessing** - Explicit uncertainty markers
+✅ **Consistent architecture** - Constitutional principles enforced
+✅ **Better AI output** - Template constraints guide LLM behavior
+✅ **Trackable complexity** - Justified exceptions documented
+✅ **Continuous improvement** - Production feedback loop
+
+### Migration Guide
+
+Existing specs work as-is. To adopt constitutional BDD:
+
+1. **Read the constitution**: `.claude/constitution.md`
+2. **Use enhanced commands**: Updated `/create-specs`, `/groundwork`, `/implement` now include gates
+3. **Optional**: Add `[NEEDS CLARIFICATION]` markers to existing specs
+4. **Optional**: Use `/create-tasks` for task breakdown
+5. **Optional**: Add "Production Learnings" sections to deployed features
