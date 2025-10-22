@@ -85,47 +85,119 @@ export const GET = withAuthentication(async (session, request) => {
 
 ### 2. Client-Side Authentication
 
+Create a shared Better Auth client once and reuse it anywhere on the client:
+
 ```typescript
+// lib/auth-client.ts
+import { createAuthClient } from 'better-auth/react';
+
+export const authClient = createAuthClient({});
+
+export const { signIn, signUp, signOut, useSession, getSession } = authClient;
+```
+
+#### Email and Password Sign-In
+
+Use the generated helpers in client components instead of writing manual fetch calls. The helpers handle request state, cookie management, and keep the session store in sync.
+
+```tsx
 // components/auth/login-form.tsx
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { signIn } from '@/lib/auth-client';
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    const response = await fetch('/api/auth/sign-in', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
 
-    if (response.ok) {
-      window.location.href = '/playground/generate-text';
+    const { error } = await signIn.email(
+      {
+        email,
+        password,
+        callbackURL: '/playground/generate-text',
+      },
+      {
+        onError: ({ error }) => setErrorMessage(error.message),
+        onSuccess: () => router.push('/playground/generate-text'),
+      },
+    );
+
+    if (error) {
+      setErrorMessage(error.message);
     }
+
+    setIsSubmitting(false);
   };
 
   return (
-    <form>
+    <form onSubmit={handleLogin} className="space-y-4">
       <input
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(event) => setEmail(event.target.value)}
         placeholder="Email"
+        required
       />
       <input
         type="password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(event) => setPassword(event.target.value)}
         placeholder="Password"
+        required
       />
-      <Button onClick={handleLogin}>Sign In</Button>
+      {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Signing in…' : 'Sign In'}
+      </Button>
     </form>
   );
 }
+```
+
+#### Reading Session Data
+
+Any client component can read the authenticated user with the `useSession` hook. The hook stays updated when the session changes (for example, after calling `signOut`).
+
+```tsx
+// components/auth/user-status.tsx
+'use client';
+
+import { useSession, signOut } from '@/lib/auth-client';
+
+export function UserStatus() {
+  const { data: session, isPending, error } = useSession();
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (isPending) return <p>Loading session…</p>;
+  if (error) return <p>Unable to load session.</p>;
+  if (!session?.user) return <p>Signed out</p>;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span>{session.user.email}</span>
+      <button onClick={handleSignOut}>Sign out</button>
+    </div>
+  );
+}
+```
+
+When you need to fetch the current session on demand (for example inside a TanStack Query), call `getSession`. It returns the same `{ data, error }` object shape.
+
+```ts
+const { data: session } = await getSession();
 ```
 
 ### 3. Session Management

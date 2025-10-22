@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authClient } from '@/lib/auth-client';
+import { signIn } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
@@ -14,14 +14,25 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsSigningIn(true);
-      await authClient.signIn.social({
-        provider: 'google',
-        callbackURL: '/playground/generate-text',
-      });
+      await signIn.social(
+        {
+          provider: 'google',
+          callbackURL: '/playground/generate-text',
+        },
+        {
+          onRequest: () => setIsSigningIn(true),
+          onError: ({ error }) => {
+            console.error('Failed to sign in with Google:', error);
+            setIsSigningIn(false);
+          },
+          onSuccess: () => {
+            router.push('/playground/generate-text');
+            setIsSigningIn(false);
+          },
+        },
+      );
     } catch (error) {
-      console.error('Failed to sign in with Google:', error);
-    } finally {
+      console.error('Unexpected sign-in error:', error);
       setIsSigningIn(false);
     }
   };

@@ -33,13 +33,13 @@ Before implementing any feature, you **MUST** read the relevant architectural do
 - Data access layer conventions
 - Migration strategies
 
-**When handling authentication** → Read `docs/authentication.mdx` for:
+**When handling authentication** → Read `@docs/authentication.mdx` for:
 
 - Authentication flow and session management
 - Authorization patterns
 - Security best practices
 
-**When writing tests** → Read `docs/testing.mdx` for:
+**When writing tests** → Read `@docs/architecture/testing-strategy.mdx` for:
 
 - Testing patterns and utilities
 - Test co-location strategies

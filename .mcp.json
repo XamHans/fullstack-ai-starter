@@ -1,10 +1,8 @@
 {
   "mcpServers": {
-    "playwright": {
-      "type": "stdio",
+    "next-devtools": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"],
-      "env": {}
+      "args": ["-y", "next-devtools-mcp@latest"]
     },
     "serena": {
       "type": "stdio",
