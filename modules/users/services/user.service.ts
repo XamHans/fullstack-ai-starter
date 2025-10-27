@@ -190,4 +190,18 @@ export class UserService {
       throw error;
     }
   }
+
+  async addMember(
+    householdId: string,
+    name: string,
+    inspirationPrompt: string,
+  ): Promise<(typeof user)['$inferSelect']> {
+    // TODO: Implement logic
+    throw new Error('Not implemented');
+  }
+
+  async savePersona(userId: string, summary: string): Promise<(typeof user)['$inferSelect']> {
+    // TODO: Implement logic
+    throw new Error('Not implemented');
+  }
 }

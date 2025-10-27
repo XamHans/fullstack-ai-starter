@@ -2,6 +2,8 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/lib/db';
 import type { CustomLogger } from '@/lib/logger';
 import type { EmailService } from '@/lib/services/email';
+import type { HabitService } from '@/modules/habits/services/habit-service';
+import type { HouseholdService } from '@/modules/households/services/household-service';
 import type { PostService } from '@/modules/posts/services/post.service';
 import type { UserService } from '@/modules/users/services/user.service';
 import type { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
@@ -23,6 +25,8 @@ export interface BusinessServices {
   workflowService: WorkflowService;
   specSyncService: SpecSyncService;
   specGeneratorService: SpecGeneratorService;
+  householdService: HouseholdService;
+  habitService: HabitService;
 }
 
 // Flattened container structure for easier access
@@ -38,6 +42,8 @@ export interface Container {
   workflowService: WorkflowService;
   specSyncService: SpecSyncService;
   specGeneratorService: SpecGeneratorService;
+  householdService: HouseholdService;
+  habitService: HabitService;
 }
 
 export interface ServiceDependencies {
@@ -52,6 +58,8 @@ export interface ServiceDependencies {
     | 'workflowService'
     | 'specSyncService'
     | 'specGeneratorService'
+    | 'householdService'
+    | 'habitService'
   >;
 }
 
@@ -64,6 +72,8 @@ export type Services = Pick<
   | 'workflowService'
   | 'specSyncService'
   | 'specGeneratorService'
+  | 'householdService'
+  | 'habitService'
 >;
 export type ServiceName = keyof Services;
 export type ServiceInstance<T extends ServiceName> = Services[T];

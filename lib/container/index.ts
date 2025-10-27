@@ -3,6 +3,8 @@ import postgres from 'postgres';
 import * as schema from '@/lib/db';
 import { createLogger } from '@/lib/logger';
 import { EmailService } from '@/lib/services/email';
+import { HabitService } from '@/modules/habits/services/habit-service';
+import { HouseholdService } from '@/modules/households/services/household-service';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
 import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
@@ -59,6 +61,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
   const specGeneratorService =
     overrides?.specGeneratorService ||
     new SpecGeneratorService(serviceDependencies, workflowService);
+  const householdService = overrides?.householdService || new HouseholdService(serviceDependencies);
+  const habitService = overrides?.habitService || new HabitService(serviceDependencies);
 
   // Update service dependencies with service references for composition
   const services: Services = {
@@ -68,6 +72,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
     workflowService,
     specSyncService,
     specGeneratorService,
+    householdService,
+    habitService,
   };
   serviceDependencies.services = services;
 
@@ -84,6 +90,8 @@ export function createContainer(overrides?: Partial<Container>): Container {
     workflowService,
     specSyncService,
     specGeneratorService,
+    householdService,
+    habitService,
   };
 }
 
@@ -96,6 +104,8 @@ export function getServices(container: Container): Services {
     workflowService: container.workflowService,
     specSyncService: container.specSyncService,
     specGeneratorService: container.specGeneratorService,
+    householdService: container.householdService,
+    habitService: container.habitService,
   };
 }
 
