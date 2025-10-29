@@ -13,44 +13,59 @@ export async function setupTestDatabase() {
     throw new Error('DATABASE_URL environment variable is required for tests');
   }
 
-  // Create connection
-  testClient = postgres(connectionString);
+  // Create connection with test schema as default search path
+  testClient = postgres(connectionString, {
+    onnotice: () => {}, // Suppress notices during tests
+  });
   testDb = drizzle(testClient, { schema });
 
   try {
     // Create test schema if it doesn't exist
     await testClient`CREATE SCHEMA IF NOT EXISTS test`;
 
-    // Set search path to test schema for migrations
+    // Set search path to test schema for migrations and all subsequent queries
     await testClient`SET search_path TO test`;
 
-    // Read and execute migration SQL in test schema
-    const migrationSQL = readFileSync('./lib/db/migrations/0000_stormy_dark_beast.sql', 'utf-8');
+    // Read and execute all migrations in test schema
+    const migrations = [
+      './lib/db/migrations/0000_stormy_dark_beast.sql',
+      './lib/db/migrations/0001_add_households_users_habits.sql',
+    ];
 
-    // Execute each statement in the test schema
-    // Split by statement-breakpoint comments
-    const statements = migrationSQL
-      .split('--> statement-breakpoint')
-      .map((s) => s.trim())
-      .filter((s) => s && s.length > 0);
+    for (const migrationPath of migrations) {
+      try {
+        const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
-    for (const statement of statements) {
-      if (statement) {
-        try {
-          await testClient.unsafe(statement);
-        } catch (error: any) {
-          // Ignore "already exists" errors on subsequent runs
-          if (!error.message?.includes('already exists')) {
-            console.warn('Migration statement warning:', error.message);
+        // Execute each statement in the test schema
+        // Split by statement-breakpoint comments
+        const statements = migrationSQL
+          .split('--> statement-breakpoint')
+          .map((s) => s.trim())
+          .filter((s) => s && s.length > 0);
+
+        for (const statement of statements) {
+          if (statement) {
+            try {
+              await testClient.unsafe(statement);
+            } catch (error: any) {
+              // Ignore "already exists" errors on subsequent runs
+              if (!error.message?.includes('already exists')) {
+                console.warn('Migration statement warning:', error.message);
+              }
+            }
           }
+        }
+      } catch (error: any) {
+        // Ignore file not found errors for optional migrations
+        if (!error.message?.includes('ENOENT')) {
+          throw error;
         }
       }
     }
 
-    // Reset search path
-    await testClient`SET search_path TO public`;
-
-    console.log('✅ Test database schema created successfully');
+    // Keep search path set to 'test' for all test operations
+    // DO NOT reset to public - we want all test queries to use the test schema
+    console.log('✅ Test database schema created successfully in "test" schema');
   } catch (error) {
     console.error('Failed to setup test database:', error);
     throw error;
@@ -81,9 +96,8 @@ export async function cleanTestDatabase() {
 
   try {
     // Truncate all tables in test schema with CASCADE to handle foreign keys
-    await testClient`SET search_path TO test`;
-    await testClient`TRUNCATE TABLE specs, posts, "user", "session", "account", verification CASCADE`;
-    await testClient`SET search_path TO public`;
+    // Search path is already set to 'test' from setupTestDatabase
+    await testClient`TRUNCATE TABLE specs, posts, "user", "session", "account", verification, households, users, habits CASCADE`;
   } catch (error) {
     console.error('Failed to clean test database:', error);
     throw error;
