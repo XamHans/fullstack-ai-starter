@@ -1,14 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import {
   AlertTriangle,
+  ArrowUpRight,
   Bot,
   Check,
   Database,
-  FileCode,
+  Braces,
   Layout,
+  Mail,
   MonitorSpeaker,
   Rocket,
+  Sparkles,
   Server,
   Shield,
   Star,
@@ -17,8 +21,10 @@ import {
   Users,
   Wrench,
   X,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import type { LucideIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -37,7 +43,150 @@ import { LinkPreview } from '@/components/ui/link-preview';
 import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { Separator } from '@/components/ui/separator';
 
+type TechCategory = {
+  id: string;
+  label: string;
+  summary: string;
+  icon: LucideIcon;
+  heading: string;
+  description: string;
+  bullets: string[];
+  timeSaved: string;
+  accent: string;
+  integrations: { name: string; href: string }[];
+};
+
+const techCategories: TechCategory[] = [
+  {
+    id: 'auth',
+    label: 'Login',
+    summary: 'Magic links, OAuth, sessions',
+    icon: Shield,
+    heading: 'User authentication, sorted.',
+    description:
+      'Better Auth handles secure login flows, session management, and database wiring so your users stay safe by default.',
+    bullets: [
+      'Email and OAuth providers configured with Better Auth from day one.',
+      'Session, account, and verification tables managed through Drizzle migrations.',
+      'Route protection middleware and typed helpers connected to the App Router.',
+    ],
+    timeSaved: 'Time saved: 6+ hours of manual setup',
+    accent: 'text-emerald-400',
+    integrations: [
+      { name: 'Better Auth', href: 'https://better-auth.com' },
+      { name: 'Drizzle ORM', href: 'https://orm.drizzle.team' },
+    ],
+  },
+  {
+    id: 'ai',
+    label: 'AI',
+    summary: 'Multi-model, streaming UI',
+    icon: Bot,
+    heading: 'Production AI flows that scale.',
+    description:
+      'Experiment fast with text and chat playgrounds, then ship with confidence thanks to spec-driven prompts and real observability.',
+    bullets: [
+      'Vercel AI SDK prewired with OpenAI, Anthropic, and Google providers.',
+      'Streaming chat and text playgrounds ready for product-grade experiences.',
+      'Claude Code MCP keeps specs, code, and infrastructure in sync for agents.',
+    ],
+    timeSaved: 'Time saved: 2 days of integration work',
+    accent: 'text-purple-400',
+    integrations: [
+      { name: 'Vercel AI SDK', href: 'https://sdk.vercel.ai' },
+      { name: 'Claude Code MCP', href: 'https://claude.ai/code' },
+    ],
+  },
+  {
+    id: 'data',
+    label: 'Database',
+    summary: 'Neon, Drizzle, LibSQL ready',
+    icon: Database,
+    heading: 'A reliable data foundation.',
+    description:
+      'Type-safe queries, migrations, and environment-ready configs for both Postgres and edge-friendly SQL backends.',
+    bullets: [
+      'Drizzle migrations, seeds, and typed queries baked into the repo.',
+      'Neon, LibSQL, and local SQLite connections configured for dev and prod.',
+      'Test schema isolation ensures clean CI runs without side effects.',
+    ],
+    timeSaved: 'Time saved: 1 day of database wiring',
+    accent: 'text-sky-400',
+    integrations: [
+      { name: 'Neon', href: 'https://neon.tech' },
+      { name: 'LibSQL', href: 'https://libsql.org' },
+      { name: 'Drizzle ORM', href: 'https://orm.drizzle.team' },
+    ],
+  },
+  {
+    id: 'email',
+    label: 'Emails',
+    summary: 'Transactional ready to go',
+    icon: Mail,
+    heading: 'Email delivery without the headaches.',
+    description:
+      'Send onboarding, password reset, and product notifications with a polished template system tied straight into your auth flows.',
+    bullets: [
+      'Resend configured with API keys, domain setup docs, and env management.',
+      'Prebuilt React Email templates with Tailwind styles and dark-mode support.',
+      'Background job pattern ready for queued sends and delivery monitoring.',
+    ],
+    timeSaved: 'Time saved: 6 hours of email plumbing',
+    accent: 'text-amber-300',
+    integrations: [
+      { name: 'Resend', href: 'https://resend.com' },
+      { name: 'React Email', href: 'https://react.email' },
+    ],
+  },
+  {
+    id: 'observability',
+    label: 'Insights',
+    summary: 'Logs, traces, analytics',
+    icon: MonitorSpeaker,
+    heading: 'Observability from day one.',
+    description:
+      'Know what every AI agent and API call is doing with telemetry and alerting wired up before you deploy.',
+    bullets: [
+      'Langfuse instrumentation wraps every AI call with trace metadata.',
+      'Pino logging outputs structured JSON events for your pipelines.',
+      'Umami analytics integration gives privacy-friendly product insights.',
+    ],
+    timeSaved: 'Time saved: 3 hours of telemetry plumbing',
+    accent: 'text-blue-300',
+    integrations: [
+      { name: 'Langfuse', href: 'https://langfuse.com' },
+      { name: 'Pino', href: 'https://getpino.io' },
+      { name: 'Umami', href: 'https://umami.is' },
+    ],
+  },
+  {
+    id: 'quality',
+    label: 'Quality',
+    summary: 'Specs, tests, CI ready',
+    icon: TestTube,
+    heading: 'Quality gates baked into the template.',
+    description:
+      'Ship confidently with a spec-driven workflow, strong tests, and ready-made CI scripts your team can trust.',
+    bullets: [
+      'Gherkin specs turn product requirements into executable acceptance tests.',
+      'Vitest unit and integration harness with realistic mocks ready to extend.',
+      'Playwright and Supertest suites preconfigured for end-to-end coverage.',
+    ],
+    timeSaved: 'Time saved: 2 days of QA setup',
+    accent: 'text-pink-400',
+    integrations: [
+      { name: 'Gherkin Specs', href: 'https://cucumber.io/docs/gherkin/' },
+      { name: 'Vitest', href: 'https://vitest.dev' },
+      { name: 'Playwright', href: 'https://playwright.dev' },
+    ],
+  },
+];
+
 export default function LandingPage() {
+  const [activeCategory, setActiveCategory] = useState(techCategories[0]?.id ?? 'auth');
+  const activeHighlight =
+    techCategories.find((category) => category.id === activeCategory) ?? techCategories[0];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       {/* Hero Section */}
@@ -73,20 +222,55 @@ export default function LandingPage() {
                 Not just vibe-driven demos.
               </h1>
               <p className="text-xl leading-8 text-muted-foreground">
-                For developers building serious AI SaaS businesses. This spec-driven starter kit
-                provides the architectural foundation to ensure your product is scalable,
-                maintainable, and secure from day one.
+                Build a full-stack AI SaaS with production-grade architecture, batteries-included
+                tooling, and clear docs that keep your team aligned from prototype to launch.
               </p>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Button asChild size="lg" className="h-14 px-8 text-lg">
-                  <Link href="/playground/generate-text">
-                    Get Started for Free
-                    <Rocket className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" className="h-14 px-8 text-lg">
-                  Explore the Architecture
-                </Button>
+              <div className="space-y-4">
+                <ul className="grid gap-3 text-base text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span>End-to-end scaffolding for auth, billing, observability, and testing.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span>Spec-driven workflows so every feature ships with clarity and confidence.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span>Battle-tested integrations for major AI providers and modern databases.</span>
+                  </li>
+                </ul>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <Button asChild size="lg" className="h-14 px-8 text-lg">
+                    <Link
+                      href="https://github.com/XamHans/fullstack-ai-starter"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open on GitHub
+                      <Rocket className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg">
+                    <Link
+                      href="https://github.com/XamHans/fullstack-ai-starter?tab=readme-ov-file#quick-start"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Clone & Quickstart Guide
+                    </Link>
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Clone the repo then follow the Quick Start section in the README for the fastest setup
+                  path.
+                </p>
               </div>
             </motion.div>
 
@@ -296,578 +480,376 @@ export default function LandingPage() {
       </section>
 
       {/* Tech Stack & Benefits Section */}
-      <section className="relative py-24 sm:py-32 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="px-8"
-        >
-          <h4 className="text-3xl lg:text-5xl lg:leading-tight max-w-5xl mx-auto text-center tracking-tight font-medium text-black dark:text-white">
-            Production-Ready Tech Stack
-          </h4>
-          <p className="text-sm lg:text-base max-w-2xl my-4 mx-auto text-neutral-500 text-center font-normal dark:text-neutral-300">
-            Every component battle-tested and chosen for long-term maintainability. Deploy in
-            minutes, scale for years.
-          </p>
-        </motion.div>
-
-        <div className="px-8 mt-16">
-          {/* Core Architecture Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="mb-12"
-          >
-            <h5 className="text-xl font-semibold mb-6 text-center">Core Architecture</h5>
+      <motion.section
+        className="relative overflow-hidden py-24 sm:py-32"
+        initial={{ opacity: 0, y: 80 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        viewport={{ once: true, amount: 0.2 }}
+      >
+        <div className="mx-auto max-w-6xl px-6 lg:px-8">
+          <motion.div layout className="relative">
             <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.3, staggerChildren: 0.1 }}
+              transition={{ duration: 1.2, delay: 0.2 }}
               viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             >
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                      <i className="devicon-cucumber-plain text-4xl text-green-600 dark:text-green-400"></i>
-                    </div>
-                    <div>
-                      <h6 className="font-semibold text-lg">Spec-Driven Workflows</h6>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Gherkin specifications for clear requirements and AI implementation
-                        guidance.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-
+                className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.6, 0.4] }}
+                transition={{ duration: 10, repeat: Infinity }}
+              />
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                      <Wrench className="h-8 w-8 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <h6 className="font-semibold text-lg">Dependency Injection</h6>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Clean, testable architecture with proper separation of concerns and
-                        dependency management.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                      <Layout className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div>
-                      <h6 className="font-semibold text-lg">Modular Domain Architecture</h6>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Business logic organized by domain with scalable patterns and clear
-                        boundaries.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <Card className="p-6 h-full">
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                      <i className="devicon-typescript-original text-4xl text-blue-600 dark:text-blue-400"></i>
-                    </div>
-                    <div>
-                      <h6 className="font-semibold text-lg">
-                        <LinkPreview
-                          url="https://typescriptlang.org"
-                          className="hover:text-primary transition-colors"
-                        >
-                          TypeScript
-                        </LinkPreview>
-                      </h6>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Full type safety with strict configuration and exceptional developer
-                        experience.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+                className="absolute -bottom-16 right-8 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl"
+                animate={{ scale: [1, 0.95, 1.05, 1], opacity: [0.35, 0.5, 0.35, 0.4] }}
+                transition={{ duration: 12, repeat: Infinity }}
+              />
             </motion.div>
+
+            <div className="relative overflow-hidden rounded-3xl border border-neutral-200/30 bg-neutral-950 text-neutral-100 shadow-2xl dark:border-neutral-800">
+              <div className="border-b border-white/5 px-8 py-10 sm:px-10">
+                <code className="inline rounded-full bg-white/5 px-4 py-2 font-mono text-xs tracking-tight text-emerald-400">
+                  const launch_time = "05:01 PM";
+                </code>
+                <motion.h3
+                  className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  Supercharge your app instantly.
+                  <br className="hidden sm:block" />
+                  Launch faster, make revenue sooner.
+                </motion.h3>
+                <motion.p
+                  className="mt-4 max-w-3xl text-base text-neutral-300 sm:text-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  Login users, run AI workloads, ship reliable features without wiring every
+                  integration by hand. Pick a capability to see what ships for you.
+                </motion.p>
+              </div>
+
+              <div className="flex flex-col gap-8 px-6 py-10 sm:px-10 md:flex-row md:gap-12">
+                <div className="md:w-1/3">
+                  <div className="flex flex-row flex-wrap gap-3 md:flex-col">
+                    {techCategories.map((category) => {
+                      const Icon = category.icon;
+                      const isActive = category.id === activeCategory;
+                      return (
+                        <motion.button
+                          key={category.id}
+                          type="button"
+                          className={`group flex min-w-[150px] flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-left md:w-full ${
+                            isActive
+                              ? 'border-white/40 bg-white/10 text-white'
+                              : 'border-white/10 text-white/60 hover:border-white/25 hover:text-white'
+                          }`}
+                          onClick={() => setActiveCategory(category.id)}
+                          whileHover={{ scale: 1.02, y: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                        >
+                          <motion.span
+                            className={`flex h-12 w-12 items-center justify-center rounded-xl border ${
+                              isActive
+                                ? 'border-white bg-white text-neutral-900'
+                                : 'border-white/10 bg-white/5 text-white/80 group-hover:border-white/30 group-hover:text-white'
+                            }`}
+                            layout
+                            transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+                          >
+                            <Icon
+                              className={`h-5 w-5 ${isActive ? 'text-neutral-900' : category.accent}`}
+                            />
+                          </motion.span>
+                          <div className="space-y-1">
+                            <div className="text-sm font-semibold uppercase tracking-wide">
+                              {category.label}
+                            </div>
+                            <div className="text-xs text-white/60">{category.summary}</div>
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="md:flex-1">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeHighlight.id}
+                      className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -15 }}
+                      transition={{ duration: 0.35, ease: 'easeOut' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono uppercase tracking-[0.2em] text-white/50">
+                          Capability spotlight
+                        </span>
+                        <Separator className="h-5 w-px bg-white/10" orientation="vertical" />
+                        <span className="text-xs text-white/60">
+                          Selected • {activeHighlight.label}
+                        </span>
+                      </div>
+                      <h4 className="mt-6 text-2xl font-semibold sm:text-3xl">
+                        {activeHighlight.heading}
+                      </h4>
+                      <p className="mt-3 text-base text-neutral-300">
+                        {activeHighlight.description}
+                      </p>
+                      <ul className="mt-6 space-y-3 text-sm sm:text-base">
+                        {activeHighlight.bullets.map((point) => (
+                          <motion.li
+                            key={point}
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                          >
+                            <Check className={`mt-1 h-5 w-5 flex-shrink-0 ${activeHighlight.accent}`} />
+                            <span className="text-neutral-100">{point}</span>
+                          </motion.li>
+                        ))}
+                      </ul>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-semibold">
+                        <Check className={`h-4 w-4 ${activeHighlight.accent}`} />
+                        <span className={activeHighlight.accent}>{activeHighlight.timeSaved}</span>
+                      </div>
+                      <div className="mt-6">
+                        <p className="text-xs uppercase tracking-wide text-white/60">Works with</p>
+                        <motion.div
+                          className="mt-3 flex flex-wrap gap-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                        >
+                          {activeHighlight.integrations.map((integration) => (
+                            <Link
+                              key={integration.name}
+                              href={integration.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70 transition hover:border-white/30 hover:text-white"
+                            >
+                              {integration.name}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 border-t border-white/5 bg-black/40 px-8 py-6 sm:px-10 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-white/70">
+                  Clone the repo and follow the Quick Start in the README to activate every module in
+                  minutes.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="h-10 px-5 text-sm font-semibold text-neutral-900"
+                  >
+                    <Link
+                      href="https://github.com/XamHans/fullstack-ai-starter"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open GitHub
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="secondary"
+                    className="h-10 px-5 text-sm font-semibold"
+                  >
+                    <Link
+                      href="https://github.com/XamHans/fullstack-ai-starter?tab=readme-ov-file#quick-start"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Quick Start Guide
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* AI Services Section */}
+      <motion.section
+        className="relative overflow-hidden py-24 sm:py-32"
+        initial={{ opacity: 0, y: 80 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute left-1/2 top-1/4 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl"
+            animate={{ scale: [1, 1.08, 1], opacity: [0.35, 0.55, 0.35] }}
+            transition={{ duration: 12, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute -bottom-16 right-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl"
+            animate={{ scale: [1, 0.95, 1.05, 1], opacity: [0.3, 0.45, 0.3, 0.35] }}
+            transition={{ duration: 10, repeat: Infinity }}
+          />
+        </div>
+        <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-6 lg:px-8">
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+              AI Services
+            </span>
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              Built on Vercel AI SDK with enterprise AI patterns baked in.
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground sm:mx-auto sm:max-w-3xl">
+              Stream results, enforce structured output, and generate imagery with Google Gemini’s
+              Nano Banana model — all without leaving this starter kit.
+            </p>
           </motion.div>
 
-          {/* Frontend & Framework Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">Frontend & Framework</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-black dark:bg-white/20 rounded-lg">
-                    <i className="devicon-nextjs-original text-4xl text-white dark:text-white"></i>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: 'Multi-provider text & chat',
+                description:
+                  'Prebuilt playgrounds and endpoints for OpenAI, Anthropic, and Google models using Vercel AI SDK’s React bindings.',
+                icon: Sparkles,
+              },
+              {
+                title: 'Structured output, guaranteed',
+                description:
+                  'Define Zod schemas and receive typed responses automatically. No more brittle parsing when you need JSON your services can trust.',
+                icon: Braces,
+              },
+              {
+                title: 'Gemini Nano Banana visuals',
+                description:
+                  'Spin up image generation with Google’s Nano Banana diffusion model. Produce marketing visuals and UI concepts directly from prompts.',
+                icon: ImageIcon,
+              },
+            ].map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/60 p-8 shadow-lg transition hover:border-primary/40 hover:shadow-primary/10"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: 0.12 * index }}
+                  viewport={{ once: true }}
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 transition group-hover:opacity-100"
+                    initial={false}
+                  />
+                  <div className="relative">
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+                      <Icon className="h-6 w-6" />
+                    </span>
+                    <h3 className="mt-6 text-xl font-semibold text-foreground">{feature.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{feature.description}</p>
                   </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://nextjs.org"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Next.js 15 with App Router
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      React Server Components, streaming, and modern routing patterns for optimal
-                      performance.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-cyan-100 dark:bg-cyan-900/20 rounded-lg">
-                    <i className="devicon-tailwindcss-original text-4xl text-cyan-600 dark:text-cyan-400"></i>
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://ui.shadcn.com"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Shadcn/ui Components
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Beautiful, accessible UI components built on Tailwind CSS and Radix
-                      primitives.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg">
-                    <Target className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://motion.dev"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Motion/React
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Smooth animations and interactive user experiences with performance-optimized
-                      motion.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* AI & Intelligence Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">AI & Intelligence</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-                    <Bot className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://sdk.vercel.ai"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Vercel AI SDK
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Multi-provider support (OpenAI, Anthropic, Google AI) with streaming
-                      responses.
-                    </p>
-                  </div>
+          <motion.div
+            className="relative overflow-hidden rounded-3xl border border-border bg-background/80 p-10 shadow-xl"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div className="space-y-4">
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  AI launchpad
+                </Badge>
+                <h3 className="text-2xl font-semibold text-foreground sm:text-3xl">
+                  One command to run the playground, one spec to ship the feature.
+                </h3>
+                <p className="text-base text-muted-foreground">
+                  The repo wires Vercel AI SDK handlers, streaming UI components, and Langfuse
+                  telemetry. Describe your feature in Gherkin, feed it to Claude Code, and watch the
+                  agent deploy the change with complete context.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild size="sm">
+                    <Link href="/playground/generate-text">Open AI Playground</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Link
+                      href="https://github.com/XamHans/fullstack-ai-starter/tree/main/modules"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Explore specs & modules
+                      <ArrowUpRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
                 </div>
-              </Card>
+              </div>
 
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-cyan-100 dark:bg-cyan-900/20 rounded-lg">
-                    <FileCode className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">Text & Image Generation</h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Complete AI content creation capabilities with multiple model providers and
-                      formats.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-violet-100 dark:bg-violet-900/20 rounded-lg">
-                    <Shield className="h-8 w-8 text-violet-600 dark:text-violet-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://claude.ai/code"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Claude Code MCP
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Context-aware AI with full codebase understanding and specialized
-                      integrations.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
-                    <Users className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">Specialized AI Agents</h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Multiple configured subagents for different workflows and development tasks.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              <motion.div
+                className="rounded-2xl border border-border/80 bg-background/90 p-6 font-mono text-xs text-muted-foreground shadow-inner"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.25 }}
+                viewport={{ once: true }}
+              >
+                <p className="text-[10px] uppercase tracking-[0.3em] text-primary mb-4">
+                  Example structured output call
+                </p>
+                <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
+{`const result = await streamText({
+  model: google('gemini-1.5-pro'),
+  prompt,
+  output: z.object({
+    summary: z.string(),
+    actionItems: z.array(z.string()),
+    heroVisual: z.string().url(), // generated via Nano Banana
+  }),
+});`}
+                </pre>
+                <p className="mt-4 text-xs text-muted-foreground/80">
+                  The template handles streaming UI state, optimistic rendering, and Langfuse
+                  tracing so you can focus on product experience.
+                </p>
+              </motion.div>
             </div>
-          </div>
-
-          {/* Database & Storage Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">Database & Storage</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                    <i className="devicon-postgresql-original text-4xl text-blue-600 dark:text-blue-400"></i>
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://neon.tech"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Neon PostgreSQL
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Serverless Postgres with database branching for safe development workflows.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                    <Server className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://orm.drizzle.team"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Drizzle ORM
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Type-safe database queries with migrations and schema management built-in.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
-                    <Database className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://cloudflare.com/products/r2"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Cloudflare R2
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Object storage for file uploads and media management with S3-compatible API.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* File Management Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">File Management</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                    <Target className="h-8 w-8 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://uppy.io"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Uppy 5.0 File Uploads
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Complete upload solution with security validation, resumable uploads, and
-                      progress tracking.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                    <Layout className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">Multiple Upload Methods</h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Dashboard, dropzone, and button interfaces with file previews and validation.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Testing & Quality Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">Testing & Quality</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-                    <i className="devicon-vitest-original text-4xl text-yellow-600 dark:text-yellow-400"></i>
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://vitest.dev"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Vitest Testing
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Modern unit and integration testing with fast execution and great developer
-                      experience.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-cyan-100 dark:bg-cyan-900/20 rounded-lg">
-                    <Server className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">Supertest API Testing</h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Comprehensive API endpoint testing with authentication and validation
-                      coverage.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                    <i className="devicon-playwright-original text-4xl text-green-600 dark:text-green-400"></i>
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://playwright.dev"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Playwright E2E
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Browser automation for reliable end-to-end testing across all platforms.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Communication & Analytics Row */}
-          <div className="mb-12">
-            <h5 className="text-xl font-semibold mb-6 text-center">Communication & Analytics</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                    <Users className="h-8 w-8 text-red-600 dark:text-red-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://resend.com"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Resend Email Service
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Professional email delivery with templates, automation, and deliverability
-                      tracking.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg">
-                    <Target className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://umami.is"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Umami Analytics
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Privacy-focused, open-source website analytics with real-time insights.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Infrastructure & Observability Row */}
-          <div>
-            <h5 className="text-xl font-semibold mb-6 text-center">
-              Infrastructure & Observability
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-black dark:bg-white/20 rounded-lg">
-                    <i className="devicon-vercel-original text-4xl text-white dark:text-white"></i>
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://vercel.com"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Vercel Hosting
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Zero-config deployments with edge functions, global CDN, and automatic
-                      scaling.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-                    <MonitorSpeaker className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">
-                      <LinkPreview
-                        url="https://langfuse.com"
-                        className="hover:text-primary transition-colors"
-                      >
-                        Langfuse Observability
-                      </LinkPreview>
-                    </h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      AI operation tracking with comprehensive telemetry and performance analytics.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 h-full">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 bg-rose-100 dark:bg-rose-900/20 rounded-lg">
-                    <AlertTriangle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
-                  </div>
-                  <div>
-                    <h6 className="font-semibold text-lg">Pino Structured Logging</h6>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Production-grade JSON logging for debugging, monitoring, and observability.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Pricing Comparison Section */}
       <section className="relative overflow-hidden py-24 sm:py-32 bg-muted/30">

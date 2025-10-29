@@ -32,7 +32,7 @@ $ARGUMENTS
    - Extract feature name from spec file
    - Check if `modules/{domain}/GROUNDWORK-{feature-name}.md` exists
    - If NOT found:
-     - Inform user: "⚠️  No groundwork found. For best results, run /groundwork first."
+     - Inform user: "⚠️ No groundwork found. For best results, run /groundwork first."
      - Ask: "Continue without groundwork? (y/n)"
      - If no: Exit and suggest running /groundwork
      - If yes: Note that minimal infrastructure will be created as needed
@@ -122,73 +122,97 @@ $ARGUMENTS
    ```
 
 10. **Update Spec File with Scenario Status**:
-   After successful implementation, update the spec file to track progress:
-   - Add status metadata directly below the implemented scenario's title:
+    After successful implementation, update the spec file to track progress:
 
-     ```markdown
-     ### Scenario Name Here
-     **Status**: ✅ Completed | **Branch**: `feature/{domain}/{feature-name}/{scenario-slug}` | **Date**: {YYYY-MM-DD}
-     ```
+- Add status metadata directly below the implemented scenario's title:
 
-   - Update the "Implementation Progress" section at the top of the spec
-   - List which specific scenario was completed
-   - Commit the updated spec file with the implementation
+  ```markdown
+  ### Scenario Name Here
+
+  **Status**: ✅ Completed | **Branch**: `feature/{domain}/{feature-name}/{scenario-slug}` | **Date**: {YYYY-MM-DD}
+  ```
+
+- Update the "Implementation Progress" section at the top of the spec
+- List which specific scenario was completed
+- Commit the updated spec file with the implementation
+
+Next Steps After Success:
+Tell the user:
+Scenario has been implemented on branch feature/{domain}/{feature-name}/{scenario-slug}
+All tests are passing
+They can review the changes and merge when ready
+Suggest: git diff main to see all changes
+If more scenarios remain, offer to continue with next scenario
+After all done run /clear
+After all done run /clear
+Then create a pull request to the master branch with gh cli and remove the branch:
+code
+Bash
+gh pr create --base master --head feature/{domain}/{feature-name}/{scenario-slug} --title "feat({domain}): Implement {feature-name} - {scenario-slug}" --body "This PR implements the '{scenario-title}' scenario from the '{feature-name}' feature spec."
+git checkout master
+git branch -D feature/{domain}/{feature-name}/{scenario-slug}
 
 11. **Prompt for Next Scenario with Context Management**:
-   After completing one scenario:
+    After completing one scenario:
 
-   Show completion summary:
-   ```
-   ✅ Scenario {N} completed: "{Scenario Name}"
+Show completion summary:
 
-   What was built:
-   - API routes: {list routes created/modified}
-   - UI components: {list components created/modified}
-   - Tests: {X} tests added, all passing ✅
-   - Files modified: {count}
+```
+✅ Scenario {N} completed: "{Scenario Name}"
 
-   Remaining scenarios: {count}
-   ```
+What was built:
+- API routes: {list routes created/modified}
+- UI components: {list components created/modified}
+- Tests: {X} tests added, all passing ✅
+- Files modified: {count}
 
-   Ask: "Continue with next scenario? (y/n)"
+Remaining scenarios: {count}
+```
 
-   If yes:
-   - Ask: "Clear context with /clear before continuing? (Recommended for better performance) (y/n)"
-     - If yes to clear:
-       ```
-       👉 Please run /clear now, then restart with:
-       /implement specs/{domain}/{feature-name}.md --scenario {next-number}
+Ask: "Continue with next scenario? (y/n)"
 
-       This keeps context focused and improves AI performance.
-       ```
-     - If no to clear:
-       ```
-       ⚠️  Continuing without clearing context.
-       Performance may degrade with large context windows.
+If yes:
 
-       Proceeding to next scenario...
-       ```
-       Return to step 2 for next incomplete scenario
+- Ask: "Clear context with /clear before continuing? (Recommended for better performance) (y/n)"
+  - If yes to clear:
 
-   If no: Proceed to documentation step
+    ```
+    👉 Please run /clear now, then restart with:
+    /implement specs/{domain}/{feature-name}.md --scenario {next-number}
+
+    This keeps context focused and improves AI performance.
+    ```
+
+  - If no to clear:
+
+    ```
+    ⚠️  Continuing without clearing context.
+    Performance may degrade with large context windows.
+
+    Proceeding to next scenario...
+    ```
+
+    Return to step 2 for next incomplete scenario
+
+If no: Proceed to documentation step
 
 12. **Update Feature Documentation** (Optional but recommended):
-   Create or update `modules/{domain}/features.md`:
+    Create or update `modules/{domain}/features.md`:
 
-   ```markdown
-   ### {Feature Name}
+```markdown
+### {Feature Name}
 
-   **Spec**: `specs/{domain}/{feature-name}.md`
-   **Date**: {date}
+**Spec**: `specs/{domain}/{feature-name}.md`
+**Date**: {date}
 
-   **What was built:**
+**What was built:**
 
-   - {Brief bullet points of key functionality}
+- {Brief bullet points of key functionality}
 
-   **Tests added:**
+**Tests added:**
 
-   - {List test files created}
-   ```
+- {List test files created}
+```
 
 **Next Steps After Success:**
 Tell the user:
