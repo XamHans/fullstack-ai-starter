@@ -1,0 +1,32 @@
+# Fullstack AI Starter
+
+Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable: spec-driven workflows, typed integrations, and batteries-included tooling from auth to observability.
+
+**⭐️ Star the repo, then clone it and start building.**
+
+## Why teams ship with this starter
+- Spec-driven development keeps AI agents aligned and kills rework.
+- Multi-provider AI playgrounds stream results with typed, structured output.
+- Better Auth, Drizzle, and Neon give you secure login, sessions, and migrations on day one.
+- Resend emails, R2 file uploads, and background jobs are wired for real customer flows.
+- Langfuse, Pino, Umami, and Vitest ensure you monitor, log, and test before launch.
+
+## What's inside
+- Next.js 15 App Router, TypeScript, Tailwind, and shadcn/ui components.
+- Vercel AI SDK preconfigured for OpenAI, Anthropic, Google Gemini, and Claude Code MCP.
+- Modular services with dependency injection plus Drizzle ORM schemas and seeds.
+- Spec-first QA with Gherkin, Vitest unit/integration suites, Playwright, and Supertest templates.
+- Documentation hub covering AI patterns, authentication, database, testing, and analytics.
+
+## Quick start
+1. `git clone https://github.com/XamHans/fullstack-ai-starter.git && cd fullstack-ai-starter`
+2. Install dependencies: `pnpm install` (or `npm install` if you prefer).
+3. `cp .env.example .env.local` and add database, AI provider, auth, storage, and analytics keys.
+4. Prime the database: `pnpm db:generate && pnpm db:migrate`.
+5. Run the app: `pnpm dev` and visit `http://localhost:3000`.
+6. Docs are available via `pnpm docs` or by reading the `.mdx` files in `docs/`.
+
+## Need details?
+- Deployment, auth, database, and AI guides live in `docs/*.mdx`.
+- Testing patterns and DI examples: `docs/testing.mdx`.
+- Observability and analytics setup: `docs/observability.mdx` and `docs/umami-analytics.mdx`.
