@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { ServiceDependencies } from '@/lib/container/types';
-import { user } from '../schema';
+import { user } from '@/modules/auth/schema';
+import { users } from '../schema';
 
 export class UserService {
   constructor(private deps: ServiceDependencies) {}
@@ -189,5 +190,65 @@ export class UserService {
       });
       throw error;
     }
+  }
+
+  async createHouseholdMember(data: {
+    householdId: string;
+    name: string;
+    dietarySummary: string;
+    personaSummary?: string;
+    inspirationPrompt?: string;
+  }): Promise<(typeof users)['$inferSelect']> {
+    this.logger.info('Creating household member', {
+      operation: 'createHouseholdMember',
+      householdId: data.householdId,
+      name: data.name,
+      hasPersonaSummary: !!data.personaSummary,
+      hasInspirationPrompt: !!data.inspirationPrompt,
+    });
+
+    try {
+      const [newMember] = await this.deps.db
+        .insert(users)
+        .values({
+          householdId: data.householdId,
+          name: data.name,
+          dietarySummary: data.dietarySummary,
+          personaSummary: data.personaSummary || null,
+          inspirationPrompt: data.inspirationPrompt || null,
+        })
+        .returning();
+
+      this.logger.info('Household member created successfully', {
+        operation: 'createHouseholdMember',
+        memberId: newMember.id,
+        householdId: data.householdId,
+        name: data.name,
+      });
+
+      return newMember;
+    } catch (error) {
+      this.logger.error('Failed to create household member', {
+        error,
+        operation: 'createHouseholdMember',
+        householdId: data.householdId,
+        name: data.name,
+      });
+      throw error;
+    }
+  }
+
+  async addMember(
+    householdId: string,
+    name: string,
+    inspirationPrompt: string,
+  ): Promise<(typeof user)['$inferSelect']> {
+    // TODO: Implement logic
+    throw new Error('Not implemented');
+  }
+
+  async savePersona(userId: string, summary: string): Promise<(typeof user)['$inferSelect']> {
+    // TODO: Implement logic
+    throw new Error('Not implemented');
   }
 }

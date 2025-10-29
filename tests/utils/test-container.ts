@@ -2,6 +2,8 @@ import { vi } from 'vitest';
 import type { Container } from '@/lib/container';
 import type { DatabaseConnection, ServiceDependencies } from '@/lib/container/types';
 import { createLogger } from '@/lib/logger';
+import { HabitService } from '@/modules/habits/services/habit-service';
+import { HouseholdService } from '@/modules/households/services/household-service';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
 import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
@@ -41,6 +43,8 @@ export function createTestContainer(): Container & {
   // Create services manually with test dependencies
   const userService = new UserService(serviceDependencies);
   const postService = new PostService(serviceDependencies);
+  const householdService = new HouseholdService(serviceDependencies);
+  const habitService = new HabitService(serviceDependencies);
   const workflowService = new WorkflowService(serviceDependencies);
   const specSyncService = new SpecSyncService(serviceDependencies, workflowService);
   const specGeneratorService = new SpecGeneratorService(serviceDependencies, workflowService);
@@ -49,6 +53,8 @@ export function createTestContainer(): Container & {
   serviceDependencies.services = {
     userService,
     postService,
+    householdService,
+    habitService,
     workflowService,
     specSyncService,
     specGeneratorService,
@@ -57,10 +63,6 @@ export function createTestContainer(): Container & {
   const container: Container = {
     database: testDatabase,
     externalServices: {
-      geminiClient: {
-        generateVideo: vi.fn().mockResolvedValue({ jobId: 'test-job-123' }),
-        checkJobStatus: vi.fn().mockResolvedValue({ status: 'completed', videoUrl: 'test-url' }),
-      },
       r2Client: {
         uploadVideo: vi.fn().mockResolvedValue({ url: 'test-upload-url' }),
         deleteVideo: vi.fn().mockResolvedValue(true),
@@ -68,6 +70,8 @@ export function createTestContainer(): Container & {
     },
     userService,
     postService,
+    householdService,
+    habitService,
     workflowService,
     specSyncService,
     specGeneratorService,
