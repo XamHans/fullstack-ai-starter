@@ -26,6 +26,13 @@ Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable
 5. Run the app: `pnpm dev` and visit `http://localhost:3000`.
 6. Docs are available via `pnpm docs` or by reading the `.mdx` files in `docs/`.
 
+## Keep your fork updated
+- Leave `origin` pointing at your fork and add this starter as an `upstream` remote: `git remote add upstream https://github.com/our-org/starter-kit.git`.
+- Do feature work on branches off your `main`, then sync with the starter by fetching and rebasing (or merging): `git fetch upstream && git rebase upstream/main`.
+- Resolve conflicts locally, run your test suite, then push back to your repo: `git push origin main` (or the feature branch you are updating).
+- If you used the GitHub template flow, the “Sync fork” button performs the fetch/merge for you—just pull those changes into your local clone afterward.
+- Keep notes on tweaks you reapply each update so future merges stay quick; try the flow on a scratch branch first if you want a dry run.
+
 ## Need details?
 - Deployment, auth, database, and AI guides live in `docs/*.mdx`.
 - Testing patterns and DI examples: `docs/testing.mdx`.

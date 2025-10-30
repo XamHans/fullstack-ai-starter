@@ -20,6 +20,9 @@ export interface AIEventData {
   messageLength?: number;
   conversationLength?: number;
   clearedMessageCount?: number;
+  queryLength?: number;
+  provider?: string;
+  resultCount?: number;
 }
 
 export interface FileEventData {
@@ -132,6 +135,18 @@ class AnalyticsService {
       },
       clear: (data: Pick<AIEventData, 'clearedMessageCount'>) => {
         this.track('chat-conversation-cleared', data);
+      },
+    },
+
+    webSearch: {
+      submit: (data: Pick<AIEventData, 'queryLength' | 'provider'>) => {
+        this.track('web-search-submit', data);
+      },
+      success: (data: Pick<AIEventData, 'resultCount' | 'provider'>) => {
+        this.track('web-search-success', data);
+      },
+      error: (data: Pick<AIEventData, 'errorType' | 'provider'>) => {
+        this.track('web-search-error', data);
       },
     },
   };

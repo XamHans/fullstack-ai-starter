@@ -19,6 +19,7 @@ const playgroundItems = [
     href: '/playground/generate-image',
   },
   { label: 'Chat', href: '/playground/chat' },
+  { label: 'Web Search', href: '/playground/web-search' },
 ];
 
 const settingsItems = [

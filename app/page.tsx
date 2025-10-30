@@ -39,7 +39,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Cover } from '@/components/ui/cover';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { LinkPreview } from '@/components/ui/link-preview';
 import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { Separator } from '@/components/ui/separator';
 
@@ -1270,12 +1269,14 @@ export default function LandingPage() {
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm font-medium mb-3">
                     Thanks -{' '}
-                    <LinkPreview
-                      url="hhttps://www.linkedin.com/in/johannes-hayer-b8253a294/"
+                    <Link
+                      href="https://www.linkedin.com/in/johannes-hayer-b8253a294/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="font-bold hover:text-primary transition-colors text-blue-800"
                     >
                       Johannes
-                    </LinkPreview>
+                    </Link>
                   </p>
                   <p className="text-sm text-muted-foreground mb-3">
                     If you have questions, join our community of AI Builders
