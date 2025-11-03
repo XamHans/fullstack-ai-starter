@@ -28,16 +28,19 @@ All development MUST adhere to these principles from `.claude/constitution.md`:
 ### Quality Gates
 
 **Before `/implement`**:
+
 - ✅ All `[NEEDS CLARIFICATION]` markers resolved
 - ✅ Spec focuses on WHAT/WHY, not HOW
 - ✅ Scenarios are testable, independent, precise, minimal
 
 **During `/groundwork`**:
+
 - ✅ Simplicity Gate: Minimal complexity, no future-proofing
 - ✅ Anti-Abstraction Gate: Using frameworks directly
 - ✅ Groundwork Gate: Justified upfront infrastructure
 
 **During `/implement`**:
+
 - ✅ Test-First: Write tests before code
 - ✅ Vertical Slicing: API + UI + tests together
 - ✅ No guessing: Stop and ask for clarification if ambiguous
@@ -106,6 +109,7 @@ modules/
 ## Workflow Patterns
 
 ### After Groundwork
+
 ```bash
 /groundwork specs/posts/archive-posts.md
 # Review changes, then:
@@ -114,6 +118,7 @@ modules/
 ```
 
 ### Between Scenarios
+
 ```bash
 # After completing scenario 1:
 /clear
@@ -134,6 +139,7 @@ modules/
 
 ## Key Resources
 
+- `.claude/IMPLEMENTATION-PATTERNS.md` - **Technical patterns (READ FIRST)** - Container usage, API responses, Next.js 15+
 - `.claude/constitution.md` - Architectural principles and phase gates
 - `.claude/BDD-WORKFLOW.md` - Complete workflow guide with constitutional BDD details
 - `.claude/commands/` - Command templates with quality constraints

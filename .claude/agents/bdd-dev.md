@@ -21,6 +21,14 @@ Your implementation follows a **context-aware, test-first methodology**:
 
 Before implementing any feature, you **MUST** read the relevant architectural documentation to understand existing patterns:
 
+**CRITICAL: Technical Implementation Patterns** → Read `.claude/IMPLEMENTATION-PATTERNS.md` for:
+
+- Container & services usage (withServices pattern)
+- API response handling (auto-wrapped responses)
+- Next.js 15+ breaking changes (async params)
+- Complete API route templates
+- **READ THIS FIRST before any implementation**
+
 **When implementing APIs** → Read `docs/api-architecture.mdx` for:
 
 - API response patterns and error handling
@@ -105,12 +113,17 @@ BDD is our method for ensuring we build the right software. We achieve this by:
 **Phase 1: GHERKIN ANALYSIS & STRATEGY SELECTION**
 
 1.  **Deconstruct the Gherkin Scenario:** Read the target scenario from the `.md` spec file.
-2.  **Context Discovery:** Based on the scenario type, read relevant documentation:
+2.  **Read Technical Patterns (MANDATORY):** Read `.claude/IMPLEMENTATION-PATTERNS.md` to understand:
+    - Container & services usage patterns
+    - API response handling
+    - Next.js 15+ requirements (async params)
+    - Complete working examples
+3.  **Context Discovery:** Based on the scenario type, read relevant documentation:
     - **API scenarios** → Read `@docs/architecture/api-architecture.mdx`
     - **Database operations** → Read `@docs/architecture/database.mdx`
     - **Authentication/authorization** → Read `@docs/architecture/authentication.mdx`
     - **General patterns** → Read `@docs/architecture/code-architecture.mdx`
-3.  **Choose the Most Relevant Test Case (Your Core Task):**
+4.  **Choose the Most Relevant Test Case (Your Core Task):**
     - **Is it a single business rule?** -> **UNIT TEST** (Vitest) -> Place in `modules/{domain}/tests/unit/`.
     - **Does it define an HTTP contract?** -> **API TEST** (Vitest + Supertest) -> Place in `modules/{domain}/tests/integration/`.
     - **Is it a full user journey spanning multiple modules?** -> **E2E TEST** (Vitest + Playwright) -> Place in `tests/e2e/`.
@@ -124,6 +137,41 @@ You will now execute the TDD cycle _at the layer you chose_.
     - Use Gherkin steps as comments (`// GIVEN...`, `// WHEN...`, `// THEN...`) to structure your test.
 2.  **Write Minimal Code to Pass:** Implement the simplest possible code in your application module (e.g., `/modules/inventory/services/`) to make the test pass.
 3.  **Refactor:** Clean up the code while ensuring the test remains green.
+
+---
+
+## **TECHNICAL REQUIREMENTS CHECKLIST**
+
+Before implementing **ANY** API route or service method, verify these requirements:
+
+### ✅ Container & Services Pattern
+
+- [ ] Using `withServices()` to access services (NOT `container.db` or `getContainer().database`)
+- [ ] Only accessing available services: `userService`, `habitService`, `householdService`, `emailService`, `workflowService`, `specSyncService`, `specGeneratorService`
+- [ ] Never trying to access `db`, `database`, or `externalServices` via `withServices()`
+- [ ] Service methods use `this.deps.db` for database access (constructor injection)
+
+### ✅ API Response Pattern
+
+- [ ] Returning plain data objects from `withErrorHandling` handlers
+- [ ] NOT returning `NextResponse.json()` inside `withErrorHandling` (responses are auto-wrapped)
+- [ ] Frontend code handles wrapped responses: `const data = result.data || result`
+- [ ] Using `ApiError` for controlled error responses
+
+### ✅ Next.js 15+ Requirements
+
+- [ ] Awaiting `context.params` in dynamic routes: `const params = await context.params`
+- [ ] Using `useSearchParams()` hook properly in client components
+- [ ] Never accessing `context.params.id` without await
+
+### ✅ Logging & Error Handling
+
+- [ ] Adding logger calls for important operations with context
+- [ ] Proper try-catch blocks with error logging
+- [ ] Re-throwing `ApiError` instances unchanged
+- [ ] Wrapping unknown errors in `ApiError` with descriptive messages
+
+**Reference**: See `.claude/IMPLEMENTATION-PATTERNS.md` for complete examples and anti-patterns.
 
 ---
 

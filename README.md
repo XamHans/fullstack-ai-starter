@@ -12,7 +12,7 @@ Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable
 - Langfuse, Pino, Umami, and Vitest ensure you monitor, log, and test before launch.
 
 ## What's inside
-- Next.js 15 App Router, TypeScript, Tailwind, and shadcn/ui components.
+- Next.js 16 App Router, TypeScript, Tailwind, and shadcn/ui components.
 - Vercel AI SDK preconfigured for OpenAI, Anthropic, Google Gemini, and Claude Code MCP.
 - Modular services with dependency injection plus Drizzle ORM schemas and seeds.
 - Spec-first QA with Gherkin, Vitest unit/integration suites, Playwright, and Supertest templates.

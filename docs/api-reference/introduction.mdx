@@ -1,13 +1,13 @@
 ---
-title: "API Reference"
-description: "Complete REST API documentation with authentication, error handling, and standardized response patterns"
+title: 'API Reference'
+description: 'Complete REST API documentation with authentication, error handling, and standardized response patterns'
 ---
 
 # API Reference
 
 ## What
 
-A complete REST API built with Next.js 15 Route Handlers featuring standardized error handling, authentication wrappers, and consistent response formatting. All endpoints follow the same patterns for predictable integration.
+A complete REST API built with Next.js 16 Route Handlers featuring standardized error handling, authentication wrappers, and consistent response formatting. All endpoints follow the same patterns for predictable integration.
 
 ## Why
 
@@ -35,7 +35,7 @@ const response = await fetch('/api/posts', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ title: 'My Post', content: 'Content' }),
-  credentials: 'include'
+  credentials: 'include',
 });
 
 // Using API key (server-to-server)
@@ -43,9 +43,9 @@ const response = await fetch('/api/posts', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer your-api-key'
+    Authorization: 'Bearer your-api-key',
   },
-  body: JSON.stringify({ title: 'My Post', content: 'Content' })
+  body: JSON.stringify({ title: 'My Post', content: 'Content' }),
 });
 ```
 
@@ -66,6 +66,7 @@ All API responses follow this structure:
 ## Example
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -79,6 +80,7 @@ All API responses follow this structure:
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -90,21 +92,25 @@ All API responses follow this structure:
 ## Available Endpoints
 
 ### AI Generation
+
 - `POST /api/ai/generate-text` - Generate text with AI models
 - `POST /api/ai/chat` - Chat completions with streaming
 
 ### File Management
+
 - `POST /api/upload` - Upload files to R2 storage
 - `GET /api/upload` - Generate presigned upload URLs
 - `DELETE /api/upload` - Delete uploaded files
 
 ### Authentication
+
 - `POST /api/auth/sign-in` - Sign in with email/password
 - `POST /api/auth/sign-up` - Create new account
 - `POST /api/auth/sign-out` - Sign out current session
 - `GET /api/auth/session` - Get current session
 
 ### Content Management
+
 - `GET /api/posts` - List posts (public)
 - `POST /api/posts` - Create post (authenticated)
 - `GET /api/posts/[id]` - Get specific post
@@ -113,23 +119,25 @@ All API responses follow this structure:
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| `UNAUTHORIZED` | Authentication required |
-| `FORBIDDEN` | Insufficient permissions |
-| `NOT_FOUND` | Resource not found |
-| `VALIDATION_ERROR` | Invalid request data |
-| `RATE_LIMITED` | Too many requests |
-| `INTERNAL_ERROR` | Server error |
+| Code               | Description              |
+| ------------------ | ------------------------ |
+| `UNAUTHORIZED`     | Authentication required  |
+| `FORBIDDEN`        | Insufficient permissions |
+| `NOT_FOUND`        | Resource not found       |
+| `VALIDATION_ERROR` | Invalid request data     |
+| `RATE_LIMITED`     | Too many requests        |
+| `INTERNAL_ERROR`   | Server error             |
 
 ## Rate Limiting
 
 API endpoints are rate limited:
+
 - **Authenticated users**: 1000 requests/hour
 - **Anonymous users**: 100 requests/hour
 - **AI endpoints**: 50 requests/hour
 
 Rate limit headers are included in responses:
+
 ```
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
