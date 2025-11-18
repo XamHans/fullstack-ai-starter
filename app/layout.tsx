@@ -11,6 +11,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'AI Starter Kit',
   description: 'Start your next AI project in days instead of months',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

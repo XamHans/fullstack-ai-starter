@@ -19,13 +19,9 @@
       "command": "npx",
       "args": ["-y", "mcp-remote@latest", "https://mcp.neon.tech/mcp"]
     },
-    "browsertool": {
+    "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "m @agentdeskai/browser-tools-mcp@1.2.0"]
-    },
-    "vercel": {
-      "command": "npx",
-      "args": ["mcp-remote", "https://mcp.vercel.com"]
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }
