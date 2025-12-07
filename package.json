@@ -118,7 +118,7 @@
     "motion": "^12.23.12",
     "msw": "latest",
     "mysql2": "latest",
-    "next": "16.0.0-canary.18",
+    "next": "16.0.7",
     "next-themes": "latest",
     "path": "latest",
     "pg": "latest",
