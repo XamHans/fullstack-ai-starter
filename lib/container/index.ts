@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import * as schema from '@/lib/db';
 import { createLogger } from '@/lib/logger';
 import { EmailService } from '@/lib/services/email';
+import { PaymentService } from '@/modules/payments/services/payment.service';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
 import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
@@ -52,6 +53,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
 
   const userService = overrides?.userService || new UserService(serviceDependencies);
   const postService = overrides?.postService || new PostService(serviceDependencies);
+  const paymentService = overrides?.paymentService || new PaymentService(serviceDependencies);
   const emailService = overrides?.emailService || new EmailService();
   const workflowService = overrides?.workflowService || new WorkflowService(serviceDependencies);
   const specSyncService =
@@ -64,6 +66,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
   const services: Services = {
     userService,
     postService,
+    paymentService,
     emailService,
     workflowService,
     specSyncService,
@@ -80,6 +83,7 @@ export function createContainer(overrides?: Partial<Container>): Container {
     // Flattened services for direct access
     userService,
     postService,
+    paymentService,
     emailService,
     workflowService,
     specSyncService,
@@ -92,6 +96,7 @@ export function getServices(container: Container): Services {
   return {
     userService: container.userService,
     postService: container.postService,
+    paymentService: container.paymentService,
     emailService: container.emailService,
     workflowService: container.workflowService,
     specSyncService: container.specSyncService,

@@ -2,6 +2,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/lib/db';
 import type { CustomLogger } from '@/lib/logger';
 import type { EmailService } from '@/lib/services/email';
+import type { PaymentService } from '@/modules/payments/services/payment.service';
 import type { PostService } from '@/modules/posts/services/post.service';
 import type { UserService } from '@/modules/users/services/user.service';
 import type { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
@@ -19,6 +20,7 @@ export interface ExternalServices {
 export interface BusinessServices {
   userService: UserService;
   postService: PostService;
+  paymentService: PaymentService;
   emailService: EmailService;
   workflowService: WorkflowService;
   specSyncService: SpecSyncService;
@@ -34,6 +36,7 @@ export interface Container {
   // Business services (flattened for direct access)
   userService: UserService;
   postService: PostService;
+  paymentService: PaymentService;
   emailService: EmailService;
   workflowService: WorkflowService;
   specSyncService: SpecSyncService;
@@ -48,6 +51,7 @@ export interface ServiceDependencies {
     Container,
     | 'userService'
     | 'postService'
+    | 'paymentService'
     | 'emailService'
     | 'workflowService'
     | 'specSyncService'
@@ -60,6 +64,7 @@ export type Services = Pick<
   Container,
   | 'userService'
   | 'postService'
+  | 'paymentService'
   | 'emailService'
   | 'workflowService'
   | 'specSyncService'
