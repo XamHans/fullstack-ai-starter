@@ -13,7 +13,45 @@
     },
     "sequential-thinking": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "args": [
+        "-y",
+        "--package",
+        "mollie-api-typescript",
+        "--",
+        "mcp",
+        "start",
+        "--api-key",
+        "...",
+        "--o-auth",
+        "...",
+        "--profile-id",
+        "...",
+        "--testmode",
+        "...",
+        "--custom-user-agent",
+        "..."
+      ]
+    },
+    "mollie": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "mollie-api-typescript",
+        "--",
+        "mcp",
+        "start",
+        "--api-key",
+        "...",
+        "--o-auth",
+        "...",
+        "--profile-id",
+        "...",
+        "--testmode",
+        "...",
+        "--custom-user-agent",
+        "..."
+      ]
     },
     "neon": {
       "command": "npx",

@@ -161,13 +161,18 @@ export default function WebSearchPage() {
           <Card>
             <CardHeader>
               <CardTitle>Search Query</CardTitle>
-              <CardDescription>Select a provider and describe what you want to know.</CardDescription>
+              <CardDescription>
+                Select a provider and describe what you want to know.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="provider">Provider</Label>
-                  <Select value={provider} onValueChange={(value: SearchProvider) => setProvider(value)}>
+                  <Select
+                    value={provider}
+                    onValueChange={(value: SearchProvider) => setProvider(value)}
+                  >
                     <SelectTrigger id="provider">
                       <SelectValue placeholder="Choose a provider" />
                     </SelectTrigger>
@@ -176,7 +181,9 @@ export default function WebSearchPage() {
                         <SelectItem key={option.value} value={option.value}>
                           <div className="flex flex-col gap-1">
                             <span>{option.label}</span>
-                            <span className="text-xs text-muted-foreground">{option.description}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {option.description}
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -196,7 +203,9 @@ export default function WebSearchPage() {
                   />
                 </div>
 
-                {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>}
+                {error && (
+                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">{error}</div>
+                )}
 
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? (
@@ -220,7 +229,9 @@ export default function WebSearchPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Results</CardTitle>
-                  <CardDescription>Responses and citations from the selected provider.</CardDescription>
+                  <CardDescription>
+                    Responses and citations from the selected provider.
+                  </CardDescription>
                 </div>
                 {result && (
                   <Badge variant="secondary" className="flex items-center gap-1">
@@ -249,7 +260,10 @@ export default function WebSearchPage() {
                     {hasSources ? (
                       <ul className="space-y-3">
                         {result.sources.map((source, index) => (
-                          <li key={source.id ?? source.url ?? index} className="border rounded-lg p-3">
+                          <li
+                            key={source.id ?? source.url ?? index}
+                            className="border rounded-lg p-3"
+                          >
                             <div className="flex flex-col gap-1">
                               <span className="text-sm font-medium">
                                 {source.title || source.url || `Result ${index + 1}`}

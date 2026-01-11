@@ -1,32 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   AlertTriangle,
   ArrowUpRight,
   Bot,
+  Braces,
   Check,
   Database,
-  Braces,
+  Image as ImageIcon,
   Layout,
   Mail,
   MonitorSpeaker,
   Rocket,
-  Sparkles,
   Server,
   Shield,
+  Sparkles,
   Star,
   Target,
   TestTube,
   Users,
   Wrench,
   X,
-  Image as ImageIcon,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -230,19 +230,25 @@ export default function LandingPage() {
                     <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Check className="h-4 w-4" />
                     </span>
-                    <span>End-to-end scaffolding for auth, billing, observability, and testing.</span>
+                    <span>
+                      End-to-end scaffolding for auth, billing, observability, and testing.
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Check className="h-4 w-4" />
                     </span>
-                    <span>Spec-driven workflows so every feature ships with clarity and confidence.</span>
+                    <span>
+                      Spec-driven workflows so every feature ships with clarity and confidence.
+                    </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Check className="h-4 w-4" />
                     </span>
-                    <span>Battle-tested integrations for major AI providers and modern databases.</span>
+                    <span>
+                      Battle-tested integrations for major AI providers and modern databases.
+                    </span>
                   </li>
                 </ul>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -267,8 +273,8 @@ export default function LandingPage() {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Clone the repo then follow the Quick Start section in the README for the fastest setup
-                  path.
+                  Clone the repo then follow the Quick Start section in the README for the fastest
+                  setup path.
                 </p>
               </div>
             </motion.div>
@@ -615,7 +621,9 @@ export default function LandingPage() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.3, ease: 'easeOut' }}
                           >
-                            <Check className={`mt-1 h-5 w-5 flex-shrink-0 ${activeHighlight.accent}`} />
+                            <Check
+                              className={`mt-1 h-5 w-5 flex-shrink-0 ${activeHighlight.accent}`}
+                            />
                             <span className="text-neutral-100">{point}</span>
                           </motion.li>
                         ))}
@@ -652,8 +660,8 @@ export default function LandingPage() {
 
               <div className="flex flex-col gap-4 border-t border-white/5 bg-black/40 px-8 py-6 sm:px-10 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-white/70">
-                  Clone the repo and follow the Quick Start in the README to activate every module in
-                  minutes.
+                  Clone the repo and follow the Quick Start in the README to activate every module
+                  in minutes.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button
@@ -801,12 +809,7 @@ export default function LandingPage() {
                   <Button asChild size="sm">
                     <Link href="/playground/generate-text">Open AI Playground</Link>
                   </Button>
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                  >
+                  <Button asChild size="sm" variant="outline" className="gap-2">
                     <Link
                       href="https://github.com/XamHans/fullstack-ai-starter/tree/main/modules"
                       target="_blank"
@@ -830,7 +833,7 @@ export default function LandingPage() {
                   Example structured output call
                 </p>
                 <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
-{`const result = await streamText({
+                  {`const result = await streamText({
   model: google('gemini-1.5-pro'),
   prompt,
   output: z.object({
