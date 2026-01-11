@@ -1,0 +1,517 @@
+---
+title: 'Payment Integration with Mollie'
+description: 'Complete guide to integrating Mollie payments in your application'
+---
+
+## Overview
+
+The starter kit includes a complete Mollie payment integration with:
+- Payment creation and processing
+- Webhook handling for payment status updates
+- Payment history tracking
+- Secure API key management
+- Multi-currency support (EUR, USD, GBP, CHF, PLN)
+- Webhook signature verification
+
+## Architecture
+
+```
+User Action → API Route → PaymentService → Mollie API
+                                ↓
+                          Database Storage
+                                ↓
+                    Mollie Webhook → Status Update
+```
+
+## Setting Up Mollie
+
+### 1. Create Mollie Account
+
+Sign up at [mollie.com](https://www.mollie.com/) and complete your business verification.
+
+### 2. Get API Keys
+
+1. Navigate to **Dashboard → Developers → API Keys**
+2. Copy your **test API key** (starts with `test_`)
+3. For production, use your **live API key** (starts with `live_`)
+
+### 3. Configure Environment
+
+Add to `.env.local`:
+
+```bash
+# Mollie API Key (test mode for development)
+MOLLIE_API_KEY="test_your-mollie-api-key-here"
+
+# Application URL (used for webhook and redirect URLs)
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Mollie Webhook Secret (for signature verification)
+MOLLIE_WEBHOOK_SECRET="your-webhook-secret-here-at-least-32-characters"
+```
+
+**Generate a webhook secret:**
+```bash
+openssl rand -hex 32
+```
+
+### 4. Run Database Migration
+
+```bash
+pnpm db:migrate
+```
+
+This creates the `payments` and `webhook_events` tables.
+
+## Creating a Payment
+
+### Backend (API Route)
+
+```typescript
+// app/api/custom-payment/route.ts
+import { withAuthentication } from '@/lib/api/base';
+import { withServices } from '@/lib/container/utils';
+
+export const POST = withAuthentication(async (session, request) => {
+  const { paymentService } = withServices('paymentService');
+
+  const payment = await paymentService.createPayment(
+    {
+      amount: '25.00',
+      currency: 'EUR',
+      description: 'Premium Subscription',
+      metadata: {
+        subscriptionId: 'sub_123',
+        orderId: 'order_456'
+      },
+    },
+    session.user.id
+  );
+
+  return { payment };
+});
+```
+
+### Frontend (React Component)
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
+export function CheckoutButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handlePayment = async () => {
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/custom-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Payment failed');
+      }
+
+      const payment = result.data?.payment || result.payment;
+
+      // Redirect to Mollie checkout
+      window.location.href = payment.mollieCheckoutUrl;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Payment failed');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button onClick={handlePayment} disabled={loading}>
+      {loading ? 'Processing...' : 'Pay Now'}
+    </Button>
+  );
+}
+```
+
+## Webhook Handling
+
+Mollie automatically calls `/api/payments/webhook` when payment status changes.
+
+### How Webhooks Work
+
+1. **Payment Status Changes**: User completes or cancels payment in Mollie
+2. **Mollie Calls Webhook**: Sends POST request to your webhook URL
+3. **Signature Verification**: Your server verifies the request is from Mollie
+4. **Status Update**: Fetch latest status from Mollie API and update database
+5. **Event Recording**: Store webhook event for audit trail
+
+### Local Development with Webhooks
+
+Mollie webhooks require a publicly accessible URL. Use **ngrok** for local testing:
+
+```bash
+# Install ngrok
+brew install ngrok
+
+# Start your Next.js dev server
+pnpm dev
+
+# In another terminal, expose it publicly
+ngrok http 3000
+
+# Copy the HTTPS URL (e.g., https://abc123.ngrok.io)
+# Update .env.local:
+NEXT_PUBLIC_APP_URL="https://abc123.ngrok.io"
+```
+
+### Testing Webhooks
+
+1. Create a test payment in your app
+2. Use Mollie's test payment flow to complete/cancel the payment
+3. Check your server logs to see the webhook being received
+4. Verify the payment status updated in your database
+
+## Payment States
+
+| Status | Description | User Action |
+|--------|-------------|-------------|
+| `open` | Payment created, awaiting user | Show checkout link |
+| `pending` | Payment started, processing | Show loading state |
+| `paid` | Payment successful ✅ | Grant access/fulfill order |
+| `failed` | Payment failed ❌ | Show error, allow retry |
+| `expired` | Payment link expired | Create new payment |
+| `canceled` | User canceled payment | Show cancellation message |
+
+## Supported Currencies
+
+The integration supports multiple currencies:
+
+- **EUR** - Euro (€)
+- **USD** - US Dollar ($)
+- **GBP** - British Pound (£)
+- **CHF** - Swiss Franc
+- **PLN** - Polish Złoty
+
+Check [Mollie's currency support](https://docs.mollie.com/payments/multicurrency) for the full list.
+
+## Using the Payment Service
+
+### Get Payment by ID
+
+```typescript
+const { paymentService } = withServices('paymentService');
+
+const payment = await paymentService.getPaymentById(paymentId);
+
+if (!payment) {
+  throw new ApiError(404, 'Payment not found', 'PAYMENT_NOT_FOUND');
+}
+```
+
+### List User Payments
+
+```typescript
+const payments = await paymentService.getUserPayments({
+  userId: session.user.id,
+  status: 'paid', // optional filter
+  limit: 20,
+  offset: 0,
+});
+```
+
+### Get Payment by Mollie ID
+
+```typescript
+const payment = await paymentService.getPaymentByMollieId('tr_xxx');
+```
+
+## Security Best Practices
+
+### 1. Never Expose API Keys Client-Side
+
+❌ **Don't do this:**
+```typescript
+// NEVER put API keys in frontend code
+const mollie = mollieClient({ apiKey: 'test_xxx' });
+```
+
+✅ **Do this:**
+```typescript
+// Keep API keys in backend services only
+export class PaymentService {
+  private mollie: ReturnType<typeof mollieClient>;
+
+  constructor(private deps: ServiceDependencies) {
+    this.mollie = mollieClient({
+      apiKey: process.env.MOLLIE_API_KEY || '',
+    });
+  }
+}
+```
+
+### 2. Always Verify Webhook Signatures
+
+The webhook handler automatically verifies signatures using HMAC-SHA256:
+
+```typescript
+function verifyWebhookSignature(
+  body: string,
+  signature: string | null,
+  secret: string
+): boolean {
+  if (!signature) return false;
+
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(body);
+  const calculatedSignature = hmac.digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(calculatedSignature)
+  );
+}
+```
+
+### 3. Use HTTPS for Webhooks
+
+Mollie requires HTTPS for webhook URLs in production. Use ngrok for local development.
+
+### 4. Implement Rate Limiting
+
+Consider adding rate limiting to payment creation endpoints to prevent abuse.
+
+### 5. Store Minimal Payment Data
+
+Only store what you need. The integration stores:
+- Payment ID and Mollie payment ID
+- Amount, currency, description
+- Status and timestamps
+- Minimal metadata (orderId, productId)
+
+**Never store** credit card details - Mollie handles all sensitive data.
+
+## Production Checklist
+
+Before going live:
+
+- [ ] Switch to live API key (`live_...` instead of `test_...`)
+- [ ] Update `NEXT_PUBLIC_APP_URL` to your production domain
+- [ ] Configure webhook URL in Mollie dashboard
+- [ ] Generate secure webhook secret (32+ characters)
+- [ ] Test webhook with Mollie's test payments
+- [ ] Set up payment monitoring and alerts
+- [ ] Review PCI DSS compliance requirements
+- [ ] Configure proper error handling and logging
+- [ ] Test all payment flows (success, failure, cancellation)
+- [ ] Set up backup webhook URL (optional but recommended)
+
+## Troubleshooting
+
+### Webhook Not Receiving Events
+
+**Check:**
+- Is `NEXT_PUBLIC_APP_URL` publicly accessible?
+- Is the webhook URL configured in Mollie dashboard?
+- Check server logs for errors
+- Verify ngrok is running (local development)
+- Test webhook URL with `curl` from outside your network
+
+**Mollie Dashboard:**
+- Go to **Developers → Webhooks**
+- Add webhook URL: `https://yourdomain.com/api/payments/webhook`
+
+### Payment Creation Fails
+
+**Common issues:**
+- API key is incorrect or expired
+- Amount format is wrong (must be "10.00", not "10")
+- Currency not supported
+- Mollie account not verified
+
+**Check:**
+```typescript
+// Amount must be a string in format "X.XX"
+✅ amount: "10.00"
+❌ amount: "10"
+❌ amount: 10
+```
+
+### Webhook Signature Verification Fails
+
+**Common issues:**
+- `MOLLIE_WEBHOOK_SECRET` not set or incorrect
+- Using wrong signature header
+- Body content modified before verification
+
+**Debug:**
+```typescript
+// Log signature verification details
+logger.info('Webhook signature verification', {
+  receivedSignature: signature,
+  webhookSecret: webhookSecret ? 'SET' : 'NOT SET',
+  bodyLength: rawBody.length,
+});
+```
+
+### Payment Status Not Updating
+
+**Check:**
+- Webhook is being received (check logs)
+- Webhook signature verification passing
+- Mollie API credentials are correct
+- Database transaction completing successfully
+
+**Test webhook manually:**
+```bash
+curl -X POST https://yourdomain.com/api/payments/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Mollie-Signature: your-test-signature" \
+  -d '{"id":"tr_test_xxx"}'
+```
+
+## API Reference
+
+### POST /api/payments/create
+
+Create a new payment.
+
+**Authentication**: Required
+
+**Request Body**:
+```json
+{
+  "amount": "10.00",
+  "currency": "EUR",
+  "description": "Payment description",
+  "metadata": {
+    "orderId": "order_123",
+    "productId": "product_456"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "payment": {
+    "id": "uuid",
+    "molliePaymentId": "tr_xxx",
+    "mollieCheckoutUrl": "https://www.mollie.com/checkout/...",
+    "amount": "10.00",
+    "currency": "EUR",
+    "status": "open",
+    "userId": "user_123",
+    "metadata": { ... },
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "expiresAt": "2024-01-01T01:00:00.000Z"
+  }
+}
+```
+
+### GET /api/payments
+
+List user payments.
+
+**Authentication**: Required
+
+**Query Parameters**:
+- `status` (optional): Filter by status (open, paid, failed, etc.)
+- `limit` (optional): Max results (default: 20, max: 100)
+- `offset` (optional): Pagination offset (default: 0)
+
+**Response**:
+```json
+{
+  "payments": [
+    {
+      "id": "uuid",
+      "amount": "10.00",
+      "currency": "EUR",
+      "status": "paid",
+      ...
+    }
+  ]
+}
+```
+
+### GET /api/payments/[id]
+
+Get payment details.
+
+**Authentication**: Required (must own payment)
+
+**Response**:
+```json
+{
+  "payment": {
+    "id": "uuid",
+    "molliePaymentId": "tr_xxx",
+    "amount": "10.00",
+    "status": "paid",
+    ...
+  }
+}
+```
+
+### POST /api/payments/webhook
+
+Mollie webhook endpoint.
+
+**Authentication**: None (validated by signature)
+
+**Headers**:
+- `X-Mollie-Signature`: HMAC-SHA256 signature
+
+**Request Body**:
+```json
+{
+  "id": "tr_xxx"
+}
+```
+
+## Database Schema
+
+### payments table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text (UUID) | Primary key |
+| molliePaymentId | text | Mollie payment ID (unique) |
+| mollieCheckoutUrl | text | Mollie checkout URL |
+| amount | text | Payment amount (e.g., "10.00") |
+| currency | text | ISO 4217 currency code |
+| description | text | Payment description |
+| status | text | Payment status |
+| userId | text | User ID |
+| metadata | jsonb | Custom metadata |
+| createdAt | timestamp | Creation time |
+| updatedAt | timestamp | Last update time |
+| paidAt | timestamp | Payment completion time |
+| failedAt | timestamp | Payment failure time |
+| expiresAt | timestamp | Expiration time |
+
+### webhook_events table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text (UUID) | Primary key |
+| paymentId | text | Reference to payment |
+| molliePaymentId | text | Mollie payment ID |
+| eventType | text | Event type |
+| status | text | Payment status |
+| processed | boolean | Processing flag |
+| processedAt | timestamp | Processing time |
+| payload | jsonb | Raw webhook data |
+| createdAt | timestamp | Event time |
+
+## Resources
+
+- [Mollie API Documentation](https://docs.mollie.com/)
+- [Mollie Node.js SDK](https://github.com/mollie/mollie-api-node)
+- [Payment Methods](https://www.mollie.com/payments)
+- [Webhook Documentation](https://docs.mollie.com/overview/webhooks)
+- [Testing Payments](https://docs.mollie.com/overview/testing)

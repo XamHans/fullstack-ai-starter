@@ -61,7 +61,8 @@
         "authentication",
         "database",
         "api-architecture",
-        "file-uploads"
+        "file-uploads",
+        "payment-integration"
       ]
     },
     {

@@ -8,7 +8,7 @@ Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable
 - Spec-driven development keeps AI agents aligned and kills rework.
 - Multi-provider AI playgrounds stream results with typed, structured output.
 - Better Auth, Drizzle, and Neon give you secure login, sessions, and migrations on day one.
-- Resend emails, R2 file uploads, and background jobs are wired for real customer flows.
+- Resend emails, R2 file uploads, Mollie payments, and background jobs are wired for real customer flows.
 - Langfuse, Pino, Umami, and Vitest ensure you monitor, log, and test before launch.
 
 ## What's inside
