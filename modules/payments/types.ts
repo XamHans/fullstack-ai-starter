@@ -43,28 +43,3 @@ export interface PaymentFilters {
   limit?: number;
   offset?: number;
 }
-
-/**
- * Mollie API payment response type
- */
-export interface MolliePaymentResponse {
-  id: string;
-  mode: string;
-  status: string;
-  amount: {
-    value: string;
-    currency: string;
-  };
-  description: string;
-  metadata?: Record<string, unknown>;
-  _links: {
-    checkout: {
-      href: string;
-      type: string;
-    };
-  };
-  createdAt: string;
-  expiresAt: string;
-  paidAt?: string;
-  failedAt?: string;
-}

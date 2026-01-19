@@ -10,11 +10,11 @@ import type { CreatePaymentInput } from '@/modules/payments/types';
 
 /**
  * POST /api/payments/create
- * Create a new payment via Mollie
+ * Create a new payment via Stripe Checkout
  *
  * Requires authentication
  * Validates amount format and required fields
- * Returns payment with Mollie checkout URL for redirect
+ * Returns payment with Stripe checkout URL for redirect
  */
 export const POST = withAuthentication(async (session, request: NextRequest, context, logger) => {
   const { paymentService } = withServices('paymentService');
@@ -48,7 +48,7 @@ export const POST = withAuthentication(async (session, request: NextRequest, con
     logger?.info('Payment created successfully', {
       operation: 'createPayment',
       paymentId: payment.id,
-      molliePaymentId: payment.molliePaymentId,
+      stripeCheckoutSessionId: payment.stripeCheckoutSessionId,
     });
 
     return { payment };

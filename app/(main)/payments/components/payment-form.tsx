@@ -53,9 +53,9 @@ export function PaymentForm() {
 
       const payment = result.data?.payment || result.payment;
 
-      // Redirect to Mollie checkout
-      if (payment.mollieCheckoutUrl) {
-        window.location.href = payment.mollieCheckoutUrl;
+      // Redirect to Stripe Checkout
+      if (payment.stripeCheckoutUrl) {
+        window.location.href = payment.stripeCheckoutUrl;
       } else {
         throw new Error('No checkout URL received');
       }
@@ -123,7 +123,7 @@ export function PaymentForm() {
       </div>
 
       <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Creating payment...' : 'Pay with Mollie'}
+        {loading ? 'Creating payment...' : 'Pay with Stripe'}
       </Button>
     </form>
   );

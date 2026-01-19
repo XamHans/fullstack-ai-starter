@@ -2,11 +2,9 @@ import { vi } from 'vitest';
 import type { Container } from '@/lib/container';
 import type { DatabaseConnection, ServiceDependencies } from '@/lib/container/types';
 import { createLogger } from '@/lib/logger';
+import { PaymentService } from '@/modules/payments/services/payment.service';
 import { PostService } from '@/modules/posts/services/post.service';
 import { UserService } from '@/modules/users/services/user.service';
-import { SpecGeneratorService } from '@/modules/workflow/services/spec-generator.service';
-import { SpecSyncService } from '@/modules/workflow/services/spec-sync.service';
-import { WorkflowService } from '@/modules/workflow/services/workflow.service';
 import { getTestDb } from './test-database';
 
 export function createTestContainer(): Container & {
@@ -41,26 +39,18 @@ export function createTestContainer(): Container & {
   // Create services manually with test dependencies
   const userService = new UserService(serviceDependencies);
   const postService = new PostService(serviceDependencies);
-  const workflowService = new WorkflowService(serviceDependencies);
-  const specSyncService = new SpecSyncService(serviceDependencies, workflowService);
-  const specGeneratorService = new SpecGeneratorService(serviceDependencies, workflowService);
+  const paymentService = new PaymentService(serviceDependencies);
 
   // Update service dependencies with service references
   serviceDependencies.services = {
     userService,
     postService,
-    workflowService,
-    specSyncService,
-    specGeneratorService,
+    paymentService,
   };
 
   const container: Container = {
     database: testDatabase,
     externalServices: {
-      geminiClient: {
-        generateVideo: vi.fn().mockResolvedValue({ jobId: 'test-job-123' }),
-        checkJobStatus: vi.fn().mockResolvedValue({ status: 'completed', videoUrl: 'test-url' }),
-      },
       r2Client: {
         uploadVideo: vi.fn().mockResolvedValue({ url: 'test-upload-url' }),
         deleteVideo: vi.fn().mockResolvedValue(true),
@@ -68,9 +58,7 @@ export function createTestContainer(): Container & {
     },
     userService,
     postService,
-    workflowService,
-    specSyncService,
-    specGeneratorService,
+    paymentService,
   };
 
   return {

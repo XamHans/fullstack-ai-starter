@@ -11,47 +11,12 @@
         " --from git+https://github.com/oraios/serena serena start-mcp-server"
       ]
     },
-    "sequential-thinking": {
+    "stripe": {
       "command": "npx",
-      "args": [
-        "-y",
-        "--package",
-        "mollie-api-typescript",
-        "--",
-        "mcp",
-        "start",
-        "--api-key",
-        "...",
-        "--o-auth",
-        "...",
-        "--profile-id",
-        "...",
-        "--testmode",
-        "...",
-        "--custom-user-agent",
-        "..."
-      ]
-    },
-    "mollie": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "--package",
-        "mollie-api-typescript",
-        "--",
-        "mcp",
-        "start",
-        "--api-key",
-        "...",
-        "--o-auth",
-        "...",
-        "--profile-id",
-        "...",
-        "--testmode",
-        "...",
-        "--custom-user-agent",
-        "..."
-      ]
+      "args": ["-y", "@stripe/mcp-server-stripe@latest"],
+      "env": {
+        "STRIPE_SECRET_KEY": "${STRIPE_SECRET_KEY}"
+      }
     },
     "neon": {
       "command": "npx",

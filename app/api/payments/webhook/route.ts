@@ -1,110 +1,172 @@
-import crypto from 'crypto';
 import type { NextRequest } from 'next/server';
+import Stripe from 'stripe';
 import { ApiError, withErrorHandling } from '@/lib/api/base';
 import { withServices } from '@/lib/container/utils';
 
 /**
- * Verify Mollie webhook signature
- * See: https://docs.mollie.com/overview/webhooks#webhook-security
- *
- * @param body Raw request body as string
- * @param signature Signature from X-Mollie-Signature header
- * @param secret Webhook secret from environment
- * @returns true if signature is valid
- */
-function verifyWebhookSignature(body: string, signature: string | null, secret: string): boolean {
-  if (!signature) return false;
-
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(body);
-  const calculatedSignature = hmac.digest('hex');
-
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(calculatedSignature));
-}
-
-/**
  * POST /api/payments/webhook
- * Handle Mollie payment status webhooks
+ * Handle Stripe webhook events
  *
  * No authentication required (validated by signature)
- * Verifies webhook signature for security
- * Updates payment status from Mollie
+ * Verifies webhook signature using Stripe SDK
+ * Updates payment status from Stripe events
  * Records webhook event for audit trail
  */
 export const POST = withErrorHandling(async (request: NextRequest, context, logger) => {
   const { paymentService } = withServices('paymentService');
 
-  logger?.info('Received payment webhook', { operation: 'webhookHandler' });
+  logger?.info('Received Stripe webhook', { operation: 'webhookHandler' });
 
-  // Get raw body for signature verification
+  // Get raw body for signature verification (CRITICAL for Stripe)
   const rawBody = await request.text();
-  const body = JSON.parse(rawBody) as { id: string };
+  const signature = request.headers.get('stripe-signature');
 
-  // Verify webhook signature (production security)
-  const signature = request.headers.get('X-Mollie-Signature');
-  const webhookSecret = process.env.MOLLIE_WEBHOOK_SECRET;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (webhookSecret && !verifyWebhookSignature(rawBody, signature, webhookSecret)) {
-    logger?.warn('Invalid webhook signature', {
-      operation: 'webhookHandler',
-      signature,
-    });
-    throw new ApiError(401, 'Invalid signature', 'INVALID_SIGNATURE');
+  if (!webhookSecret) {
+    logger?.error('STRIPE_WEBHOOK_SECRET not configured', { operation: 'webhookHandler' });
+    throw new ApiError(500, 'Webhook secret not configured', 'WEBHOOK_SECRET_MISSING');
   }
 
-  if (!body.id) {
-    throw new ApiError(400, 'Missing payment ID', 'MISSING_PAYMENT_ID');
+  if (!signature) {
+    logger?.warn('Missing Stripe signature', { operation: 'webhookHandler' });
+    throw new ApiError(400, 'Missing signature', 'MISSING_SIGNATURE');
   }
+
+  let event: Stripe.Event;
 
   try {
-    // Get payment from database
-    const payment = await paymentService.getPaymentByMollieId(body.id);
-
-    if (!payment) {
-      logger?.warn('Payment not found in webhook', {
-        operation: 'webhookHandler',
-        molliePaymentId: body.id,
-      });
-      throw new ApiError(404, 'Payment not found', 'PAYMENT_NOT_FOUND');
-    }
-
-    // Update payment status from Mollie
-    const updatedPayment = await paymentService.updatePaymentStatus(body.id);
-
-    // Record webhook event for audit trail
-    await paymentService.recordWebhookEvent(
-      payment.id,
-      body.id,
-      'payment.updated',
-      updatedPayment.status,
-      body,
-    );
-
-    logger?.info('Webhook processed successfully', {
-      operation: 'webhookHandler',
-      paymentId: payment.id,
-      molliePaymentId: body.id,
-      status: updatedPayment.status,
+    // Stripe SDK handles all signature verification
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+      apiVersion: '2023-10-16',
     });
 
-    // Mollie expects 200 OK response
-    return { status: 'ok' };
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (error) {
-    logger?.error('Failed to process webhook', {
+    logger?.warn('Invalid webhook signature', {
       operation: 'webhookHandler',
       error: error instanceof Error ? error.message : 'Unknown error',
-      molliePaymentId: body.id,
     });
+    throw new ApiError(400, 'Invalid signature', 'INVALID_SIGNATURE');
+  }
 
-    // Re-throw ApiErrors
-    if (error instanceof ApiError) {
-      throw error;
+  logger?.info('Webhook signature verified', {
+    operation: 'webhookHandler',
+    eventType: event.type,
+    eventId: event.id,
+  });
+
+  // Handle relevant event types
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      const payment = await paymentService.getPaymentByStripeSessionId(session.id);
+
+      if (!payment) {
+        logger?.warn('Payment not found for checkout session', {
+          operation: 'webhookHandler',
+          sessionId: session.id,
+        });
+        return { status: 'ignored', reason: 'payment_not_found' };
+      }
+
+      const updatedPayment = await paymentService.updatePaymentStatus({
+        stripeCheckoutSessionId: session.id,
+      });
+
+      await paymentService.recordWebhookEvent(
+        payment.id,
+        updatedPayment.stripePaymentIntentId,
+        session.id,
+        event.type,
+        updatedPayment.status,
+        event.data.object,
+      );
+
+      logger?.info('Checkout session completed', {
+        operation: 'webhookHandler',
+        paymentId: payment.id,
+        sessionId: session.id,
+        status: updatedPayment.status,
+      });
+
+      break;
     }
 
-    throw new ApiError(
-      500,
-      `Failed to process webhook: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      'WEBHOOK_PROCESSING_FAILED',
-    );
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+      const payment = await paymentService.getPaymentByStripeIntentId(paymentIntent.id);
+
+      if (!payment) {
+        logger?.warn('Payment not found for payment intent', {
+          operation: 'webhookHandler',
+          paymentIntentId: paymentIntent.id,
+        });
+        return { status: 'ignored', reason: 'payment_not_found' };
+      }
+
+      const updatedPayment = await paymentService.updatePaymentStatus({
+        stripePaymentIntentId: paymentIntent.id,
+      });
+
+      await paymentService.recordWebhookEvent(
+        payment.id,
+        paymentIntent.id,
+        payment.stripeCheckoutSessionId!,
+        event.type,
+        updatedPayment.status,
+        event.data.object,
+      );
+
+      logger?.info('Payment intent succeeded', {
+        operation: 'webhookHandler',
+        paymentId: payment.id,
+        paymentIntentId: paymentIntent.id,
+      });
+
+      break;
+    }
+
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+      const payment = await paymentService.getPaymentByStripeIntentId(paymentIntent.id);
+
+      if (!payment) {
+        return { status: 'ignored', reason: 'payment_not_found' };
+      }
+
+      const updatedPayment = await paymentService.updatePaymentStatus({
+        stripePaymentIntentId: paymentIntent.id,
+      });
+
+      await paymentService.recordWebhookEvent(
+        payment.id,
+        paymentIntent.id,
+        payment.stripeCheckoutSessionId!,
+        event.type,
+        updatedPayment.status,
+        event.data.object,
+      );
+
+      logger?.warn('Payment intent failed', {
+        operation: 'webhookHandler',
+        paymentId: payment.id,
+        paymentIntentId: paymentIntent.id,
+      });
+
+      break;
+    }
+
+    default:
+      logger?.debug('Unhandled webhook event type', {
+        operation: 'webhookHandler',
+        eventType: event.type,
+      });
+      return { status: 'ignored', reason: 'event_type_not_handled' };
   }
+
+  return { status: 'ok' };
 });

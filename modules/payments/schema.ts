@@ -1,22 +1,23 @@
 import { boolean, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
- * Payments table - stores all payment transactions via Mollie
+ * Payments table - stores all payment transactions via Stripe Checkout
  */
 export const payments = pgTable('payments', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
 
-  // Mollie integration
-  molliePaymentId: text('mollie_payment_id').unique().notNull(),
-  mollieCheckoutUrl: text('mollie_checkout_url'),
+  // Stripe integration
+  stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
+  stripeCheckoutSessionId: text('stripe_checkout_session_id').unique().notNull(),
+  stripeCheckoutUrl: text('stripe_checkout_url'),
 
   // Payment details
   amount: text('amount').notNull(), // Store as string to avoid precision issues
   currency: text('currency').notNull(), // ISO 4217 code: EUR, USD, GBP, etc.
   description: text('description').notNull(),
-  status: text('status').notNull(), // open, pending, paid, failed, expired, canceled
+  status: text('status').notNull(), // requires_payment_method, processing, succeeded, canceled, etc.
 
   // User relationship
   userId: text('user_id').notNull(),
@@ -37,7 +38,7 @@ export const payments = pgTable('payments', {
 });
 
 /**
- * Webhook events table - audit trail for all webhook callbacks from Mollie
+ * Webhook events table - audit trail for all webhook callbacks from Stripe
  */
 export const webhookEvents = pgTable('webhook_events', {
   id: text('id')
@@ -48,8 +49,9 @@ export const webhookEvents = pgTable('webhook_events', {
   paymentId: text('payment_id')
     .references(() => payments.id)
     .notNull(),
-  molliePaymentId: text('mollie_payment_id').notNull(),
-  eventType: text('event_type').notNull(), // payment.paid, payment.failed, etc.
+  stripePaymentIntentId: text('stripe_payment_intent_id'),
+  stripeCheckoutSessionId: text('stripe_checkout_session_id').notNull(),
+  eventType: text('event_type').notNull(), // checkout.session.completed, payment_intent.succeeded, etc.
   status: text('status').notNull(),
 
   // Processing

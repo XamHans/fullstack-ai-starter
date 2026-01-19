@@ -8,7 +8,7 @@ Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable
 - Spec-driven development keeps AI agents aligned and kills rework.
 - Multi-provider AI playgrounds stream results with typed, structured output.
 - Better Auth, Drizzle, and Neon give you secure login, sessions, and migrations on day one.
-- Resend emails, R2 file uploads, Mollie payments, and background jobs are wired for real customer flows.
+- Resend emails, R2 file uploads, Stripe payments, and background jobs are wired for real customer flows.
 - Langfuse, Pino, Umami, and Vitest ensure you monitor, log, and test before launch.
 
 ## What's inside
@@ -25,6 +25,25 @@ Production-grade Next.js 15 starter for shipping AI SaaS that stays maintainable
 4. Prime the database: `pnpm db:generate && pnpm db:migrate`.
 5. Run the app: `pnpm dev` and visit `http://localhost:3000`.
 6. Docs are available via `pnpm docs` or by reading the `.mdx` files in `docs/`.
+
+## Payments (Stripe)
+
+Get started with Stripe Checkout in minutes:
+
+1. Get API keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+2. Add to `.env.local`:
+   ```bash
+   STRIPE_SECRET_KEY="sk_test_..."
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
+   STRIPE_WEBHOOK_SECRET="whsec_..."
+   ```
+3. Setup webhook (local dev):
+   ```bash
+   stripe listen --forward-to http://localhost:3000/api/payments/webhook
+   ```
+4. Run migrations: `pnpm db:migrate`
+
+See [Payment Integration Guide](./docs/payment-integration.mdx) for full details.
 
 ## Keep your fork updated
 - Leave `origin` pointing at your fork and add this starter as an `upstream` remote: `git remote add upstream https://github.com/our-org/starter-kit.git`.
