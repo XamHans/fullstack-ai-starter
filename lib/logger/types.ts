@@ -1,6 +1,6 @@
 export interface LoggerConfig {
   level: string;
-  isDevelopment: boolean;
+  environment: 'test' | 'development' | 'production';
   redact: string[];
 }
 

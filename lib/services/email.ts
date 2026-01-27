@@ -66,3 +66,17 @@ export class EmailService {
     }
   }
 }
+
+/**
+ * Factory function to create an EmailService instance.
+ * Use this in tests if needed.
+ */
+export function createEmailService(): EmailService {
+  return new EmailService();
+}
+
+/**
+ * Singleton instance for production use.
+ * Import this directly in API routes.
+ */
+export const emailService = new EmailService();

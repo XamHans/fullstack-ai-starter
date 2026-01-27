@@ -1,14 +1,15 @@
 import { and, desc, eq, ilike } from 'drizzle-orm';
-import type { ServiceDependencies } from '@/lib/container/types';
+import type { ServiceContext } from '@/lib/services/context';
+import { getServiceContext } from '@/lib/services';
 import type { Result } from '@/lib/result';
 import { posts } from '../schema';
 import type { CreatePostInput, Post, PostFilters, UpdatePostInput } from '../types';
 
 export class PostService {
-  constructor(private deps: ServiceDependencies) { }
+  constructor(private ctx: ServiceContext) { }
 
   private get logger() {
-    return this.deps.logger.child({ service: 'PostService' });
+    return this.ctx.logger.child({ service: 'PostService' });
   }
 
   async createPost(data: CreatePostInput, authorId: string): Promise<Result<Post>> {
@@ -20,7 +21,7 @@ export class PostService {
     });
 
     try {
-      const [post] = await this.deps.db
+      const [post] = await this.ctx.db
         .insert(posts)
         .values({
           ...data,
@@ -59,7 +60,7 @@ export class PostService {
     });
 
     try {
-      const [post] = await this.deps.db.select().from(posts).where(eq(posts.id, id));
+      const [post] = await this.ctx.db.select().from(posts).where(eq(posts.id, id));
 
       if (!post) {
         this.logger.debug('Post not found', {
@@ -112,7 +113,7 @@ export class PostService {
     }
 
     try {
-      const [post] = await this.deps.db
+      const [post] = await this.ctx.db
         .update(posts)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(posts.id, id))
@@ -159,7 +160,7 @@ export class PostService {
     }
 
     try {
-      await this.deps.db.delete(posts).where(eq(posts.id, id));
+      await this.ctx.db.delete(posts).where(eq(posts.id, id));
 
       this.logger.info('Post deleted successfully', {
         operation: 'deletePost',
@@ -195,7 +196,7 @@ export class PostService {
     });
 
     try {
-      const query = this.deps.db
+      const query = this.ctx.db
         .select()
         .from(posts)
         .where(
@@ -242,7 +243,7 @@ export class PostService {
     });
 
     try {
-      const result = await this.deps.db
+      const result = await this.ctx.db
         .select()
         .from(posts)
         .where(
@@ -281,3 +282,17 @@ export class PostService {
     }
   }
 }
+
+/**
+ * Factory function to create a PostService instance.
+ * Use this in tests to inject test database context.
+ */
+export function createPostService(ctx: ServiceContext): PostService {
+  return new PostService(ctx);
+}
+
+/**
+ * Singleton instance for production use.
+ * Import this directly in API routes.
+ */
+export const postService = new PostService(getServiceContext());

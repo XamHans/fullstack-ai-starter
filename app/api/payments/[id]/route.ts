@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { ApiError, withAuthentication } from '@/lib/api/base';
-import { withServices } from '@/lib/container/utils';
+import { paymentService } from '@/modules/payments/services/payment.service';
 
 /**
  * GET /api/payments/[id]
@@ -10,7 +10,6 @@ import { withServices } from '@/lib/container/utils';
  * Authorization: User can only view their own payments
  */
 export const GET = withAuthentication(async (session, request: NextRequest, context, logger) => {
-  const { paymentService } = withServices('paymentService');
 
   const params = await context.params;
   const id = params?.id as string;

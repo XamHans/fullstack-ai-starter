@@ -1,21 +1,13 @@
 import { eq } from 'drizzle-orm';
-import type { ServiceDependencies } from '@/lib/container/types';
+import type { ServiceContext } from '@/lib/services/context';
+import { getServiceContext } from '@/lib/services';
 import { user } from '../schema';
 
 export class UserService {
-  constructor(private deps: ServiceDependencies) {}
+  constructor(private ctx: ServiceContext) {}
 
   private get logger() {
-    return this.deps.logger.child({ service: 'UserService' });
-  }
-
-  // Service composition helpers
-  protected get services() {
-    return this.deps.services;
-  }
-
-  protected get postService() {
-    return this.services?.postService;
+    return this.ctx.logger.child({ service: 'UserService' });
   }
 
   async createUser(data: {
@@ -34,7 +26,7 @@ export class UserService {
     });
 
     try {
-      const [newUser] = await this.deps.db
+      const [newUser] = await this.ctx.db
         .insert(user)
         .values({
           email: data.email,
@@ -70,7 +62,7 @@ export class UserService {
     });
 
     try {
-      const [foundUser] = await this.deps.db.select().from(user).where(eq(user.id, id));
+      const [foundUser] = await this.ctx.db.select().from(user).where(eq(user.id, id));
 
       if (foundUser) {
         this.logger.debug('User found', {
@@ -102,7 +94,7 @@ export class UserService {
     });
 
     try {
-      const [foundUser] = await this.deps.db.select().from(user).where(eq(user.email, email));
+      const [foundUser] = await this.ctx.db.select().from(user).where(eq(user.email, email));
 
       this.logger.debug(foundUser ? 'User found by email' : 'User not found by email', {
         operation: 'getUserByEmail',
@@ -127,7 +119,7 @@ export class UserService {
     });
 
     try {
-      const [foundUser] = await this.deps.db
+      const [foundUser] = await this.ctx.db
         .select()
         .from(user)
         .where(eq(user.provider, provider))
@@ -167,7 +159,7 @@ export class UserService {
     });
 
     try {
-      const [updatedUser] = await this.deps.db
+      const [updatedUser] = await this.ctx.db
         .update(user)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(user.id, id))
@@ -191,3 +183,17 @@ export class UserService {
     }
   }
 }
+
+/**
+ * Factory function to create a UserService instance.
+ * Use this in tests to inject test database context.
+ */
+export function createUserService(ctx: ServiceContext): UserService {
+  return new UserService(ctx);
+}
+
+/**
+ * Singleton instance for production use.
+ * Import this directly in API routes.
+ */
+export const userService = new UserService(getServiceContext());

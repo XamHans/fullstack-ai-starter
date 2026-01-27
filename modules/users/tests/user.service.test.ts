@@ -1,15 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createTestContainer } from '@/tests/utils/test-container';
+import { getTestDb } from '@/tests/utils/test-database';
+import { createLogger } from '@/lib/logger';
+import { createUserService } from '../services/user.service';
 import type { UserService } from '../services/user.service';
+import type { ServiceContext } from '@/lib/services/context';
 
 describe('UserService', () => {
   let userService: UserService;
-  let testContainer: ReturnType<typeof createTestContainer>;
 
   beforeEach(() => {
-    testContainer = createTestContainer();
-    // Use the flattened container structure
-    userService = testContainer.userService;
+    const ctx: ServiceContext = {
+      db: getTestDb(),
+      logger: createLogger(), // No context - let services set their own
+    };
+    userService = createUserService(ctx);
   });
 
   describe('createUser', () => {

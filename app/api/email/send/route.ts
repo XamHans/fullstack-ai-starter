@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { withAuth } from '@/lib/api/handlers';
 import { parseRequestBody } from '@/lib/validation/parse';
-import { getContainer } from '@/lib/container';
+import { emailService } from '@/lib/services/email';
 import { type EmailTemplateName, emailTemplates } from '@/lib/email/templates';
 import { z } from 'zod';
 
@@ -20,7 +20,6 @@ export const POST = withAuth(async (session, request: NextRequest) => {
   if (!bodyResult.success) return bodyResult;
 
   const { to, subject, templateName, templateProps } = bodyResult.data;
-  const { emailService } = getContainer();
 
   const result = await emailService.sendEmail({
     to,

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import Stripe from 'stripe';
 import { ApiError, withErrorHandling } from '@/lib/api/base';
-import { withServices } from '@/lib/container/utils';
+import { paymentService } from '@/modules/payments/services/payment.service';
 
 /**
  * POST /api/payments/webhook
@@ -13,7 +13,6 @@ import { withServices } from '@/lib/container/utils';
  * Records webhook event for audit trail
  */
 export const POST = withErrorHandling(async (request: NextRequest, context, logger) => {
-  const { paymentService } = withServices('paymentService');
 
   logger?.info('Received Stripe webhook', { operation: 'webhookHandler' });
 

@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createTestContainer } from '@/tests/utils/test-container';
+import { getTestDb } from '@/tests/utils/test-database';
+import { createLogger } from '@/lib/logger';
+import { createPostService } from '../services/post.service';
 import type { PostService } from '../services/post.service';
+import type { ServiceContext } from '@/lib/services/context';
 
 describe('PostService', () => {
   let postService: PostService;
-  let testContainer: ReturnType<typeof createTestContainer>;
 
   beforeEach(() => {
-    testContainer = createTestContainer();
-    postService = testContainer.postService;
+    const ctx: ServiceContext = {
+      db: getTestDb(),
+      logger: createLogger(), // No context - let services set their own
+    };
+    postService = createPostService(ctx);
   });
 
   describe('createPost', () => {

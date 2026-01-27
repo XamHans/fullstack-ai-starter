@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { withAuthentication } from '@/lib/api/base';
-import { withServices } from '@/lib/container/utils';
+import { paymentService } from '@/modules/payments/services/payment.service';
 
 /**
  * GET /api/payments
@@ -11,7 +11,6 @@ import { withServices } from '@/lib/container/utils';
  * Supports pagination via limit and offset
  */
 export const GET = withAuthentication(async (session, request: NextRequest, context, logger) => {
-  const { paymentService } = withServices('paymentService');
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') || undefined;

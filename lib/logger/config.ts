@@ -1,24 +1,45 @@
 import type { LoggerOptions } from 'pino';
 import type { LoggerConfig } from './types';
 
-export const getLoggerConfig = (): LoggerConfig => ({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-  isDevelopment: process.env.NODE_ENV !== 'production',
-  redact: [
-    'password',
-    'token',
-    'authorization',
-    'cookie',
-    'access_token',
-    'refresh_token',
-    'api_key',
-    'secret',
-    'private_key',
-    'credit_card',
-    'ssn',
-    'phone',
-  ],
-});
+/**
+ * Detect the current environment
+ */
+function getEnvironment(): 'test' | 'development' | 'production' {
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+    return 'test';
+  }
+  return process.env.NODE_ENV === 'production' ? 'production' : 'development';
+}
+
+export const getLoggerConfig = (): LoggerConfig => {
+  const env = getEnvironment();
+
+  // Default log levels per environment
+  const defaultLevels = {
+    test: 'silent',      // No logs in tests by default
+    development: 'debug', // Verbose in development
+    production: 'info',   // Moderate in production
+  };
+
+  return {
+    level: process.env.LOG_LEVEL || defaultLevels[env],
+    environment: env,
+    redact: [
+      'password',
+      'token',
+      'authorization',
+      'cookie',
+      'access_token',
+      'refresh_token',
+      'api_key',
+      'secret',
+      'private_key',
+      'credit_card',
+      'ssn',
+      'phone',
+    ],
+  };
+};
 
 export const getPinoConfig = (config: LoggerConfig): LoggerOptions => {
   const baseConfig: LoggerOptions = {
@@ -57,13 +78,25 @@ export const getPinoConfig = (config: LoggerConfig): LoggerOptions => {
     },
   };
 
-  if (config.isDevelopment) {
+  // Use pretty printing in test and development environments
+  // Safe to use pino-pretty in test environment (no Next.js worker threads)
+  if (config.environment === 'test' || config.environment === 'development') {
     return {
       ...baseConfig,
-      // Use JSON logging in development to avoid Next.js worker thread issues
-      // pino-pretty transport causes issues with Next.js worker threads
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss',
+          ignore: 'pid,hostname',
+          singleLine: false,
+          messageFormat: '{msg} {if req.method}[{req.method} {req.url}]{end}',
+          errorLikeObjectKeys: ['err', 'error'],
+        },
+      },
     };
   }
 
+  // Production: JSON format for log aggregation
   return baseConfig;
 };

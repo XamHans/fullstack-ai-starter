@@ -1,6 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import Stripe from 'stripe';
-import type { ServiceDependencies } from '@/lib/container/types';
+import type { ServiceContext } from '@/lib/services/context';
+import { getServiceContext } from '@/lib/services';
 import type { Result } from '@/lib/result';
 import { payments, webhookEvents } from '../schema';
 import type { CreatePaymentInput, NewPayment, Payment, PaymentFilters } from '../types';
@@ -11,7 +12,7 @@ import type { CreatePaymentInput, NewPayment, Payment, PaymentFilters } from '..
 export class PaymentService {
   private stripe: Stripe | null;
 
-  constructor(private deps: ServiceDependencies) {
+  constructor(private ctx: ServiceContext) {
     const secretKey = process.env.STRIPE_SECRET_KEY;
 
     this.stripe = secretKey
@@ -22,7 +23,7 @@ export class PaymentService {
   }
 
   private get logger() {
-    return this.deps.logger.child({ service: 'PaymentService' });
+    return this.ctx.logger.child({ service: 'PaymentService' });
   }
 
   private requireStripe(): Stripe {
@@ -129,7 +130,7 @@ export class PaymentService {
         cancel_url: `${appUrl}/payments/return?canceled=true`,
       });
 
-      const [payment] = await this.deps.db
+      const [payment] = await this.ctx.db
         .insert(payments)
         .values({
           id: paymentId,
@@ -298,7 +299,7 @@ export class PaymentService {
         updateData.expiresAt = expiresAt;
       }
 
-      const [payment] = await this.deps.db
+      const [payment] = await this.ctx.db
         .update(payments)
         .set(updateData)
         .where(
@@ -343,7 +344,7 @@ export class PaymentService {
 
     this.logger.debug('Fetching user payments', { userId, status, limit, offset });
 
-    const result = await this.deps.db
+    const result = await this.ctx.db
       .select()
       .from(payments)
       .where(
@@ -378,7 +379,7 @@ export class PaymentService {
       status,
     });
 
-    await this.deps.db.insert(webhookEvents).values({
+    await this.ctx.db.insert(webhookEvents).values({
       paymentId,
       stripePaymentIntentId,
       stripeCheckoutSessionId,
@@ -388,3 +389,17 @@ export class PaymentService {
     });
   }
 }
+
+/**
+ * Factory function to create a PaymentService instance.
+ * Use this in tests to inject test database context.
+ */
+export function createPaymentService(ctx: ServiceContext): PaymentService {
+  return new PaymentService(ctx);
+}
+
+/**
+ * Singleton instance for production use.
+ * Import this directly in API routes.
+ */
+export const paymentService = new PaymentService(getServiceContext());

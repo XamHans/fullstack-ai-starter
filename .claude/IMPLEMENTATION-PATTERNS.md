@@ -2,81 +2,98 @@
 
 This document provides specific technical patterns for AI agents implementing features in this codebase. These patterns prevent common errors and ensure consistency.
 
-## Container & Services Pattern
+## Service Singleton Pattern (Hybrid)
 
 ### Using Services in API Routes
 
-**ALWAYS** use services via `withServices()`. **NEVER** access database directly.
+**ALWAYS** use singleton service instances in production code. **NEVER** access database directly.
 
-✅ **CORRECT:**
+✅ **CORRECT - Production (Simple!):**
 
 ```typescript
-import { withServices } from '@/lib/container/utils';
+import { userService } from '@/modules/users/services/user.service';
+import { postService } from '@/modules/posts/services/post.service';
 import { withAuth } from '@/lib/api/handlers';
 
 export const POST = withAuth(async (session, request) => {
-  const { userService, habitService } = withServices(
-    'userService',
-    'habitService'
-  );
-
   const result = await userService.createUser(data);
   return result; // Returns Result<T>
 });
 ```
 
-❌ **WRONG - Will throw "db does not exist in Services" error:**
+❌ **WRONG - Never access database directly:**
 
 ```typescript
 // DO NOT DO THIS
-const { db } = withServices('db'); // ❌ db is NOT a service!
-
-// DO NOT DO THIS
-const container = getContainer();
-const db = container.database.db; // ❌ Never access db directly in API routes
+import { db } from '@/lib/db';
+const [post] = await db.select().from(posts); // ❌ Never access db directly in API routes
 ```
 
 ### Available Services
 
-You can access these services via `withServices()`:
+Import singleton instances directly in production code:
 
 - `userService` - User management operations
 - `emailService` - Email operations
-- `workflowService` - Workflow operations
 - `postService` - Post management operations
 - `paymentService` - Payment processing operations
 
-### NOT Available as Services
+### Factory Functions (Tests Only)
 
-These are infrastructure, not services:
+For tests, use factory functions to inject test database context:
 
-- ❌ `db` - Use services instead
-- ❌ `database` - Use services instead
-- ❌ `externalServices` - Use services instead
+- `createUserService(ctx)` - Create with test context
+- `createPostService(ctx)` - Create with test context
+- `createPaymentService(ctx)` - Create with test context
+- `createEmailService()` - Email (no context needed)
+
+### Service Context
+
+Services receive a `ServiceContext` containing:
+
+```typescript
+interface ServiceContext {
+  db: PostgresJsDatabase<typeof schema>;
+  logger: CustomLogger;
+}
+```
+
+Production uses singleton context:
+- `getServiceContext()` - Singleton for production (used internally by service singletons)
+
+Tests create custom context:
+- `createServiceContext()` - Create new context for tests (rarely needed)
 
 ### Why This Matters
 
-The architecture follows the **Anti-Abstraction Principle** (Constitution Article II) where:
+The architecture follows the **KISS/YAGNI Principle** (Constitution Article I) where:
 
-- **Services** encapsulate business logic and database operations
-- **API Routes** use services, never direct database access
-- **Services** receive dependencies via constructor injection
+- **Services** are stateless singletons - simple and efficient
+- **API Routes** import services directly - one line, zero boilerplate
+- **Tests** use factory functions - flexible injection for test databases
+- **Best of both worlds** - simplicity in production, flexibility in tests
 
 ### Service Implementation Pattern
 
-When implementing a service method, access the database through injected dependencies and return a `Result<T>`:
+When implementing a service, export both singleton and factory:
 
 ✅ **CORRECT:**
 
 ```typescript
+import type { ServiceContext } from '@/lib/services/context';
+import { getServiceContext } from '@/lib/services';
 import type { Result } from '@/lib/result';
 
 export class PostService {
-  constructor(private deps: ServiceDependencies) {}
+  constructor(private ctx: ServiceContext) {}
+
+  private get logger() {
+    return this.ctx.logger.child({ service: 'PostService' });
+  }
 
   async getById(id: string): Promise<Result<Post>> {
     try {
-      const [post] = await this.deps.db
+      const [post] = await this.ctx.db
         .select()
         .from(posts)
         .where(eq(posts.id, id));
@@ -101,6 +118,14 @@ export class PostService {
     }
   }
 }
+
+// Factory function for tests
+export function createPostService(ctx: ServiceContext): PostService {
+  return new PostService(ctx);
+}
+
+// Singleton for production
+export const postService = new PostService(getServiceContext());
 ```
 
 ## Result Type Pattern
@@ -267,11 +292,9 @@ For routes requiring authentication:
 
 ```typescript
 import { withAuth } from '@/lib/api/handlers';
-import { withServices } from '@/lib/container/utils';
+import { postService } from '@/modules/posts/services/post.service';
 
 export const POST = withAuth(async (session, req, ctx) => {
-  const { postService } = withServices('postService');
-
   // session.user.id is available
   return postService.createPost(data, session.user.id);
 });
@@ -290,10 +313,9 @@ For routes not requiring authentication:
 
 ```typescript
 import { withHandler } from '@/lib/api/handlers';
-import { withServices } from '@/lib/container/utils';
+import { postService } from '@/modules/posts/services/post.service';
 
 export const GET = withHandler(async (req, ctx) => {
-  const { postService } = withServices('postService');
   return postService.getPosts();
 });
 ```
@@ -568,7 +590,7 @@ Here's a complete example showing all patterns together:
 // app/api/posts/route.ts
 import { withAuth, withHandler } from '@/lib/api/handlers';
 import { parseRequestBody, parseSearchParams } from '@/lib/validation/parse';
-import { withServices } from '@/lib/container/utils';
+import { postService } from '@/modules/posts/services/post.service';
 import { createPostSchema } from '@/modules/posts/schemas';
 import { z } from 'zod';
 
@@ -583,7 +605,6 @@ export const GET = withHandler(async (req) => {
   const paramsResult = parseSearchParams(req.url, listQuerySchema);
   if (!paramsResult.success) return paramsResult;
 
-  const { postService } = withServices('postService');
   return postService.getPosts(paramsResult.data);
 });
 
@@ -592,7 +613,6 @@ export const POST = withAuth(async (session, req) => {
   const bodyResult = await parseRequestBody(req, createPostSchema);
   if (!bodyResult.success) return bodyResult;
 
-  const { postService } = withServices('postService');
   return postService.createPost(bodyResult.data, session.user.id);
 });
 ```
@@ -601,7 +621,7 @@ export const POST = withAuth(async (session, req) => {
 // app/api/posts/[id]/route.ts
 import { withAuth } from '@/lib/api/handlers';
 import { parseRequestBody } from '@/lib/validation/parse';
-import { withServices } from '@/lib/container/utils';
+import { postService } from '@/modules/posts/services/post.service';
 import { updatePostSchema } from '@/modules/posts/schemas';
 
 // GET /api/posts/[id]
@@ -609,7 +629,6 @@ export const GET = withAuth(async (session, req, ctx) => {
   const params = await ctx.params;
   const id = params?.id as string;
 
-  const { postService } = withServices('postService');
   return postService.getById(id);
 });
 
@@ -621,7 +640,6 @@ export const PUT = withAuth(async (session, req, ctx) => {
   const bodyResult = await parseRequestBody(req, updatePostSchema);
   if (!bodyResult.success) return bodyResult;
 
-  const { postService } = withServices('postService');
   return postService.updatePost(id, bodyResult.data, session.user.id);
 });
 
@@ -630,36 +648,31 @@ export const DELETE = withAuth(async (session, req, ctx) => {
   const params = await ctx.params;
   const id = params?.id as string;
 
-  const { postService } = withServices('postService');
   return postService.deletePost(id, session.user.id);
 });
 ```
 
 ## Testing Patterns
 
-### Using Test Container
+### Using Service Context in Tests
 
-In tests, use the test container with test database:
+In tests, create services with test context:
 
 ```typescript
-import { createTestContainer } from '@/tests/utils/test-container';
-import {
-  setupTestDatabase,
-  cleanupTestDatabase,
-} from '@/tests/utils/test-database';
+import { getTestDb } from '@/tests/utils/test-database';
+import { createLogger } from '@/lib/logger';
+import { createPostService } from '@/modules/posts/services/post.service';
+import type { ServiceContext } from '@/lib/services/context';
 
 describe('PostService', () => {
-  let container: Container;
   let postService: PostService;
 
-  beforeAll(async () => {
-    await setupTestDatabase();
-    container = createTestContainer();
-    postService = container.postService;
-  });
-
-  afterAll(async () => {
-    await cleanupTestDatabase();
+  beforeEach(() => {
+    const ctx: ServiceContext = {
+      db: getTestDb(),
+      logger: createLogger(), // No context - let services set their own
+    };
+    postService = createPostService(ctx);
   });
 
   it('should create post', async () => {
@@ -685,6 +698,158 @@ describe('PostService', () => {
 });
 ```
 
+## Logging Best Practices
+
+### Log Levels by Environment
+
+The logger automatically configures itself based on the environment:
+
+- **Production**: `info` (business events only) - JSON format for log aggregation
+- **Development**: `debug` (verbose for debugging) - Pretty format with colors
+- **Tests**: `silent` (clean output by default) - Use `npm run test:verbose` for debugging
+
+### Using Logger in Services
+
+Services get the logger from their context and create a child logger with service identification:
+
+```typescript
+export class PostService {
+  constructor(private ctx: ServiceContext) {}
+
+  private get logger() {
+    return this.ctx.logger.child({ service: 'PostService' });
+  }
+
+  async createPost(data: CreatePostInput, authorId: string): Promise<Result<Post>> {
+    // Log business events at appropriate levels
+    this.logger.info('Creating new post', {
+      operation: 'createPost',
+      authorId,
+      title: data.title
+    }); // Mutations = info
+
+    try {
+      const [post] = await this.ctx.db.insert(posts).values({ ...data, authorId }).returning();
+
+      this.logger.info('Post created successfully', {
+        postId: post.id,
+        authorId
+      });
+
+      return { success: true, data: post };
+    } catch (error) {
+      this.logger.error('Failed to create post', {
+        error: error instanceof Error ? error : new Error(String(error)),
+        context: { operation: 'createPost', authorId }
+      }); // Errors = error
+
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to create post', cause: error }
+      };
+    }
+  }
+
+  async getPostById(id: string): Promise<Result<Post>> {
+    this.logger.debug('Fetching post by ID', { postId: id }); // Reads = debug
+    // ... implementation
+  }
+}
+```
+
+### Log Level Guidelines
+
+- **`debug`**: Read operations, queries, retrievals (only visible in development/when LOG_LEVEL=debug)
+- **`info`**: Mutations, business events (create, update, delete, state changes)
+- **`warn`**: Recoverable issues, deprecated usage, fallbacks
+- **`error`**: Failures, exceptions, unrecoverable errors
+
+### Environment Variables
+
+Control log output with `LOG_LEVEL` environment variable:
+
+- `LOG_LEVEL=silent` - No logs (tests)
+- `LOG_LEVEL=debug` - Verbose (debugging)
+- `LOG_LEVEL=info` - Normal (default in prod)
+- `LOG_LEVEL=warn` - Warnings only
+- `LOG_LEVEL=error` - Errors only
+
+### Running Tests with Logs
+
+```bash
+# Clean output (default) - no logs
+npm test
+
+# Verbose logging for debugging
+npm run test:verbose
+
+# Or set environment variable directly
+LOG_LEVEL=debug npm test
+
+# Watch mode with verbose logging
+npm run test:watch:verbose
+```
+
+### Output Examples
+
+**Test Environment (Silent by default)**:
+```
+✓ modules/posts/tests/post.service.test.ts (16 tests) 1.2s
+  ✓ PostService > createPost > should create a new post
+  ✓ PostService > getPostById > should find post by id
+```
+
+**Test Environment (LOG_LEVEL=debug - Pretty format)**:
+```
+14:31:24 INFO [PostService]: Creating new post
+  operation: createPost
+  authorId: test-author-id
+  title: "Published Post 2"
+
+14:31:24 INFO [PostService]: Post created successfully
+  postId: "d8f675e8-4584-47b1-951b-416128279526"
+  authorId: test-author-id
+```
+
+**Development (Pretty format with colors)**:
+```
+14:31:24 INFO [PostService]: Creating new post
+  operation: createPost
+  userId: user-123
+  title: "My First Post"
+  published: true
+```
+
+**Production (JSON for log aggregation)**:
+```json
+{"level":"info","time":"2026-01-27T14:31:24.732Z","service":"PostService","operation":"createPost","userId":"user-123","msg":"Post created successfully"}
+```
+
+### Testing Pattern with Logger
+
+In tests, create services without setting the service context field - let services set their own:
+
+```typescript
+import { getTestDb } from '@/tests/utils/test-database';
+import { createLogger } from '@/lib/logger';
+import { createPostService } from '@/modules/posts/services/post.service';
+import type { ServiceContext } from '@/lib/services/context';
+
+describe('PostService', () => {
+  let postService: PostService;
+
+  beforeEach(() => {
+    const ctx: ServiceContext = {
+      db: getTestDb(),
+      logger: createLogger(), // No context - let services set their own
+    };
+    postService = createPostService(ctx);
+  });
+
+  // Tests run silently by default, use npm run test:verbose to see logs
+});
+```
+
 ## Migration Guide: Old vs New Patterns
 
 | Aspect          | Before (Deprecated)                               | After (Current)                               |
@@ -701,7 +866,7 @@ describe('PostService', () => {
 
 ### ❌ What NOT to Do
 
-1. **Never access `db` directly via `withServices('db')`** - db is not a service
+1. **Never access `db` directly** - use service factory functions instead
 2. **Never throw errors in services** - return `Result<T>` instead
 3. **Never access `context.params.id` without await** - params is a Promise in Next.js 15+
 4. **Never use direct database queries in API routes** - use services instead
@@ -710,12 +875,13 @@ describe('PostService', () => {
 
 ### ✅ What to Do
 
-1. **Always use `withServices()` to access services** in API routes
+1. **Always import singleton services** (`postService`, `userService`, etc.) in API routes - simple and direct
 2. **Always return `Result<T>` from service methods** - explicit success/error
 3. **Always await `context.params`** in Next.js 15+ dynamic routes
 4. **Always validate with Zod schemas** - use `parseRequestBody` and `parseSearchParams`
 5. **Always use TanStack Query** for client-side data fetching
 6. **Always add new error codes** to `ErrorCode` and `errorCodeToStatus`
+7. **In tests, use factory functions** (`createPostService(ctx)`) with test database context
 
 ## Constitutional Compliance
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { withAuth } from '@/lib/api/handlers';
 import { parseRequestBody } from '@/lib/validation/parse';
-import { withServices } from '@/lib/container/utils';
+import { paymentService } from '@/modules/payments/services/payment.service';
 import type { CreatePaymentInput } from '@/modules/payments/types';
 import { z } from 'zod';
 
@@ -23,7 +23,6 @@ export const POST = withAuth(async (session, request: NextRequest) => {
   if (!bodyResult.success) return bodyResult;
 
   const data = bodyResult.data as CreatePaymentInput; // Type assertion since schema matches
-  const { paymentService } = withServices('paymentService');
 
   return paymentService.createPayment(data, session.user.id);
 });

@@ -1,7 +1,7 @@
 import { withAuth, withHandler } from '@/lib/api/handlers';
 import { parseRequestBody, parseWith } from '@/lib/validation/parse';
 import { updatePostSchema } from '@/modules/posts/schemas';
-import { withServices } from '@/lib/container/utils';
+import { postService } from '@/modules/posts/services/post.service';
 import { z } from 'zod';
 
 const idParamSchema = z.object({
@@ -16,7 +16,6 @@ export const GET = withHandler(async (req, ctx) => {
   });
   if (!idResult.success) return idResult;
 
-  const { postService } = withServices('postService');
   return postService.getPostById(idResult.data.id);
 });
 
@@ -31,7 +30,6 @@ export const PUT = withAuth(async (session, req, ctx) => {
   const bodyResult = await parseRequestBody(req, updatePostSchema);
   if (!bodyResult.success) return bodyResult;
 
-  const { postService } = withServices('postService');
   return postService.updatePost(idResult.data.id, bodyResult.data, session.user.id);
 });
 
@@ -43,6 +41,5 @@ export const DELETE = withAuth(async (session, req, ctx) => {
   });
   if (!idResult.success) return idResult;
 
-  const { postService } = withServices('postService');
   return postService.deletePost(idResult.data.id, session.user.id);
 });
