@@ -1,39 +1,41 @@
 import type { NextRequest } from 'next/server';
-import {
-  ApiError,
-  parseRequestBody,
-  validateRequiredFields,
-  withAuthentication,
-} from '@/lib/api/base';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 import { getContainer } from '@/lib/container';
-import type { EmailTemplateName } from '@/lib/email/templates';
+import { type EmailTemplateName, emailTemplates } from '@/lib/email/templates';
+import { z } from 'zod';
 
-interface SendEmailRequest {
-  to: string | string[];
-  subject: string;
-  templateName: EmailTemplateName;
-  templateProps?: Record<string, any>;
-}
+// Helper to get template names at runtime
+const templateNames = Object.keys(emailTemplates) as [string, ...string[]];
 
-export const POST = withAuthentication(async (session, request: NextRequest) => {
-  const body = await parseRequestBody<SendEmailRequest>(request);
-  validateRequiredFields(body, ['to', 'subject', 'templateName']);
+const sendEmailSchema = z.object({
+  to: z.union([z.string().email(), z.array(z.string().email())]),
+  subject: z.string().min(1),
+  templateName: z.enum(templateNames).transform((val) => val as EmailTemplateName),
+  templateProps: z.record(z.any()).optional(),
+});
 
+export const POST = withAuth(async (session, request: NextRequest) => {
+  const bodyResult = await parseRequestBody(request, sendEmailSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const { to, subject, templateName, templateProps } = bodyResult.data;
   const { emailService } = getContainer();
 
   const result = await emailService.sendEmail({
-    to: body.to,
-    subject: body.subject,
-    templateName: body.templateName,
-    templateProps: body.templateProps,
+    to,
+    subject,
+    templateName,
+    templateProps,
   });
 
-  if (!result.success) {
-    throw new ApiError(500, result.error || 'Failed to send email', 'EMAIL_SEND_FAILED');
-  }
+  if (!result.success) return result;
 
   return {
-    message: 'Email sent successfully',
-    emailId: result.id,
+    success: true,
+    data: {
+      message: 'Email sent successfully',
+      emailId: result.data.id,
+    },
   };
 });

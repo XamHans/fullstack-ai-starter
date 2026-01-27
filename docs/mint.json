@@ -52,7 +52,10 @@
     {
       "group": "Get Started",
       "icon": "play",
-      "pages": ["introduction", "quickstart"]
+      "pages": [
+        "introduction",
+        "quickstart"
+      ]
     },
     {
       "group": "Core Platform",
@@ -61,6 +64,7 @@
         "authentication",
         "database",
         "api-architecture",
+        "full-feature-slice",
         "file-uploads",
         "payment-integration"
       ]
@@ -79,12 +83,17 @@
     {
       "group": "Monitoring & Analytics",
       "icon": "chart-line",
-      "pages": ["observability", "umami-analytics"]
+      "pages": [
+        "observability",
+        "umami-analytics"
+      ]
     },
     {
       "group": "API Reference",
       "icon": "book-open",
-      "pages": ["api-reference/introduction"]
+      "pages": [
+        "api-reference/introduction"
+      ]
     }
   ],
   "footerSocials": {

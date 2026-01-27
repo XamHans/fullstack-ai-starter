@@ -1,83 +1,68 @@
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
-import {
-  parseRequestBody,
-  validateRequiredFields,
-  withAITelemetry,
-  withAuthentication,
-} from '@/lib/api/base';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { withAITelemetry } from '@/lib/ai/telemetry';
+import { z } from 'zod';
 
-export const POST = withAuthentication(async (session, req, params, logger) => {
-  logger?.info('Generate image request received');
+const generateImageSchema = z.object({
+  prompt: z.string().min(1),
+});
 
-  const body = await parseRequestBody<{
-    prompt: string;
-  }>(req);
+export const POST = withAuth(async (session, req, context) => {
+  const bodyResult = await parseRequestBody(req, generateImageSchema);
+  if (!bodyResult.success) return bodyResult;
 
-  validateRequiredFields(body, ['prompt']);
+  const { prompt } = bodyResult.data;
 
-  const result = await generateText(
-    withAITelemetry(
-      {
-        model: google('gemini-2.5-flash-image-preview'),
-        prompt: body.prompt,
-      },
-      {
-        functionId: 'generate-image',
-        metadata: {
-          userId: session.userId,
-          sessionId: session.id,
+  // We are creating a logger inside the handler if needed, but withAuth signature 
+  // currently doesn't pass a logger. We can use console or rely on telemetry.
+  // Ideally, if logging is critical, we should inject it or adapt withAuth.
+
+  try {
+    const result = await generateText(
+      withAITelemetry(
+        {
+          model: google('gemini-2.5-flash-image-preview'),
+          prompt,
         },
-      },
-    ),
-  );
-
-  // Debug logging to see actual response structure
-  logger?.info('Gemini result structure:', {
-    hasFiles: !!result.files,
-    filesLength: result.files?.length || 0,
-    text: result.text,
-    keys: Object.keys(result),
-  });
-
-  if (result.files) {
-    logger?.info(
-      'Files details:',
-      result.files.map((file, i) => ({
-        index: i,
-        mediaType: file.mediaType,
-        hasUint8Array: !!file.uint8Array,
-        uint8ArrayLength: file.uint8Array?.length || 0,
-      })),
+        {
+          functionId: 'generate-image',
+          metadata: {
+            userId: session.user.id,
+            sessionId: req.headers.get('x-session-id') || undefined, // Fallback if needed
+          },
+        },
+      ),
     );
-  }
 
-  // Find the first image file
-  let imageUrl: string | null = null;
+    // Find the first image file
+    let imageUrl: string | null = null;
 
-  if (result.files) {
-    const imageFile = result.files.find((file) => file.mediaType.startsWith('image/'));
-    if (imageFile) {
-      // Convert Uint8Array to base64 data URL
-      const base64 = Buffer.from(imageFile.uint8Array).toString('base64');
-      imageUrl = `data:${imageFile.mediaType};base64,${base64}`;
-
-      logger?.info('Successfully created image URL:', {
-        mediaType: imageFile.mediaType,
-        base64Length: base64.length,
-        dataUrlLength: imageUrl.length,
-      });
+    if (result.files) {
+      const imageFile = result.files.find((file) => file.mediaType.startsWith('image/'));
+      if (imageFile) {
+        // Convert Uint8Array to base64 data URL
+        const base64 = Buffer.from(imageFile.uint8Array).toString('base64');
+        imageUrl = `data:${imageFile.mediaType};base64,${base64}`;
+      }
     }
-  }
 
-  if (!imageUrl) {
-    logger?.error('No image generated or found in response');
-    throw new Error('No image was generated');
-  }
+    if (!imageUrl) {
+      return {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'No image was generated' },
+      };
+    }
 
-  logger?.info('Image generated successfully');
-  return {
-    imageUrl,
-    success: true,
-  };
+    return {
+      success: true,
+      data: { imageUrl },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: { code: 'EXTERNAL_SERVICE_ERROR', message: 'Failed to generate image', cause: error },
+    };
+  }
 });

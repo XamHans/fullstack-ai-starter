@@ -20,17 +20,20 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const post = await postService.createPost(postData, authorId);
+      const result = await postService.createPost(postData, authorId);
 
-      expect(post).toMatchObject({
-        title: postData.title,
-        content: postData.content,
-        published: postData.published,
-        authorId: authorId,
-      });
-      expect(post.id).toBeDefined();
-      expect(post.createdAt).toBeDefined();
-      expect(post.updatedAt).toBeDefined();
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toMatchObject({
+          title: postData.title,
+          content: postData.content,
+          published: postData.published,
+          authorId: authorId,
+        });
+        expect(result.data.id).toBeDefined();
+        expect(result.data.createdAt).toBeDefined();
+        expect(result.data.updatedAt).toBeDefined();
+      }
     });
 
     it('should create a published post', async () => {
@@ -41,11 +44,14 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const post = await postService.createPost(postData, authorId);
+      const result = await postService.createPost(postData, authorId);
 
-      expect(post.published).toBe(true);
-      expect(post.title).toBe(postData.title);
-      expect(post.authorId).toBe(authorId);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.published).toBe(true);
+        expect(result.data.title).toBe(postData.title);
+        expect(result.data.authorId).toBe(authorId);
+      }
     });
   });
 
@@ -58,21 +64,30 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const createdPost = await postService.createPost(postData, authorId);
-      const foundPost = await postService.getPostById(createdPost.id);
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
 
-      expect(foundPost).toMatchObject({
-        id: createdPost.id,
-        title: postData.title,
-        content: postData.content,
-        published: postData.published,
-        authorId: authorId,
-      });
+      const findResult = await postService.getPostById(createResult.data.id);
+
+      expect(findResult.success).toBe(true);
+      if (findResult.success) {
+        expect(findResult.data).toMatchObject({
+          id: createResult.data.id,
+          title: postData.title,
+          content: postData.content,
+          published: postData.published,
+          authorId: authorId,
+        });
+      }
     });
 
-    it('should return undefined for non-existent post', async () => {
-      const foundPost = await postService.getPostById('non-existent-id');
-      expect(foundPost).toBeUndefined();
+    it('should return error for non-existent post', async () => {
+      const result = await postService.getPostById('non-existent-id');
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('POST_NOT_FOUND');
+      }
     });
   });
 
@@ -85,23 +100,28 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const createdPost = await postService.createPost(postData, authorId);
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
 
       const updateData = {
         title: 'Updated Title',
         content: 'Updated content',
       };
 
-      const updatedPost = await postService.updatePost(createdPost.id, updateData);
+      const updateResult = await postService.updatePost(createResult.data.id, updateData, authorId);
 
-      expect(updatedPost).toMatchObject({
-        id: createdPost.id,
-        title: updateData.title,
-        content: updateData.content,
-        published: false,
-        authorId: authorId,
-      });
-      expect(updatedPost.updatedAt).not.toEqual(createdPost.updatedAt);
+      expect(updateResult.success).toBe(true);
+      if (updateResult.success) {
+        expect(updateResult.data).toMatchObject({
+          id: createResult.data.id,
+          title: updateData.title,
+          content: updateData.content,
+          published: false,
+          authorId: authorId,
+        });
+        expect(updateResult.data.updatedAt).not.toEqual(createResult.data.updatedAt);
+      }
     });
 
     it('should update only published status', async () => {
@@ -112,21 +132,51 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const createdPost = await postService.createPost(postData, authorId);
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
 
       const updateData = {
         published: true,
       };
 
-      const updatedPost = await postService.updatePost(createdPost.id, updateData);
+      const updateResult = await postService.updatePost(createResult.data.id, updateData, authorId);
 
-      expect(updatedPost).toMatchObject({
-        id: createdPost.id,
-        title: postData.title,
-        content: postData.content,
-        published: true,
-        authorId: authorId,
-      });
+      expect(updateResult.success).toBe(true);
+      if (updateResult.success) {
+        expect(updateResult.data).toMatchObject({
+          id: createResult.data.id,
+          title: postData.title,
+          content: postData.content,
+          published: true,
+          authorId: authorId,
+        });
+      }
+    });
+
+    it('should return error when updating post owned by another user', async () => {
+      const postData = {
+        title: 'Test Post',
+        content: 'Test content',
+        published: false,
+      };
+      const authorId = 'test-author-id';
+      const otherUserId = 'other-user-id';
+
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
+
+      const updateResult = await postService.updatePost(
+        createResult.data.id,
+        { title: 'Hacked Title' },
+        otherUserId,
+      );
+
+      expect(updateResult.success).toBe(false);
+      if (!updateResult.success) {
+        expect(updateResult.error.code).toBe('FORBIDDEN');
+      }
     });
   });
 
@@ -139,12 +189,39 @@ describe('PostService', () => {
       };
       const authorId = 'test-author-id';
 
-      const createdPost = await postService.createPost(postData, authorId);
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
 
-      await postService.deletePost(createdPost.id);
+      const deleteResult = await postService.deletePost(createResult.data.id, authorId);
+      expect(deleteResult.success).toBe(true);
 
-      const foundPost = await postService.getPostById(createdPost.id);
-      expect(foundPost).toBeUndefined();
+      const findResult = await postService.getPostById(createResult.data.id);
+      expect(findResult.success).toBe(false);
+      if (!findResult.success) {
+        expect(findResult.error.code).toBe('POST_NOT_FOUND');
+      }
+    });
+
+    it('should return error when deleting post owned by another user', async () => {
+      const postData = {
+        title: 'Test Post',
+        content: 'Test content',
+        published: false,
+      };
+      const authorId = 'test-author-id';
+      const otherUserId = 'other-user-id';
+
+      const createResult = await postService.createPost(postData, authorId);
+      expect(createResult.success).toBe(true);
+      if (!createResult.success) return;
+
+      const deleteResult = await postService.deletePost(createResult.data.id, otherUserId);
+
+      expect(deleteResult.success).toBe(false);
+      if (!deleteResult.success) {
+        expect(deleteResult.error.code).toBe('FORBIDDEN');
+      }
     });
   });
 
@@ -182,33 +259,45 @@ describe('PostService', () => {
     });
 
     it('should return only published posts by default', async () => {
-      const posts = await postService.getPosts();
+      const result = await postService.getPosts();
 
-      expect(posts).toHaveLength(2);
-      posts.forEach((post) => {
-        expect(post.published).toBe(true);
-      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(2);
+        result.data.forEach((post) => {
+          expect(post.published).toBe(true);
+        });
+      }
     });
 
     it('should respect limit parameter', async () => {
-      const posts = await postService.getPosts({ limit: 1 });
+      const result = await postService.getPosts({ limit: 1 });
 
-      expect(posts).toHaveLength(1);
-      expect(posts[0].published).toBe(true);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].published).toBe(true);
+      }
     });
 
     it('should respect offset parameter', async () => {
-      const posts = await postService.getPosts({ limit: 1, offset: 1 });
+      const result = await postService.getPosts({ limit: 1, offset: 1 });
 
-      expect(posts).toHaveLength(1);
-      expect(posts[0].published).toBe(true);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].published).toBe(true);
+      }
     });
 
     it('should filter by search term', async () => {
-      const posts = await postService.getPosts({ search: 'Post 1' });
+      const result = await postService.getPosts({ search: 'Post 1' });
 
-      expect(posts).toHaveLength(1);
-      expect(posts[0].title).toBe('Published Post 1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].title).toBe('Published Post 1');
+      }
     });
 
     it('should filter by author id', async () => {
@@ -223,11 +312,14 @@ describe('PostService', () => {
         otherAuthorId,
       );
 
-      const posts = await postService.getPosts({ authorId: otherAuthorId });
+      const result = await postService.getPosts({ authorId: otherAuthorId });
 
-      expect(posts).toHaveLength(1);
-      expect(posts[0].title).toBe('Other Author Post');
-      expect(posts[0].authorId).toBe(otherAuthorId);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].title).toBe('Other Author Post');
+        expect(result.data[0].authorId).toBe(otherAuthorId);
+      }
     });
   });
 
@@ -263,11 +355,14 @@ describe('PostService', () => {
         otherAuthorId,
       );
 
-      const posts = await postService.getPostsByAuthor(authorId);
+      const result = await postService.getPostsByAuthor(authorId);
 
-      expect(posts).toHaveLength(1); // Only published post
-      expect(posts[0].title).toBe('Author 1 Post 1');
-      expect(posts[0].authorId).toBe(authorId);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1); // Only published post
+        expect(result.data[0].title).toBe('Author 1 Post 1');
+        expect(result.data[0].authorId).toBe(authorId);
+      }
     });
 
     it('should include unpublished posts when specified', async () => {
@@ -291,11 +386,14 @@ describe('PostService', () => {
         authorId,
       );
 
-      const posts = await postService.getPostsByAuthor(authorId, true);
+      const result = await postService.getPostsByAuthor(authorId, true);
 
-      expect(posts).toHaveLength(2);
-      expect(posts.some((p) => p.published)).toBe(true);
-      expect(posts.some((p) => !p.published)).toBe(true);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(2);
+        expect(result.data.some((p) => p.published)).toBe(true);
+        expect(result.data.some((p) => !p.published)).toBe(true);
+      }
     });
   });
 });

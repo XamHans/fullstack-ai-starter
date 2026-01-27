@@ -8,6 +8,12 @@ You are a Technical Planning Specialist. Your task is to analyze a Gherkin speci
 
 This is **Phase 2** of the BDD workflow: Spec → **Plan** → Implement
 
+**IMPORTANT**: Plans should follow the current patterns from `.claude/IMPLEMENTATION-PATTERNS.md`:
+- Service methods return `Result<T>` type (not throwing exceptions)
+- API routes use `withAuth`/`withHandler` (not `withErrorHandling`/`withAuthentication`)
+- Request validation uses Zod schemas with `parseRequestBody`/`parseSearchParams`
+- Client-side uses TanStack Query hooks in `modules/{domain}/hooks/`
+
 --- Specification File Path ---
 $ARGUMENTS
 --- End Path ---
@@ -69,8 +75,13 @@ $ARGUMENTS
 ### Services
 
 - `modules/{domain}/services/{service-name}.service.ts`
-  - Methods: {list key methods}
+  - Methods: {list key methods with `Result<T>` return types}
   - Purpose: {brief description}
+
+### Schemas
+
+- `modules/{domain}/schemas.ts` (if needed)
+  - Zod validation schemas for request bodies/params
 
 ### Types
 
@@ -81,6 +92,12 @@ $ARGUMENTS
 
 - `app/api/{route}/route.ts` (if needed)
   - Endpoints: {list HTTP methods and paths}
+  - Handler: `withAuth` for authenticated, `withHandler` for public
+
+### Client Hooks
+
+- `modules/{domain}/hooks/use-{entity}.ts` (if needed)
+  - TanStack Query hooks for data fetching/mutations
 
 ### Tests
 

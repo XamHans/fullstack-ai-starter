@@ -4,6 +4,9 @@ import { handlers } from './mocks/handlers';
 import '@testing-library/jest-dom';
 import { cleanTestDatabase, setupTestDatabase, teardownTestDatabase } from './utils/test-database';
 
+// Load environment variables from .env for tests (needed for DATABASE_URL)
+process.loadEnvFile?.('.env');
+
 // Setup MSW server for API mocking
 export const server = setupServer(...handlers);
 

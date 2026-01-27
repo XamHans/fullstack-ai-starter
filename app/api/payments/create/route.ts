@@ -1,68 +1,29 @@
 import type { NextRequest } from 'next/server';
-import {
-  ApiError,
-  parseRequestBody,
-  validateRequiredFields,
-  withAuthentication,
-} from '@/lib/api/base';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 import { withServices } from '@/lib/container/utils';
 import type { CreatePaymentInput } from '@/modules/payments/types';
+import { z } from 'zod';
+
+const createPaymentSchema = z.object({
+  amount: z.string().regex(/^\d+\.\d{2}$/, 'Amount must be in format: 10.00'),
+  currency: z.enum(['EUR', 'USD', 'GBP', 'CHF', 'PLN'], {
+    errorMap: () => ({ message: 'Invalid currency' }),
+  }),
+  description: z.string().min(1),
+  metadata: z.record(z.any()).optional(),
+});
 
 /**
  * POST /api/payments/create
  * Create a new payment via Stripe Checkout
- *
- * Requires authentication
- * Validates amount format and required fields
- * Returns payment with Stripe checkout URL for redirect
  */
-export const POST = withAuthentication(async (session, request: NextRequest, context, logger) => {
+export const POST = withAuth(async (session, request: NextRequest) => {
+  const bodyResult = await parseRequestBody(request, createPaymentSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const data = bodyResult.data as CreatePaymentInput; // Type assertion since schema matches
   const { paymentService } = withServices('paymentService');
 
-  logger?.info('Creating payment', {
-    operation: 'createPayment',
-    userId: session.user.id,
-  });
-
-  const body = await parseRequestBody<CreatePaymentInput>(request);
-  validateRequiredFields(body, ['amount', 'currency', 'description']);
-
-  // Validate amount format (must be decimal with 2 places: "10.00")
-  if (!/^\d+\.\d{2}$/.test(body.amount)) {
-    throw new ApiError(400, 'Amount must be in format: 10.00', 'INVALID_AMOUNT');
-  }
-
-  // Validate currency (ISO 4217 codes)
-  const supportedCurrencies = ['EUR', 'USD', 'GBP', 'CHF', 'PLN'];
-  if (!supportedCurrencies.includes(body.currency)) {
-    throw new ApiError(
-      400,
-      `Currency must be one of: ${supportedCurrencies.join(', ')}`,
-      'INVALID_CURRENCY',
-    );
-  }
-
-  try {
-    const payment = await paymentService.createPayment(body, session.user.id);
-
-    logger?.info('Payment created successfully', {
-      operation: 'createPayment',
-      paymentId: payment.id,
-      stripeCheckoutSessionId: payment.stripeCheckoutSessionId,
-    });
-
-    return { payment };
-  } catch (error) {
-    logger?.error('Failed to create payment', {
-      operation: 'createPayment',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      userId: session.user.id,
-    });
-
-    throw new ApiError(
-      500,
-      `Failed to create payment: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      'PAYMENT_CREATION_FAILED',
-    );
-  }
+  return paymentService.createPayment(data, session.user.id);
 });

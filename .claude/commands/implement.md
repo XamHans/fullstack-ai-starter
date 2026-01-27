@@ -8,6 +8,14 @@ You are a BDD Implementation Coordinator. Your task is to orchestrate feature im
 
 The `bdd-dev` agent is an expert in test-first BDD using Vitest and Supertest within a modular Next.js architecture. It strategically chooses the most efficient test type (Unit, API, E2E) and implements using co-located tests.
 
+**CRITICAL**: Before delegating, ensure you understand the current implementation patterns:
+- **Read `.claude/IMPLEMENTATION-PATTERNS.md`** for current patterns including:
+  - `Result<T>` type for service returns (not throwing exceptions)
+  - `withAuth`/`withHandler` API handlers (not `withErrorHandling`/`withAuthentication`)
+  - Zod validation with `parseRequestBody`/`parseSearchParams`
+  - TanStack Query hooks for client-side data fetching
+  - Error codes from `lib/errors.ts`
+
 --- Specification File Path ---
 $ARGUMENTS
 --- End Path ---
@@ -92,6 +100,13 @@ $ARGUMENTS
    - **Integration-First Testing (Article III)**: Real database, contract tests mandatory
    - **Test-First (Article IV)**: Write tests before code, Red-Green-Refactor
    - **Vertical Slicing (Article VIII)**: End-to-end functionality (API + UI + tests)
+
+   IMPLEMENTATION PATTERNS (from `.claude/IMPLEMENTATION-PATTERNS.md`):
+   - Services return `Result<T>` type (not throwing exceptions)
+   - API routes use `withAuth` for authenticated, `withHandler` for public
+   - Request validation uses Zod schemas with `parseRequestBody`/`parseSearchParams`
+   - Client-side uses TanStack Query hooks in `modules/{domain}/hooks/`
+   - Error codes defined in `lib/errors.ts` with `errorCodeToStatus` mapping
 
    IMPORTANT: Implement this scenario with VERTICAL SLICING:
    - Create/update API routes needed for this scenario

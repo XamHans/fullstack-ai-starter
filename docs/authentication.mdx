@@ -14,6 +14,7 @@ A secure authentication system built with better-auth, supporting email/password
 - **Security**: Built-in protection against common authentication vulnerabilities
 - **Flexibility**: Support for multiple authentication methods (email, social providers)
 - **Session Management**: Secure session handling with automatic renewal
+- **Email Delivery**: Integrated with Resend for reliable email delivery
 - **Database Integration**: Seamless integration with Drizzle ORM
 
 ## How
@@ -72,13 +73,16 @@ export const auth = betterAuth({
 
 ```typescript
 // app/api/profile/route.ts
-import { withAuthentication } from '@/lib/api/base';
+import { withAuth } from '@/lib/api/handlers';
 
-export const GET = withAuthentication(async (session, request) => {
+export const GET = withAuth(async (session, request) => {
   // User is authenticated, session contains user data
   return {
-    user: session.user,
-    message: 'Profile data retrieved successfully',
+    success: true,
+    data: {
+      user: session.user,
+      message: 'Profile data retrieved successfully',
+    }
   };
 });
 ```

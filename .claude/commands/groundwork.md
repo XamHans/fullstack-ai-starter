@@ -8,6 +8,11 @@ You are a Foundation Builder. Your task is to analyze a Gherkin specification an
 
 CRITICAL: Do NOT implement scenario-specific logic. ONLY create the foundation.
 
+**IMPORTANT**: Service shells should follow the current patterns from `.claude/IMPLEMENTATION-PATTERNS.md`:
+- Service methods return `Result<T>` type (not throwing exceptions)
+- Zod schemas go in `modules/{domain}/schemas.ts`
+- Error codes defined in `lib/errors.ts`
+
 --- Specification File Path ---
 $ARGUMENTS
 --- End Path ---
@@ -140,9 +145,14 @@ $ARGUMENTS
    ## Service Shells
 
    - {ServiceName}:
-     - Empty method stubs (no logic)
+     - Empty method stubs returning `Result<T>` (no logic)
      - Purpose: {what it will handle}
-     - Methods: {list method signatures only}
+     - Methods: {list method signatures with Result<T> return types}
+
+   ## Zod Schemas (if needed)
+
+   - {schemaName}: Zod validation schema for {purpose}
+   - Location: `modules/{domain}/schemas.ts`
 
    ## Test Infrastructure
 

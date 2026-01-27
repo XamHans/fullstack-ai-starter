@@ -15,6 +15,7 @@ export interface PostFilters {
   offset?: number;
   search?: string;
   authorId?: string;
+  includeUnpublished?: boolean;
 }
 
 export interface Post {

@@ -38,10 +38,7 @@ export interface ServiceDependencies {
   db: PostgresJsDatabase<typeof schema>;
   logger: CustomLogger;
   // Add reference to services for composition
-  services?: Pick<
-    Container,
-    'userService' | 'postService' | 'paymentService' | 'emailService'
-  >;
+  services?: Pick<Container, 'userService' | 'postService' | 'paymentService' | 'emailService'>;
 }
 
 // Service extraction types for better DX
@@ -55,8 +52,6 @@ export type ServiceInstance<T extends ServiceName> = Services[T];
 // Helper type for service access patterns
 export interface ServiceAccessor {
   getService<T extends ServiceName>(serviceName: T): ServiceInstance<T>;
-  getServices<T extends ServiceName[]>(
-    ...serviceNames: T
-  ): Pick<Services, T[number]>;
+  getServices<T extends ServiceName[]>(...serviceNames: T): Pick<Services, T[number]>;
   getAllServices(): Services;
 }

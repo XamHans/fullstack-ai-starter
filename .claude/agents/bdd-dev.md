@@ -24,7 +24,10 @@ Before implementing any feature, you **MUST** read the relevant architectural do
 **CRITICAL: Technical Implementation Patterns** → Read `.claude/IMPLEMENTATION-PATTERNS.md` for:
 
 - Container & services usage (withServices pattern)
-- API response handling (auto-wrapped responses)
+- **Result<T> type** - services return explicit success/error
+- **API handlers** - `withAuth` and `withHandler` wrappers
+- **Zod validation** - schema-based request validation
+- **TanStack Query** - client-side data fetching hooks
 - Next.js 15+ breaking changes (async params)
 - Complete API route templates
 - **READ THIS FIRST before any implementation**
@@ -91,19 +94,21 @@ BDD is our method for ensuring we build the right software. We achieve this by:
 │   └── inventory/
 │       ├── services/
 │       │   └── inventory.service.ts
-│       ├── data-access/
+│       ├── schemas.ts                <-- Zod validation schemas
+│       ├── hooks/
+│       │   └── use-inventory.ts      <-- TanStack Query hooks
 │       ├── types/
-│       └── tests/                 <-- Tests for the 'inventory' module
+│       └── tests/                    <-- Tests for the 'inventory' module
 │           ├── unit/
 │           │   └── inventory.service.spec.ts
 │           └── integration/
 │               └── inventory.api.spec.ts
 │
-├── specs/                         # Gherkin specifications
+├── specs/                            # Gherkin specifications
 │   └── inventory/
 │       └── initialize-inventory.md
 │
-└── tests/                         # Top-level tests for the whole application
+└── tests/                            # Top-level tests for the whole application
     └── e2e/
         └── inventory-journey.spec.ts
 ```
@@ -115,7 +120,10 @@ BDD is our method for ensuring we build the right software. We achieve this by:
 1.  **Deconstruct the Gherkin Scenario:** Read the target scenario from the `.md` spec file.
 2.  **Read Technical Patterns (MANDATORY):** Read `.claude/IMPLEMENTATION-PATTERNS.md` to understand:
     - Container & services usage patterns
-    - API response handling
+    - **Result<T>** type for service returns
+    - **withAuth/withHandler** API handlers
+    - **Zod validation** with parseRequestBody/parseSearchParams
+    - **TanStack Query** hooks for client-side
     - Next.js 15+ requirements (async params)
     - Complete working examples
 3.  **Context Discovery:** Based on the scenario type, read relevant documentation:
@@ -147,16 +155,38 @@ Before implementing **ANY** API route or service method, verify these requiremen
 ### ✅ Container & Services Pattern
 
 - [ ] Using `withServices()` to access services (NOT `container.db` or `getContainer().database`)
-- [ ] Only accessing available services: `userService`, `habitService`, `householdService`, `emailService`, `workflowService`, `specSyncService`, `specGeneratorService`
+- [ ] Only accessing available services: `userService`, `postService`, `paymentService`, etc.
 - [ ] Never trying to access `db`, `database`, or `externalServices` via `withServices()`
 - [ ] Service methods use `this.deps.db` for database access (constructor injection)
 
-### ✅ API Response Pattern
+### ✅ Result Type Pattern
 
-- [ ] Returning plain data objects from `withErrorHandling` handlers
-- [ ] NOT returning `NextResponse.json()` inside `withErrorHandling` (responses are auto-wrapped)
-- [ ] Frontend code handles wrapped responses: `const data = result.data || result`
-- [ ] Using `ApiError` for controlled error responses
+- [ ] Service methods return `Result<T>` (NOT throwing exceptions)
+- [ ] Using `{ success: true, data: ... }` for successful returns
+- [ ] Using `{ success: false, error: { code, message } }` for error returns
+- [ ] Error codes come from `lib/errors.ts` `ErrorCode` enum
+- [ ] Adding new error codes to both `ErrorCode` and `errorCodeToStatus`
+
+### ✅ API Handler Pattern
+
+- [ ] Using `withAuth` for authenticated routes (NOT `withAuthentication`)
+- [ ] Using `withHandler` for public routes (NOT `withErrorHandling`)
+- [ ] Handlers return `Result<T>` which gets converted to HTTP response automatically
+- [ ] NOT manually creating `NextResponse.json()` inside handlers
+
+### ✅ Validation Pattern
+
+- [ ] Zod schemas defined in `modules/{domain}/schemas.ts`
+- [ ] Using `parseRequestBody(req, schema)` for POST/PUT bodies
+- [ ] Using `parseSearchParams(req.url, schema)` for query params
+- [ ] Early return on validation failure: `if (!result.success) return result`
+
+### ✅ Client Data Fetching Pattern
+
+- [ ] TanStack Query hooks in `modules/{domain}/hooks/use-{entity}.ts`
+- [ ] Query hooks use `useQuery` with `queryKey` and `queryFn`
+- [ ] Mutation hooks use `useMutation` with `onSuccess` cache invalidation
+- [ ] `fetchApi` helper throws on `!json.success` responses
 
 ### ✅ Next.js 15+ Requirements
 
@@ -164,12 +194,12 @@ Before implementing **ANY** API route or service method, verify these requiremen
 - [ ] Using `useSearchParams()` hook properly in client components
 - [ ] Never accessing `context.params.id` without await
 
-### ✅ Logging & Error Handling
+### ✅ Error Handling Pattern
 
-- [ ] Adding logger calls for important operations with context
-- [ ] Proper try-catch blocks with error logging
-- [ ] Re-throwing `ApiError` instances unchanged
-- [ ] Wrapping unknown errors in `ApiError` with descriptive messages
+- [ ] Using error codes from `lib/errors.ts` (e.g., `POST_NOT_FOUND`, `VALIDATION_ERROR`)
+- [ ] Including `cause` property for original errors (for server-side logging)
+- [ ] Including `details` property for validation errors (sent to client)
+- [ ] HTTP status codes determined by `errorCodeToStatus` mapping
 
 **Reference**: See `.claude/IMPLEMENTATION-PATTERNS.md` for complete examples and anti-patterns.
 
@@ -187,7 +217,6 @@ Before implementing **ANY** API route or service method, verify these requiremen
 // Specification: /specs/inventory/initialize-inventory.md
 import { describe, it, expect } from 'vitest';
 import { InventoryService } from '../../services/inventory.service';
-import { ValidationError } from '@/lib/errors';
 
 describe('Feature: Initialize Inventory', () => {
   it('Scenario: Initialize inventory with negative quantity', async () => {
@@ -195,16 +224,18 @@ describe('Feature: Initialize Inventory', () => {
     const service = new InventoryService(/* mock dependencies */);
 
     // WHEN: We try to initialize inventory with a negative quantity
-    const action = () =>
-      service.initializeInventory({
-        productId: 'prod_1',
-        locationId: 'loc_1',
-        quantity: -10,
-      });
+    const result = await service.initializeInventory({
+      productId: 'prod_1',
+      locationId: 'loc_1',
+      quantity: -10,
+    });
 
-    // THEN: It should throw a validation error
-    await expect(action).rejects.toThrow(ValidationError);
-    await expect(action).rejects.toThrow('Quantity cannot be negative');
+    // THEN: It should return a validation error (Result type)
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('VALIDATION_ERROR');
+      expect(result.error.message).toContain('negative');
+    }
   });
 });
 ```
@@ -221,20 +252,22 @@ import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import { createAPIServer } from '@/test-utils/server';
 import { InventoryService } from '../../services/inventory.service';
-import { ProductNotFoundError } from '@/modules/products/errors';
 
 // Mock the service layer to isolate the API's responsibility
 vi.mock('@/modules/inventory/services/inventory.service');
 
 describe('Feature: Initialize Inventory', () => {
   it('Scenario: Attempt to initialize inventory for non-existent product', async () => {
-    // GIVEN: The service will throw a ProductNotFoundError
+    // GIVEN: The service will return a not found error (Result type)
     vi.spyOn(
       InventoryService.prototype,
       'initializeInventory'
-    ).mockRejectedValue(new ProductNotFoundError('Product not found'));
+    ).mockResolvedValue({
+      success: false,
+      error: { code: 'PRODUCT_NOT_FOUND', message: 'Product not found' }
+    });
 
-    const { server } = createAPIServer(); // Creates a test server with our API route
+    const { server } = createAPIServer();
 
     // WHEN: We call the API endpoint
     const response = await request(server)
@@ -245,8 +278,10 @@ describe('Feature: Initialize Inventory', () => {
         quantity: 50,
       });
 
-    // THEN: I should see an error message "Product not found"
+    // THEN: I should see an error response with proper structure
     expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.code).toBe('PRODUCT_NOT_FOUND');
     expect(response.body.error).toBe('Product not found');
   });
 });
@@ -282,4 +317,46 @@ test.describe('Feature: Initialize Inventory', () => {
     ).toBeVisible();
   });
 });
+```
+
+### **4. TanStack Query Hook Pattern**
+
+**Strategy:** For client-side data fetching, create hooks that leverage TanStack Query for caching and automatic refetching.
+
+```typescript
+// modules/inventory/hooks/use-inventory.ts
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Inventory, CreateInventoryInput } from '../types';
+
+async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data;
+}
+
+export function useInventory(productId: string, locationId: string) {
+  return useQuery({
+    queryKey: ['inventory', productId, locationId],
+    queryFn: () => fetchApi<Inventory>(`/api/inventory?productId=${productId}&locationId=${locationId}`),
+    enabled: !!productId && !!locationId,
+  });
+}
+
+export function useInitializeInventory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateInventoryInput) =>
+      fetchApi<Inventory>('/api/inventory/initialize', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['inventory'] }),
+  });
+}
 ```

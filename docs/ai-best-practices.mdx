@@ -43,17 +43,35 @@ Always use streaming for user-facing applications:
 ```typescript
 // app/api/ai/chat/route.ts
 import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { handleResult } from '@/lib/api/handlers';
 
-export const POST = withAuthentication(async (session, request) => {
-  const { messages } = await request.json();
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string(),
+  })),
+});
+
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return handleResult({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+  }
+
+  const bodyResult = await parseRequestBody(request, chatSchema);
+  if (!bodyResult.success) return handleResult(bodyResult);
 
   const result = await streamText({
     model: openai('gpt-3.5-turbo'),
-    messages,
+    messages: bodyResult.data.messages,
   });
 
   return result.toDataStreamResponse();
-});
+}
 ```
 
 #### 3. Response Caching
@@ -92,18 +110,24 @@ const { text } = await generateText({
 Validate inputs to prevent expensive requests:
 
 ```typescript
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt } = await parseRequestBody<{ prompt: string }>(request);
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 
-  // Validate prompt length
-  if (prompt.length > 1000) {
-    throw new ApiError(400, 'Prompt too long', 'PROMPT_TOO_LONG');
-  }
+const generateSchema = z.object({
+  prompt: z.string().min(1).max(1000, 'Prompt too long'),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, generateSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const { prompt } = bodyResult.data;
 
   // Check for repeated requests
   const hash = createHash('md5').update(prompt).digest('hex');
   const cached = await getCachedResponse(hash);
-  if (cached) return { text: cached };
+  if (cached) return { success: true, data: { text: cached } };
 
   const { text } = await generateText({
     model: openai('gpt-3.5-turbo'),
@@ -111,7 +135,7 @@ export const POST = withAuthentication(async (session, request) => {
   });
 
   await setCachedResponse(hash, text);
-  return { text };
+  return { success: true, data: { text } };
 });
 ```
 
@@ -119,6 +143,10 @@ export const POST = withAuthentication(async (session, request) => {
 Monitor AI usage per user:
 
 ```typescript
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+
 // Track usage in database
 const logAIUsage = async (userId: string, model: string, tokens: number) => {
   await db.insert(aiUsage).values({
@@ -129,12 +157,17 @@ const logAIUsage = async (userId: string, model: string, tokens: number) => {
   });
 };
 
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt } = await request.json();
+const promptSchema = z.object({
+  prompt: z.string().min(1),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, promptSchema);
+  if (!bodyResult.success) return bodyResult;
 
   const result = await generateText({
     model: openai('gpt-3.5-turbo'),
-    prompt,
+    prompt: bodyResult.data.prompt,
   });
 
   // Log usage
@@ -144,7 +177,7 @@ export const POST = withAuthentication(async (session, request) => {
     result.usage.totalTokens
   );
 
-  return { text: result.text };
+  return { success: true, data: { text: result.text } };
 });
 ```
 
@@ -155,30 +188,41 @@ Always sanitize user inputs:
 
 ```typescript
 import DOMPurify from 'dompurify';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+import type { Result } from '@/lib/result';
 
-const sanitizePrompt = (prompt: string): string => {
+const sanitizePrompt = (prompt: string): Result<string> => {
   // Remove potentially harmful content
   const clean = DOMPurify.sanitize(prompt);
 
   // Additional validation
   if (clean.includes('ignore previous instructions')) {
-    throw new ApiError(400, 'Invalid prompt', 'INVALID_PROMPT');
+    return { success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid prompt content' } };
   }
 
-  return clean;
+  return { success: true, data: clean };
 };
 
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt } = await request.json();
-  const cleanPrompt = sanitizePrompt(prompt);
+const promptSchema = z.object({
+  prompt: z.string().min(1),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, promptSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const sanitizeResult = sanitizePrompt(bodyResult.data.prompt);
+  if (!sanitizeResult.success) return sanitizeResult;
 
   // Use sanitized prompt
   const { text } = await generateText({
     model: openai('gpt-3.5-turbo'),
-    prompt: cleanPrompt,
+    prompt: sanitizeResult.data,
   });
 
-  return { text };
+  return { success: true, data: { text } };
 });
 ```
 
@@ -188,17 +232,21 @@ Implement per-user rate limits:
 ```typescript
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { withAuth } from '@/lib/api/handlers';
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(10, '1 m'), // 10 requests per minute
 });
 
-export const POST = withAuthentication(async (session, request) => {
+export const POST = withAuth(async (session, request) => {
   const { success } = await ratelimit.limit(session.user.id);
 
   if (!success) {
-    throw new ApiError(429, 'Too many requests', 'RATE_LIMITED');
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Too many requests. Please try again later.' }
+    };
   }
 
   // Process request...
@@ -231,42 +279,45 @@ Complete production-ready AI endpoint:
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication, withAITelemetry } from '@/lib/api/base';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 import { ratelimit, sanitizePrompt, filterResponse } from '@/lib/ai/utils';
 
-export const POST = withAuthentication(async (session, request) => {
+const generateSchema = z.object({
+  prompt: z.string().min(1).max(2000),
+});
+
+export const POST = withAuth(async (session, request) => {
   // Rate limiting
-  const { success } = await ratelimit.limit(session.user.id);
-  if (!success) {
-    throw new ApiError(429, 'Too many requests', 'RATE_LIMITED');
+  const { success: rateLimitOk } = await ratelimit.limit(session.user.id);
+  if (!rateLimitOk) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Too many requests' } };
   }
 
-  // Parse and validate
-  const { prompt } = await parseRequestBody<{ prompt: string }>(request);
-  validateRequiredFields(body, ['prompt']);
+  // Parse and validate with Zod
+  const bodyResult = await parseRequestBody(request, generateSchema);
+  if (!bodyResult.success) return bodyResult;
 
   // Input sanitization
-  const cleanPrompt = sanitizePrompt(prompt);
+  const sanitizeResult = sanitizePrompt(bodyResult.data.prompt);
+  if (!sanitizeResult.success) return sanitizeResult;
+
+  const cleanPrompt = sanitizeResult.data;
 
   // Check cache first
   const cacheKey = createHash('md5').update(cleanPrompt).digest('hex');
   const cached = await getCachedResponse(cacheKey);
-  if (cached) return { text: cached, cached: true };
+  if (cached) {
+    return { success: true, data: { text: cached, cached: true } };
+  }
 
-  // Generate with telemetry
-  const { text, usage } = await generateText(
-    withAITelemetry({
-      model: openai('gpt-3.5-turbo'),
-      prompt: cleanPrompt,
-      maxTokens: 150,
-    }, {
-      functionId: 'generate-text',
-      metadata: {
-        userId: session.user.id,
-        promptLength: cleanPrompt.length,
-      },
-    })
-  );
+  // Generate text
+  const { text, usage } = await generateText({
+    model: openai('gpt-3.5-turbo'),
+    prompt: cleanPrompt,
+    maxTokens: 150,
+  });
 
   // Filter response
   const filteredText = filterResponse(text);
@@ -277,7 +328,7 @@ export const POST = withAuthentication(async (session, request) => {
   // Log usage
   await logAIUsage(session.user.id, 'gpt-3.5-turbo', usage.totalTokens);
 
-  return { text: filteredText };
+  return { success: true, data: { text: filteredText } };
 });
 ```
 

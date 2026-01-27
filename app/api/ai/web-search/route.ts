@@ -1,36 +1,35 @@
 import { google } from '@ai-sdk/google';
 import { openai } from '@ai-sdk/openai';
 import { generateText, stepCountIs } from 'ai';
-import {
-  ApiError,
-  parseRequestBody,
-  validateRequiredFields,
-  withAITelemetry,
-  withAuthentication,
-} from '@/lib/api/base';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { withAITelemetry } from '@/lib/ai/telemetry';
+import { z } from 'zod';
 
-type SearchProvider = 'openai' | 'google';
+const searchProviderSchema = z.enum(['openai', 'google']);
+type SearchProvider = z.infer<typeof searchProviderSchema>;
 
-export const POST = withAuthentication(async (session, req, params, logger) => {
-  logger?.info('Web search request received');
+const webSearchSchema = z.object({
+  query: z.string().min(1, 'Query cannot be empty'),
+  provider: searchProviderSchema.optional().default('openai'),
+});
 
-  const body = await parseRequestBody<{
-    query: string;
-    provider?: SearchProvider;
-  }>(req);
+type WebSearchResponse = {
+  provider: SearchProvider;
+  answer: string;
+  sources: any[];
+  providerMetadata?: any;
+};
 
-  validateRequiredFields(body, ['query']);
+export const POST = withAuth<WebSearchResponse>(async (session, req, context) => {
+  const bodyResult = await parseRequestBody(req, webSearchSchema);
+  if (!bodyResult.success) return bodyResult;
 
-  const provider: SearchProvider = body.provider ?? 'openai';
-  const query = body.query.trim();
-
-  if (!query) {
-    throw new ApiError(400, 'Query cannot be empty', 'INVALID_QUERY');
-  }
+  const { query, provider } = bodyResult.data;
 
   const telemetryMetadata = {
-    userId: session.userId,
-    sessionId: session.id,
+    userId: session.user.id,
+    sessionId: req.headers.get('x-session-id') || undefined,
     provider,
   };
 
@@ -39,14 +38,42 @@ export const POST = withAuthentication(async (session, req, params, logger) => {
     stopWhen: stepCountIs(2),
   };
 
-  if (provider === 'google') {
+  try {
+    if (provider === 'google') {
+      const result = await generateText(
+        withAITelemetry(
+          {
+            ...sharedConfig,
+            model: google('gemini-2.5-flash'),
+            tools: {
+              google_search: google.tools.googleSearch({}),
+            },
+          },
+          {
+            functionId: 'web-search',
+            metadata: telemetryMetadata,
+          },
+        ),
+      );
+
+      return {
+        success: true,
+        data: {
+          provider,
+          answer: result.text,
+          sources: result.sources ?? [],
+          providerMetadata: result.providerMetadata?.google?.groundingMetadata,
+        },
+      };
+    }
+
     const result = await generateText(
       withAITelemetry(
         {
           ...sharedConfig,
-          model: google('gemini-2.5-flash'),
+          model: openai.responses('gpt-4o-mini'),
           tools: {
-            google_search: google.tools.googleSearch({}),
+            web_search_preview: openai.tools.webSearchPreview({}),
           },
         },
         {
@@ -56,42 +83,19 @@ export const POST = withAuthentication(async (session, req, params, logger) => {
       ),
     );
 
-    logger?.info('Web search (Google) completed successfully', {
-      sourceCount: result.sources?.length ?? 0,
-    });
-
     return {
-      provider,
-      answer: result.text,
-      sources: result.sources ?? [],
-      providerMetadata: result.providerMetadata?.google?.groundingMetadata,
+      success: true,
+      data: {
+        provider,
+        answer: result.text,
+        sources: result.sources ?? [],
+        providerMetadata: result.providerMetadata,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: { code: 'EXTERNAL_SERVICE_ERROR', message: 'Web search failed', cause: error },
     };
   }
-
-  const result = await generateText(
-    withAITelemetry(
-      {
-        ...sharedConfig,
-        model: openai.responses('gpt-4o-mini'),
-        tools: {
-          web_search_preview: openai.tools.webSearchPreview({}),
-        },
-      },
-      {
-        functionId: 'web-search',
-        metadata: telemetryMetadata,
-      },
-    ),
-  );
-
-  logger?.info('Web search (OpenAI) completed successfully', {
-    sourceCount: result.sources?.length ?? 0,
-  });
-
-  return {
-    provider,
-    answer: result.text,
-    sources: result.sources ?? [],
-    providerMetadata: result.providerMetadata,
-  };
 });

@@ -1,42 +1,22 @@
-import type { NextRequest } from 'next/server';
-import {
-  ApiError,
-  getQueryParams,
-  parseRequestBody,
-  validateRequiredFields,
-  withAuthentication,
-  withErrorHandling,
-} from '@/lib/api/base';
+import { withAuth, withHandler } from '@/lib/api/handlers';
+import { parseRequestBody, parseSearchParams } from '@/lib/validation/parse';
+import { createPostSchema, getPostsQuerySchema } from '@/modules/posts/schemas';
 import { withServices } from '@/lib/container/utils';
 
 // GET /api/posts - List posts (public)
-export const GET = withErrorHandling(async (request: NextRequest) => {
+export const GET = withHandler(async (req) => {
+  const paramsResult = parseSearchParams(req.url, getPostsQuerySchema);
+  if (!paramsResult.success) return paramsResult;
+
   const { postService } = withServices('postService');
-
-  const { limit, offset, search } = getQueryParams(request);
-
-  const posts = await postService.getPosts({
-    limit,
-    offset,
-    search,
-  });
-
-  return posts;
+  return postService.getPosts(paramsResult.data);
 });
 
 // POST /api/posts - Create post (requires authentication)
-export const POST = withAuthentication(async (session, request) => {
+export const POST = withAuth(async (session, req) => {
+  const bodyResult = await parseRequestBody(req, createPostSchema);
+  if (!bodyResult.success) return bodyResult;
+
   const { postService } = withServices('postService');
-
-  const body = await parseRequestBody<{
-    title: string;
-    content: string;
-    published?: boolean;
-  }>(request);
-
-  validateRequiredFields(body, ['title', 'content']);
-
-  const post = await postService.createPost(body, session.user.id);
-
-  return post;
+  return postService.createPost(bodyResult.data, session.user.id);
 });

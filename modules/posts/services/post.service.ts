@@ -1,25 +1,17 @@
 import { and, desc, eq, ilike } from 'drizzle-orm';
 import type { ServiceDependencies } from '@/lib/container/types';
+import type { Result } from '@/lib/result';
 import { posts } from '../schema';
-import type { CreatePostInput, PostFilters, UpdatePostInput } from '../types';
+import type { CreatePostInput, Post, PostFilters, UpdatePostInput } from '../types';
 
 export class PostService {
-  constructor(private deps: ServiceDependencies) {}
+  constructor(private deps: ServiceDependencies) { }
 
   private get logger() {
     return this.deps.logger.child({ service: 'PostService' });
   }
 
-  // Service composition helpers
-  protected get services() {
-    return this.deps.services;
-  }
-
-  protected get userService() {
-    return this.services?.userService;
-  }
-
-  async createPost(data: CreatePostInput, authorId: string) {
+  async createPost(data: CreatePostInput, authorId: string): Promise<Result<Post>> {
     this.logger.info('Creating new post', {
       operation: 'createPost',
       authorId,
@@ -43,7 +35,7 @@ export class PostService {
         title: data.title,
       });
 
-      return post;
+      return { success: true, data: post };
     } catch (error) {
       this.logger.error('Failed to create post', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -53,11 +45,14 @@ export class PostService {
           title: data.title,
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to create post', cause: error },
+      };
     }
   }
 
-  async getPostById(id: string) {
+  async getPostById(id: string): Promise<Result<Post>> {
     this.logger.debug('Retrieving post by ID', {
       operation: 'getPostById',
       postId: id,
@@ -66,13 +61,23 @@ export class PostService {
     try {
       const [post] = await this.deps.db.select().from(posts).where(eq(posts.id, id));
 
-      this.logger.debug(post ? 'Post found' : 'Post not found', {
+      if (!post) {
+        this.logger.debug('Post not found', {
+          operation: 'getPostById',
+          postId: id,
+        });
+        return {
+          success: false,
+          error: { code: 'POST_NOT_FOUND', message: 'Post not found' },
+        };
+      }
+
+      this.logger.debug('Post found', {
         operation: 'getPostById',
         postId: id,
-        found: !!post,
       });
 
-      return post;
+      return { success: true, data: post };
     } catch (error) {
       this.logger.error('Failed to retrieve post by ID', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -81,16 +86,30 @@ export class PostService {
           postId: id,
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to fetch post', cause: error },
+      };
     }
   }
 
-  async updatePost(id: string, data: UpdatePostInput) {
+  async updatePost(id: string, data: UpdatePostInput, userId: string): Promise<Result<Post>> {
     this.logger.info('Updating post', {
       operation: 'updatePost',
       postId: id,
       fieldsToUpdate: Object.keys(data),
     });
+
+    // First check ownership
+    const postResult = await this.getPostById(id);
+    if (!postResult.success) return postResult;
+
+    if (postResult.data.authorId !== userId) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not authorized to update this post' },
+      };
+    }
 
     try {
       const [post] = await this.deps.db
@@ -105,7 +124,7 @@ export class PostService {
         fieldsUpdated: Object.keys(data),
       });
 
-      return post;
+      return { success: true, data: post };
     } catch (error) {
       this.logger.error('Failed to update post', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -115,15 +134,29 @@ export class PostService {
           fieldsToUpdate: Object.keys(data),
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to update post', cause: error },
+      };
     }
   }
 
-  async deletePost(id: string) {
+  async deletePost(id: string, userId: string): Promise<Result<void>> {
     this.logger.info('Deleting post', {
       operation: 'deletePost',
       postId: id,
     });
+
+    // First check ownership
+    const postResult = await this.getPostById(id);
+    if (!postResult.success) return postResult;
+
+    if (postResult.data.authorId !== userId) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not authorized to delete this post' },
+      };
+    }
 
     try {
       await this.deps.db.delete(posts).where(eq(posts.id, id));
@@ -132,6 +165,8 @@ export class PostService {
         operation: 'deletePost',
         postId: id,
       });
+
+      return { success: true, data: undefined };
     } catch (error) {
       this.logger.error('Failed to delete post', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -140,12 +175,15 @@ export class PostService {
           postId: id,
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to delete post', cause: error },
+      };
     }
   }
 
-  async getPosts(filters: PostFilters = {}) {
-    const { limit = 20, offset = 0, search, authorId } = filters;
+  async getPosts(filters: PostFilters = {}): Promise<Result<Post[]>> {
+    const { limit = 20, offset = 0, search, authorId, includeUnpublished } = filters;
 
     this.logger.debug('Retrieving posts with filters', {
       operation: 'getPosts',
@@ -153,6 +191,7 @@ export class PostService {
       offset,
       hasSearch: !!search,
       hasAuthorFilter: !!authorId,
+      includeUnpublished,
     });
 
     try {
@@ -161,7 +200,7 @@ export class PostService {
         .from(posts)
         .where(
           and(
-            eq(posts.published, true),
+            includeUnpublished ? undefined : eq(posts.published, true),
             search ? ilike(posts.title, `%${search}%`) : undefined,
             authorId ? eq(posts.authorId, authorId) : undefined,
           ),
@@ -179,7 +218,7 @@ export class PostService {
         offset,
       });
 
-      return result;
+      return { success: true, data: result };
     } catch (error) {
       this.logger.error('Failed to retrieve posts', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -188,11 +227,14 @@ export class PostService {
           filters,
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: { code: 'DATABASE_ERROR', message: 'Failed to retrieve posts', cause: error },
+      };
     }
   }
 
-  async getPostsByAuthor(authorId: string, includeUnpublished = false) {
+  async getPostsByAuthor(authorId: string, includeUnpublished = false): Promise<Result<Post[]>> {
     this.logger.debug('Retrieving posts by author', {
       operation: 'getPostsByAuthor',
       authorId,
@@ -218,7 +260,7 @@ export class PostService {
         includeUnpublished,
       });
 
-      return result;
+      return { success: true, data: result };
     } catch (error) {
       this.logger.error('Failed to retrieve posts by author', {
         error: error instanceof Error ? error : new Error(String(error)),
@@ -228,7 +270,14 @@ export class PostService {
           includeUnpublished,
         },
       });
-      throw error;
+      return {
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to retrieve posts by author',
+          cause: error,
+        },
+      };
     }
   }
 }

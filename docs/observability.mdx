@@ -69,25 +69,32 @@ export function withAITelemetry<T>(
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication, withAITelemetry } from '@/lib/api/base';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { withAITelemetry } from '@/lib/api/ai-utils';
 
-export const POST = withAuthentication(async (session, req) => {
-  const { prompt } = await req.json();
+const generateSchema = z.object({
+  prompt: z.string().min(1),
+});
+
+export const POST = withAuth(async (session, req) => {
+  const bodyResult = await parseRequestBody(req, generateSchema);
+  if (!bodyResult.success) return bodyResult;
 
   const { text } = await generateText(
     withAITelemetry({
       model: openai('gpt-3.5-turbo'),
-      prompt,
+      prompt: bodyResult.data.prompt,
     }, {
       functionId: 'generate-text',
       metadata: {
-        userId: session.userId,
-        sessionId: session.id,
+        userId: session.user.id,
       },
     })
   );
 
-  return { text };
+  return { success: true, data: { text } };
 });
 ```
 
@@ -99,20 +106,38 @@ Complete API route with observability:
 // app/api/ai/chat/route.ts
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication, withAITelemetry } from '@/lib/api/base';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { handleResult } from '@/lib/api/handlers';
+import { withAITelemetry } from '@/lib/api/ai-utils';
 
-export const POST = withAuthentication(async (session, request) => {
-  const { messages } = await request.json();
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string(),
+  })),
+});
+
+// Note: Streaming endpoints return DataStreamResponse directly
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return handleResult({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+  }
+
+  const bodyResult = await parseRequestBody(request, chatSchema);
+  if (!bodyResult.success) return handleResult(bodyResult);
 
   const result = await streamText(
     withAITelemetry({
       model: openai('gpt-3.5-turbo'),
-      messages,
+      messages: bodyResult.data.messages,
     }, {
       functionId: 'chat-completion',
       metadata: {
-        userId: session.userId,
-        conversationLength: messages.length,
+        userId: session.user.id,
+        conversationLength: bodyResult.data.messages.length,
         feature: 'ai-chat',
       },
       recordInputs: true,
@@ -121,7 +146,7 @@ export const POST = withAuthentication(async (session, request) => {
   );
 
   return result.toDataStreamResponse();
-});
+}
 ```
 
 ## What You'll See

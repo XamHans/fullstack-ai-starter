@@ -23,7 +23,7 @@ export default function ChatPage() {
       logger.info('Chat message received:', message);
     },
     onError: (error) => {
-      logger.error('Chat message received:', { error });
+      logger.error('Chat error occurred', { error });
     },
   });
 

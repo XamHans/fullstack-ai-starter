@@ -20,10 +20,11 @@ class PinoLoggerWrapper implements CustomLogger {
 
   error(message: string, context?: ErrorContext): void {
     if (context?.error) {
+      const { error, ...rest } = context;
       this.pinoLogger.error(
         {
-          ...context,
-          error: context.error,
+          ...rest,
+          error: error,
         },
         message,
       );
@@ -34,10 +35,11 @@ class PinoLoggerWrapper implements CustomLogger {
 
   fatal(message: string, context?: ErrorContext): void {
     if (context?.error) {
+      const { error, ...rest } = context;
       this.pinoLogger.fatal(
         {
-          ...context,
-          error: context.error,
+          ...rest,
+          error: error,
         },
         message,
       );

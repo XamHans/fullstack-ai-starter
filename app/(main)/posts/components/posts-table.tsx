@@ -1,7 +1,8 @@
 'use client';
 
 import { Edit2, Eye, EyeOff, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/use-debounce';
 import {
   Table,
   TableBody,
@@ -31,147 +33,75 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useToast } from '@/components/ui/use-toast';
+import { usePosts, useDeletePost, useUpdatePost } from '@/app/(main)/posts/hooks/use-posts';
+import type { Post } from '@/modules/posts/types';
 import { PostFormDialog } from './post-form-dialog';
-
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  published: boolean;
-  authorId: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface PostsTableProps {
   userId: string;
 }
 
 export function PostsTable({ userId }: PostsTableProps) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const { toast } = useToast();
 
-  const filteredPosts = posts.filter(
-    (post) =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const {
+    data: posts,
+    isLoading,
+    error,
+  } = usePosts({
+    search: debouncedSearchTerm || undefined,
+    authorId: userId,
+    includeUnpublished: true,
+  });
+  const deleteMutation = useDeletePost();
+  const updateMutation = useUpdatePost();
 
-  const fetchPosts = async () => {
-    try {
-      const response = await fetch('/api/posts');
-      if (!response.ok) {
-        throw new Error('Failed to fetch posts');
-      }
-      const data = await response.json();
-      if (data.success) {
-        setPosts(data.data);
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch posts',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredPosts =
+    posts?.filter(
+      (post) =>
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchTerm.toLowerCase()),
+    ) ?? [];
 
   const handleDelete = async (postId: string) => {
-    try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete post');
-      }
-
-      if (data.success) {
-        setPosts(posts.filter((post) => post.id !== postId));
-        toast({
-          title: 'Success',
-          description: 'Post deleted successfully',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete post',
-        variant: 'destructive',
-      });
-    }
+    deleteMutation.mutate(postId, {
+      onSuccess: () => {
+        toast.success('Post deleted successfully');
+      },
+      onError: (error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to delete post');
+      },
+    });
   };
 
   const handleTogglePublish = async (postId: string, currentPublished: boolean) => {
-    try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+    updateMutation.mutate(
+      { id: postId, published: !currentPublished },
+      {
+        onSuccess: () => {
+          toast.success(`Post ${!currentPublished ? 'published' : 'unpublished'} successfully`);
         },
-        body: JSON.stringify({
-          published: !currentPublished,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update post');
-      }
-
-      if (data.success) {
-        setPosts(
-          posts.map((post) =>
-            post.id === postId ? { ...post, published: !currentPublished } : post,
-          ),
-        );
-        toast({
-          title: 'Success',
-          description: `Post ${!currentPublished ? 'published' : 'unpublished'} successfully`,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update post',
-        variant: 'destructive',
-      });
-    }
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : 'Failed to update post');
+        },
+      },
+    );
   };
 
-  const handleCreatePost = (newPost: Post) => {
-    setPosts([newPost, ...posts]);
+  const handleCreateSuccess = () => {
     setIsCreateDialogOpen(false);
-    toast({
-      title: 'Success',
-      description: 'Post created successfully',
-    });
+    toast.success('Post created successfully');
   };
 
-  const handleUpdatePost = (updatedPost: Post) => {
-    setPosts(posts.map((post) => (post.id === updatedPost.id ? updatedPost : post)));
+  const handleUpdateSuccess = () => {
     setEditingPost(null);
-    toast({
-      title: 'Success',
-      description: 'Post updated successfully',
-    });
+    toast.success('Post updated successfully');
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -186,6 +116,12 @@ export function PostsTable({ userId }: PostsTableProps) {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-destructive py-8">Failed to load posts: {error.message}</div>
     );
   }
 
@@ -264,6 +200,7 @@ export function PostsTable({ userId }: PostsTableProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleTogglePublish(post.id, post.published)}
+                          disabled={updateMutation.isPending}
                         >
                           {post.published ? (
                             <>
@@ -301,8 +238,9 @@ export function PostsTable({ userId }: PostsTableProps) {
                               <AlertDialogAction
                                 onClick={() => handleDelete(post.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                disabled={deleteMutation.isPending}
                               >
-                                Delete
+                                {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -320,7 +258,7 @@ export function PostsTable({ userId }: PostsTableProps) {
       <PostFormDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onSuccess={handleCreatePost}
+        onSuccess={handleCreateSuccess}
         userId={userId}
       />
 
@@ -328,7 +266,7 @@ export function PostsTable({ userId }: PostsTableProps) {
         <PostFormDialog
           open={!!editingPost}
           onOpenChange={(open) => !open && setEditingPost(null)}
-          onSuccess={handleUpdatePost}
+          onSuccess={handleUpdateSuccess}
           userId={userId}
           post={editingPost}
         />

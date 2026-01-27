@@ -130,6 +130,9 @@ Shows:
 - ✨ Prompts to /clear context between scenarios
 - ✨ Better progress tracking in spec file
 - ✨ Smaller, focused implementations
+- ✨ Uses `Result<T>` type for explicit error handling (not throwing)
+- ✨ TanStack Query hooks for client-side data fetching
+- ✨ Zod schemas for request validation
 
 **Output per scenario**:
 - Scenario-specific branch: `feature/{domain}/{feature}/{scenario-slug}`
@@ -324,14 +327,15 @@ git diff main
 
 ## 📚 Further Reading
 
-- `.claude/constitution.md` - **NEW**: Architectural principles and phase gates
+- `.claude/IMPLEMENTATION-PATTERNS.md` - **CRITICAL**: Technical patterns (Result<T>, handlers, validation, TanStack Query)
+- `.claude/constitution.md` - Architectural principles and phase gates
 - `.claude/commands/create-specs.md` - Spec generation with SDD quality constraints
-- `.claude/commands/create-tasks.md` - **NEW**: Task decomposition with parallelization
+- `.claude/commands/create-tasks.md` - Task decomposition with parallelization
 - `.claude/commands/groundwork.md` - Infrastructure setup with constitutional gates
 - `.claude/commands/implement.md` - Scenario implementation with uncertainty handling
+- `docs/api-architecture.mdx` - API design patterns with Result<T> and Zod validation
 - `docs/architecture/testing-strategy.mdx` - Testing patterns and philosophy
 - `docs/architecture/code-architecture.mdx` - Module structure and organization
-- `docs/architecture/api-architecture.mdx` - API design patterns
 - `.claude/agents/bdd-dev.md` - BDD agent implementation details
 
 ---

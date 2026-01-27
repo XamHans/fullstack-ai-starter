@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { type EmailTemplateName, emailTemplates } from '@/lib/email/templates';
+import type { Result } from '@/lib/result';
 
 export interface EmailOptions {
   to: string | string[];
@@ -28,9 +29,7 @@ export class EmailService {
     }
   }
 
-  async sendEmail(
-    options: EmailOptions,
-  ): Promise<{ success: boolean; id?: string; error?: string }> {
+  async sendEmail(options: EmailOptions): Promise<Result<{ id: string }>> {
     try {
       this.ensureInitialized();
 
@@ -40,14 +39,29 @@ export class EmailService {
         from: options.from || this.fromEmail,
         to: Array.isArray(options.to) ? options.to : [options.to],
         subject: options.subject,
-        react: Template(options.templateProps || {}),
+        react: Template((options.templateProps || {}) as any),
       });
 
-      return { success: true, id: result.data?.id };
+      if (result.error) {
+        return {
+          success: false,
+          error: {
+            code: 'EXTERNAL_SERVICE_ERROR',
+            message: result.error.message,
+            cause: result.error,
+          },
+        };
+      }
+
+      return { success: true, data: { id: result.data?.id || '' } };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: {
+          code: 'EXTERNAL_SERVICE_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          cause: error,
+        },
       };
     }
   }

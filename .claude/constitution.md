@@ -52,6 +52,8 @@ Before adding abstraction layers, answer these questions:
 - [ ] Do I have a single representation for each domain concept?
 - [ ] Is this abstraction solving a real problem that exists today?
 
+**Note on Result<T,E> Type**: The `Result<T,E>` type is **not** an abstraction layer - it's explicit error handling that makes success/failure states visible in the type system. This aligns with this article by favoring clarity over hidden control flow (exceptions).
+
 **Enforcement**: Document justified exceptions in complexity tracking.
 
 ---
@@ -110,6 +112,11 @@ Before implementing, answer these questions:
 - [ ] Have the tests been reviewed and approved?
 - [ ] Do the tests currently FAIL (Red phase)?
 - [ ] Are tests at the appropriate level (Unit/API/E2E)?
+
+**Testing Result<T> Types**: When testing services that return `Result<T>`:
+- Assert `result.success` is `true` or `false`
+- For success: access `result.data` after narrowing
+- For errors: access `result.error.code` and `result.error.message` after narrowing
 
 **Enforcement**: No implementation code without failing tests.
 

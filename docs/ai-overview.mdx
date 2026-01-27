@@ -72,22 +72,24 @@ LANGFUSE_PUBLIC_KEY=pk-lf-...
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import {
-  withAuthentication,
-  parseRequestBody,
-  validateRequiredFields,
-} from '@/lib/api/base';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 
-export const POST = withAuthentication(async (session, request) => {
-  const body = await parseRequestBody<{ prompt: string }>(request);
-  validateRequiredFields(body, ['prompt']);
+const generateTextSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required'),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, generateTextSchema);
+  if (!bodyResult.success) return bodyResult;
 
   const { text } = await generateText({
     model: openai('gpt-3.5-turbo'),
-    prompt: body.prompt,
+    prompt: bodyResult.data.prompt,
   });
 
-  return { text };
+  return { success: true, data: { text } };
 });
 ```
 

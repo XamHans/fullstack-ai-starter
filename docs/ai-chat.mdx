@@ -26,18 +26,37 @@ Create powerful conversational AI experiences with real-time streaming responses
 // app/api/ai/chat/route.ts
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication } from '@/lib/api/base';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { handleResult } from '@/lib/api/handlers';
 
-export const POST = withAuthentication(async (session, request) => {
-  const { messages } = await request.json();
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string(),
+  })),
+});
+
+// Note: Streaming endpoints return DataStreamResponse directly
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return handleResult({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+  }
+
+  const bodyResult = await parseRequestBody(request, chatSchema);
+  if (!bodyResult.success) {
+    return handleResult(bodyResult);
+  }
 
   const result = await streamText({
     model: openai('gpt-3.5-turbo'),
-    messages,
+    messages: bodyResult.data.messages,
   });
 
   return result.toDataStreamResponse();
-});
+}
 ```
 
 2. **Build Chat Component**
@@ -243,8 +262,30 @@ Customize the AI's behavior with system prompts:
 
 ```typescript
 // app/api/ai/chat/route.ts
-export const POST = withAuthentication(async (session, request) => {
-  const { messages } = await request.json();
+import { streamText } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { handleResult } from '@/lib/api/handlers';
+
+const chatSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string(),
+  })),
+});
+
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return handleResult({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+  }
+
+  const bodyResult = await parseRequestBody(request, chatSchema);
+  if (!bodyResult.success) {
+    return handleResult(bodyResult);
+  }
 
   // Add system prompt
   const systemMessage = {
@@ -255,13 +296,13 @@ export const POST = withAuthentication(async (session, request) => {
 
   const result = await streamText({
     model: openai('gpt-3.5-turbo'),
-    messages: [systemMessage, ...messages],
+    messages: [systemMessage, ...bodyResult.data.messages],
     temperature: 0.7,
     maxTokens: 1000,
   });
 
   return result.toDataStreamResponse();
-});
+}
 ```
 
 ### Message Management Features

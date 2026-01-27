@@ -1,6 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 import type { ServiceDependencies } from '@/lib/container/types';
+import type { Result } from '@/lib/result';
 import { payments, webhookEvents } from '../schema';
 import type { CreatePaymentInput, NewPayment, Payment, PaymentFilters } from '../types';
 
@@ -15,8 +16,8 @@ export class PaymentService {
 
     this.stripe = secretKey
       ? new Stripe(secretKey, {
-          apiVersion: '2023-10-16',
-        })
+        apiVersion: '2023-10-16',
+      })
       : null;
   }
 
@@ -51,8 +52,11 @@ export class PaymentService {
       ...extras,
       ...(metadata
         ? Object.fromEntries(
-            Object.entries(metadata).map(([key, value]) => [key, value == null ? '' : String(value)]),
-          )
+          Object.entries(metadata).map(([key, value]) => [
+            key,
+            value == null ? '' : String(value),
+          ]),
+        )
         : undefined),
     };
   }
@@ -61,24 +65,43 @@ export class PaymentService {
    * Create a new payment via Stripe Checkout
    * @param data Payment creation input
    * @param userId ID of the user creating the payment
-   * @returns Created payment record
+   * @returns Result<Payment>
    */
-  async createPayment(data: CreatePaymentInput, userId: string): Promise<Payment> {
+  async createPayment(data: CreatePaymentInput, userId: string): Promise<Result<Payment>> {
     this.logger.info('Creating Stripe payment', {
       userId,
       amount: data.amount,
       currency: data.currency,
     });
 
-    const stripe = this.requireStripe();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!appUrl) {
-      throw new Error('NEXT_PUBLIC_APP_URL is not configured');
+      return {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'NEXT_PUBLIC_APP_URL is not configured' },
+      };
+    }
+
+    if (!this.stripe) {
+      return {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'Stripe secret key is not configured' },
+      };
+    }
+    const stripe = this.stripe;
+
+    let amountInMinorUnits: number;
+    try {
+      amountInMinorUnits = this.parseAmountToMinorUnits(data.amount);
+    } catch (e) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid amount value' },
+      };
     }
 
     const paymentId = crypto.randomUUID();
-    const amountInMinorUnits = this.parseAmountToMinorUnits(data.amount);
     const metadata = this.buildStripeMetadata(data.metadata, {
       paymentId,
       userId,
@@ -127,10 +150,20 @@ export class PaymentService {
         stripeCheckoutSessionId: session.id,
       });
 
-      return payment;
+      return { success: true, data: payment };
     } catch (error) {
-      this.logger.error('Failed to create payment', { error, userId });
-      throw error;
+      this.logger.error('Failed to create payment', {
+        error: error instanceof Error ? error : new Error(String(error)),
+        userId,
+      });
+      return {
+        success: false,
+        error: {
+          code: 'EXTERNAL_SERVICE_ERROR',
+          message: 'Failed to create payment',
+          cause: error,
+        },
+      };
     }
   }
 
@@ -164,9 +197,7 @@ export class PaymentService {
   /**
    * Get payment by Stripe Checkout Session ID
    */
-  async getPaymentByStripeSessionId(
-    stripeCheckoutSessionId: string,
-  ): Promise<Payment | undefined> {
+  async getPaymentByStripeSessionId(stripeCheckoutSessionId: string): Promise<Payment | undefined> {
     this.logger.debug('Fetching payment by Stripe session ID', { stripeCheckoutSessionId });
 
     const [payment] = await this.deps.db
@@ -222,18 +253,15 @@ export class PaymentService {
       }
 
       const status =
-        intent?.status ||
-        session?.payment_status ||
-        session?.status ||
-        'requires_payment_method';
+        intent?.status || session?.payment_status || session?.status || 'requires_payment_method';
 
       const paidAt =
         intent?.status === 'succeeded'
           ? new Date(
-              ((intent.latest_charge && typeof intent.latest_charge !== 'string'
-                ? intent.latest_charge.created
-                : intent.created) ?? intent.created) * 1000,
-            )
+            ((intent.latest_charge && typeof intent.latest_charge !== 'string'
+              ? intent.latest_charge.created
+              : intent.created) ?? intent.created) * 1000,
+          )
           : null;
 
       const failedAt =
@@ -294,10 +322,12 @@ export class PaymentService {
       return payment;
     } catch (error) {
       this.logger.error('Failed to update payment status', {
-        error,
-        paymentId,
-        stripePaymentIntentId,
-        stripeCheckoutSessionId,
+        error: error instanceof Error ? error : new Error(String(error)),
+        context: {
+          paymentId,
+          stripePaymentIntentId,
+          stripeCheckoutSessionId,
+        },
       });
       throw error;
     }

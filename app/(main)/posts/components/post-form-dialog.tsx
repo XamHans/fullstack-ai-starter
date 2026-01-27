@@ -14,22 +14,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  published: boolean;
-  authorId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { toast } from 'sonner';
+import { useCreatePost, useUpdatePost } from '@/app/(main)/posts/hooks/use-posts';
+import type { Post } from '@/modules/posts/types';
 
 interface PostFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (post: Post) => void;
+  onSuccess: () => void;
   userId: string;
   post?: Post;
 }
@@ -44,79 +36,50 @@ export function PostFormDialog({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [published, setPublished] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  // removed useToast
+
+  const createMutation = useCreatePost();
+  const updateMutation = useUpdatePost();
 
   const isEditing = !!post;
+  const loading = createMutation.isPending || updateMutation.isPending;
 
-  // Reset form when dialog opens/closes or post changes
-  useEffect(() => {
-    if (open && post) {
-      setTitle(post.title);
-      setContent(post.content);
-      setPublished(post.published);
-    } else if (open && !post) {
-      setTitle('');
-      setContent('');
-      setPublished(false);
-    }
-  }, [open, post]);
+  // ... useEffect
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !content.trim()) {
-      toast({
-        title: 'Validation Error',
+      toast.error('Validation Error', {
         description: 'Title and content are required',
-        variant: 'destructive',
       });
       return;
     }
 
-    setLoading(true);
+    const data = {
+      title: title.trim(),
+      content: content.trim(),
+      published,
+    };
 
-    try {
-      const url = isEditing ? `/api/posts/${post.id}` : '/api/posts';
-      const method = isEditing ? 'PUT' : 'POST';
+    const handleSuccess = () => {
+      onSuccess();
+      onOpenChange(false);
+    };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          content: content.trim(),
-          published,
-        }),
+    const handleError = (error: Error) => {
+      toast.error('Error', {
+        description: error.message || `Failed to ${isEditing ? 'update' : 'create'} post`,
       });
+    };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `Failed to ${isEditing ? 'update' : 'create'} post`);
-      }
-
-      if (data.success) {
-        onSuccess(data.data);
-        onOpenChange(false);
-        toast({
-          title: 'Success',
-          description: `Post ${isEditing ? 'updated' : 'created'} successfully`,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : `Failed to ${isEditing ? 'update' : 'create'} post`,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+    if (isEditing) {
+      updateMutation.mutate(
+        { id: post.id, ...data },
+        { onSuccess: handleSuccess, onError: handleError },
+      );
+    } else {
+      createMutation.mutate(data, { onSuccess: handleSuccess, onError: handleError });
     }
   };
 

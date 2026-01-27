@@ -132,26 +132,35 @@ Keep this terminal running while developing. It will show all webhook events in 
 
 ```typescript
 // app/api/custom-payment/route.ts
-import { withAuthentication } from '@/lib/api/base';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 import { withServices } from '@/lib/container/utils';
 
-export const POST = withAuthentication(async (session, request) => {
+const createPaymentSchema = z.object({
+  amount: z.string(),
+  currency: z.string().default('USD'),
+  description: z.string().optional(),
+  metadata: z.record(z.string()).optional(),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, createPaymentSchema);
+  if (!bodyResult.success) return bodyResult;
+
   const { paymentService } = withServices('paymentService');
 
-  const payment = await paymentService.createPayment(
+  const result = await paymentService.createPayment(
     {
-      amount: '25.00',
-      currency: 'USD',
-      description: 'Premium Subscription',
-      metadata: {
-        subscriptionId: 'sub_123',
-        orderId: 'order_456'
-      },
+      ...bodyResult.data,
+      description: bodyResult.data.description || 'Premium Subscription',
     },
     session.user.id
   );
 
-  return { payment };
+  if (!result.success) return result;
+
+  return { success: true, data: { payment: result.data } };
 });
 ```
 
@@ -289,11 +298,14 @@ Check [Stripe's currency support](https://stripe.com/docs/currencies) for the fu
 ```typescript
 const { paymentService } = withServices('paymentService');
 
-const payment = await paymentService.getPaymentById(paymentId);
+const result = await paymentService.getPaymentById(paymentId);
 
-if (!payment) {
-  throw new ApiError(404, 'Payment not found', 'PAYMENT_NOT_FOUND');
+if (!result.success) {
+  // result.error contains { code: 'PAYMENT_NOT_FOUND', message: '...' }
+  return result;
 }
+
+const payment = result.data;
 ```
 
 ### List User Payments

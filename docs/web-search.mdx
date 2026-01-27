@@ -65,8 +65,24 @@ The `/api/ai/web-search` route wraps both providers. It accepts a `query` along 
 
 ```ts
 // app/api/ai/web-search/route.ts
-export const POST = withAuthentication(async (session, req, params, logger) => {
-  const { query, provider = 'openai' } = await parseRequestBody(req);
+import { generateText, stepCountIs } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { withAITelemetry } from '@/lib/api/ai-utils';
+
+const webSearchSchema = z.object({
+  query: z.string().min(1),
+  provider: z.enum(['openai', 'google']).default('openai'),
+});
+
+export const POST = withAuth(async (session, req) => {
+  const bodyResult = await parseRequestBody(req, webSearchSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const { query, provider } = bodyResult.data;
 
   const result =
     provider === 'google'
@@ -94,10 +110,13 @@ export const POST = withAuthentication(async (session, req, params, logger) => {
         );
 
   return {
-    provider,
-    answer: result.text,
-    sources: result.sources ?? [],
-    providerMetadata: result.providerMetadata,
+    success: true,
+    data: {
+      provider,
+      answer: result.text,
+      sources: result.sources ?? [],
+      providerMetadata: result.providerMetadata,
+    },
   };
 });
 ```

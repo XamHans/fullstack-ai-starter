@@ -6,6 +6,7 @@ import type React from 'react';
 import { Footer } from '@/components/footer';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { QueryProvider } from '@/lib/query/provider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -45,13 +46,20 @@ html {
         )}
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <main className="flex flex-col min-h-screen">
-            {children}
-            <Footer />
-          </main>
-          <Toaster />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main className="flex flex-col min-h-screen">
+              {children}
+              <Footer />
+            </main>
+            <Toaster />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

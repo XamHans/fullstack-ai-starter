@@ -34,17 +34,25 @@ GOOGLE_AI_API_KEY=...
 // app/api/ai/generate-text/route.ts
 import { generateText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication } from '@/lib/api/base';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt, model = 'gpt-3.5-turbo' } = await request.json();
+const generateSchema = z.object({
+  prompt: z.string().min(1),
+  model: z.string().default('gpt-3.5-turbo'),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, generateSchema);
+  if (!bodyResult.success) return bodyResult;
 
   const { text } = await generateText({
-    model: openai(model),
-    prompt,
+    model: openai(bodyResult.data.model),
+    prompt: bodyResult.data.prompt,
   });
 
-  return { text };
+  return { success: true, data: { text } };
 });
 ```
 
@@ -108,18 +116,32 @@ For real-time user feedback, implement streaming responses:
 // app/api/ai/generate-text-stream/route.ts
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { withAuthentication } from '@/lib/api/base';
+import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { parseRequestBody } from '@/lib/validation/parse';
+import { handleResult } from '@/lib/api/handlers';
 
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt } = await request.json();
+const streamSchema = z.object({
+  prompt: z.string().min(1),
+});
+
+// Note: Streaming endpoints return DataStreamResponse directly
+export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) {
+    return handleResult({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
+  }
+
+  const bodyResult = await parseRequestBody(request, streamSchema);
+  if (!bodyResult.success) return handleResult(bodyResult);
 
   const result = await streamText({
     model: openai('gpt-3.5-turbo'),
-    prompt,
+    prompt: bodyResult.data.prompt,
   });
 
   return result.toDataStreamResponse();
-});
+}
 ```
 
 ```tsx
@@ -167,22 +189,33 @@ export function StreamingTextGenerator() {
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
+import { z } from 'zod';
+import { withAuth } from '@/lib/api/handlers';
+import { parseRequestBody } from '@/lib/validation/parse';
 
 const models = {
   'gpt-4': openai('gpt-4'),
   'claude-3.5-sonnet': anthropic('claude-3-5-sonnet-20241022'),
   'gemini-pro': google('models/gemini-pro'),
-};
+} as const;
 
-export const POST = withAuthentication(async (session, request) => {
-  const { prompt, provider = 'gpt-4' } = await request.json();
+const multiProviderSchema = z.object({
+  prompt: z.string().min(1),
+  provider: z.enum(['gpt-4', 'claude-3.5-sonnet', 'gemini-pro']).default('gpt-4'),
+});
+
+export const POST = withAuth(async (session, request) => {
+  const bodyResult = await parseRequestBody(request, multiProviderSchema);
+  if (!bodyResult.success) return bodyResult;
+
+  const { prompt, provider } = bodyResult.data;
 
   const { text } = await generateText({
     model: models[provider],
     prompt,
   });
 
-  return { text, provider };
+  return { success: true, data: { text, provider } };
 });
 ```
 
