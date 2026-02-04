@@ -19,23 +19,25 @@ Build complete features from idea to working code in one pragmatic session.
 
 The `/build` command follows this flow:
 
-1. **UNDERSTAND** (1 min) - Scan domain module and existing patterns
-2. **PLAN** (1 min) - Show inline brief plan and ask 1-2 critical questions
-3. **DATABASE** (2 min) - Update schema if needed
-4. **BACKEND** (5 min) - Build services (Result<T>) and API routes
-5. **FRONTEND** (5 min) - Build TanStack Query hooks and UI components
-6. **TESTS** (3 min) - Write integration tests (after feature works)
-7. **VERIFY** (1 min) - Run tests, format, commit
+1. **SETUP** (1 min) - Pull latest dev, create feature branch
+2. **UNDERSTAND** (1 min) - Scan domain module and existing patterns
+3. **PLAN** (1 min) - Show inline brief plan and ask 1-2 critical questions
+4. **DATABASE** (2 min) - Update schema if needed
+5. **BACKEND** (5 min) - Build services (Result<T>) and API routes
+6. **FRONTEND** (5 min) - Build TanStack Query hooks and UI components
+7. **TESTS** (3 min) - Write integration tests (after feature works)
+8. **VERIFY & PR** (2 min) - Run tests, format, commit, push, create PR to dev
 
-**Total time:** ~15-20 minutes for typical features
+**Total time:** ~20-25 minutes for typical features
 
 ### What You Get
 
 Each `/build` delivers:
+- ✅ **Git Workflow:** Feature branch from latest dev
 - ✅ **Backend:** Service methods with Result<T>, API routes with auth/validation
 - ✅ **Frontend:** TanStack Query hooks, UI components
 - ✅ **Tests:** Integration tests via HTTP with real database
-- ✅ **Commit:** Auto-formatted, tested, ready to push
+- ✅ **Pull Request:** Auto-formatted, tested, PR created to dev branch
 
 ### When to Write Tests
 

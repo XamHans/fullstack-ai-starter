@@ -8,14 +8,43 @@ user-invocable: true
 
 # Build Feature Command
 
-Build a complete feature from idea to working code in one session (~15-20 minutes).
+Build a complete feature from idea to working code with proper git workflow in one session (~20-25 minutes).
 
 ## Workflow Overview
 
 ```
-UNDERSTAND (1 min) → PLAN (1 min) → DATABASE (2 min) → BACKEND (5 min) →
-FRONTEND (5 min) → TESTS (3 min) → VERIFY (1 min) → DONE
+SETUP (1 min) → UNDERSTAND (1 min) → PLAN (1 min) → DATABASE (2 min) →
+BACKEND (5 min) → FRONTEND (5 min) → TESTS (3 min) → VERIFY & PR (2 min) → DONE
 ```
+
+## Phase 0: SETUP (1 minute)
+
+**Goal:** Prepare git environment with latest code and feature branch.
+
+**Actions:**
+```bash
+# 1. Switch to dev branch and pull latest
+git checkout dev
+git pull origin dev
+
+# 2. Create feature branch with descriptive name
+# Pattern: feature/{domain}/{brief-description}
+git checkout -b feature/{domain}/{feature-slug}
+```
+
+**Branch naming examples:**
+- `feature/posts/archive-functionality`
+- `feature/payments/stripe-subscription`
+- `feature/auth/two-factor-auth`
+
+**Critical Rules:**
+- ✅ Always pull latest dev before branching
+- ✅ Use descriptive branch names (kebab-case)
+- ✅ Branch from dev, NOT main
+- ❌ Don't start work on stale code
+- ❌ Don't use vague names like "feature/new-feature"
+
+**Skip this phase if:** User explicitly says to work on current branch
 
 ## Phase 1: UNDERSTAND (1 minute)
 
@@ -511,9 +540,9 @@ describe('{METHOD} /api/{domain}/{route}', () => {
 - **Location:** `tests/e2e/{flow}.e2e.test.ts`
 - **See:** Browser Automation section below
 
-## Phase 7: VERIFY (1 minute)
+## Phase 7: VERIFY & PR (2 minutes)
 
-**Goal:** Ensure tests pass, code is formatted, and commit is made.
+**Goal:** Ensure tests pass, code is formatted, committed, and PR created to dev branch.
 
 **Actions:**
 ```bash
@@ -534,6 +563,35 @@ git commit -m "feat({domain}): {brief description}
 - {Key implementation details}
 
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+# 5. Push feature branch to origin
+git push -u origin feature/{domain}/{feature-slug}
+
+# 6. Create PR to dev branch
+gh pr create \
+  --base dev \
+  --title "feat({domain}): {brief description}" \
+  --body "$(cat <<'EOF'
+## Summary
+{Brief description of what was built}
+
+## Changes
+- {Database changes if any}
+- {Backend changes}
+- {Frontend changes}
+
+## Testing
+- ✅ Integration tests passing
+- ✅ Manual testing completed
+
+## Type
+- [x] New feature
+- [ ] Bug fix
+- [ ] Enhancement
+
+🤖 Generated with Claude Code
+EOF
+)"
 ```
 
 **Success criteria:**
@@ -541,15 +599,23 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ Code is formatted
 - ✅ No TypeScript errors
 - ✅ Commit follows conventional commits format
+- ✅ Feature branch pushed to origin
+- ✅ PR created targeting dev branch
 
 **If tests fail:**
 - Debug and fix
 - Re-run tests
 - Do not commit until tests pass
 
+**If PR creation fails:**
+- Ensure `gh` CLI is installed and authenticated
+- Check that dev branch exists on remote
+- Manually create PR via GitHub UI if needed
+
 ## Complete! Feature is Ready
 
 **What was delivered:**
+- ✅ Feature branch created from latest dev
 - ✅ Database schema (if needed)
 - ✅ Service methods with Result<T>
 - ✅ API routes with auth/validation
@@ -557,12 +623,14 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ UI components
 - ✅ Integration tests
 - ✅ Formatted, tested, committed code
+- ✅ PR created to dev branch
 
 **Next steps:**
-- Review changes with user
-- Test manually in development
-- Create PR or merge to main
-- Deploy to production
+- Review PR with team
+- Test manually in development environment
+- Merge PR to dev when approved
+- Deploy dev to staging for further testing
+- Eventually promote to production
 
 ---
 
@@ -795,6 +863,8 @@ export const errorCodeToStatus = {
 
 Use this checklist to ensure you complete all phases:
 
+- [ ] **SETUP:** Switched to dev and pulled latest (`git checkout dev && git pull`)
+- [ ] **SETUP:** Created feature branch (`git checkout -b feature/{domain}/{slug}`)
 - [ ] **UNDERSTAND:** Scanned domain module and existing patterns
 - [ ] **PLAN:** Showed inline plan with critical questions
 - [ ] **PLAN:** Got user approval to proceed
@@ -809,8 +879,10 @@ Use this checklist to ensure you complete all phases:
 - [ ] **VERIFY:** Ran tests (`npm test`)
 - [ ] **VERIFY:** Formatted code (`pnpm format`)
 - [ ] **VERIFY:** Committed changes with conventional commit message
+- [ ] **VERIFY:** Pushed feature branch to origin
+- [ ] **VERIFY:** Created PR to dev branch
 
-**Time estimate:** ~15-20 minutes for typical feature
+**Time estimate:** ~20-25 minutes for typical feature (including git workflow)
 
 ---
 
@@ -825,12 +897,15 @@ Use this checklist to ensure you complete all phases:
 7. **Trust the process** - This workflow has built hundreds of features
 
 **Most common mistakes:**
+- ❌ Forgetting to pull latest dev before starting
+- ❌ Working directly on dev instead of feature branch
 - ❌ Starting to code before user approves plan
 - ❌ Asking too many questions (>2 is too many)
 - ❌ Adding "nice to have" features not in description
 - ❌ Writing tests before implementation
 - ❌ Building backend completely before starting frontend
 - ❌ Creating new patterns instead of using existing ones
+- ❌ Creating PR to main instead of dev
 
 **When in doubt:**
 - Read `.claude/IMPLEMENTATION-PATTERNS.md`
