@@ -1,6 +1,30 @@
-# Implementation Patterns for AI Agents
+# Implementation Patterns
 
-This document provides specific technical patterns for AI agents implementing features in this codebase. These patterns prevent common errors and ensure consistency.
+Essential technical patterns for implementing features in this codebase. Follow these patterns for consistency and to avoid common errors.
+
+## When to Write Tests
+
+**Integration Tests (API) - ALWAYS:**
+- Write AFTER API route implementation
+- Test via HTTP with Supertest
+- Use real test database
+- Location: `modules/{domain}/tests/integration/{feature}.api.test.ts`
+- Coverage: Happy path + key error cases
+
+**Unit Tests (Service) - WHEN COMPLEX:**
+- Write AFTER service implementation
+- Only for complex business logic with edge cases
+- Location: `modules/{domain}/tests/unit/{service}.test.ts`
+
+**Frontend Tests - AFTER FEATURE STABLE:**
+- Not upfront, only when feature is being used
+- Test critical user interactions
+- Location: `modules/{domain}/tests/{component}.test.tsx`
+
+**E2E Tests - RARELY:**
+- Only critical multi-step flows (checkout, signup)
+- After feature complete and stable
+- Location: `tests/e2e/`
 
 ## Service Singleton Pattern (Hybrid)
 
@@ -66,7 +90,7 @@ Tests create custom context:
 
 ### Why This Matters
 
-The architecture follows the **KISS/YAGNI Principle** (Constitution Article I) where:
+The architecture follows the **KISS/YAGNI Principle**:
 
 - **Services** are stateless singletons - simple and efficient
 - **API Routes** import services directly - one line, zero boilerplate
@@ -883,16 +907,16 @@ describe('PostService', () => {
 6. **Always add new error codes** to `ErrorCode` and `errorCodeToStatus`
 7. **In tests, use factory functions** (`createPostService(ctx)`) with test database context
 
-## Constitutional Compliance
+## Core Principles
 
-These patterns align with the Constitutional BDD principles:
+These patterns follow essential development principles:
 
-- **Article I (Simplicity First)**: Use framework patterns directly, minimal abstractions
-- **Article II (Anti-Abstraction)**: Services encapsulate logic, not wrapper layers
-- **Article III (Integration-First Testing)**: Test with real database via test container
-- **Article IV (Test-First)**: Write tests using these patterns before implementation
+- **Simplicity First**: Use framework patterns directly, minimal abstractions
+- **YAGNI**: Services encapsulate needed logic only, no wrapper layers
+- **Integration-First Testing**: Test with real database
+- **Test After**: Write tests after implementation to verify contracts
 
-Note: The `Result<T,E>` type is **not** an abstraction layer - it's explicit error handling that makes success/failure states visible in the type system. This aligns with Article II which values clarity over hidden control flow.
+Note: The `Result<T,E>` type is explicit error handling that makes success/failure states visible in the type system - this improves clarity and type safety.
 
 ## Reference Implementation
 

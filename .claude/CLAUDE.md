@@ -1,68 +1,80 @@
 # Project Commands and Guidelines
 
-## Constitutional BDD Workflow
+## Feature Development Workflow
 
-This project uses a **constitutional BDD workflow** with architectural principles that prevent common failure modes. See `.claude/constitution.md` for the complete constitutional foundation.
+Build complete features from idea to working code in one pragmatic session.
 
-### Workflow Commands
+### Primary Command
 
-1. `/create-specs [idea]` - Generate Gherkin scenarios with quality gates and uncertainty markers
-2. `/create-tasks [spec-path]` - Generate executable task list (optional)
-3. `/groundwork [spec-path]` - Build shared infrastructure with constitutional gates (run /clear after)
-4. `/plan-spec [spec-path]` - Create implementation plan (optional)
-5. `/implement [spec-path]` - Implement scenarios one-by-one with constitutional principles (suggest /clear between)
+**`/build [feature description]`** - Build a complete feature (API + UI + tests) in ~15-20 minutes
 
-### Constitutional Principles
+**Example:**
+```bash
+/build "add like button to posts"
+/build "archive posts without deleting them"
+/build "add payment subscription with Stripe"
+```
 
-All development MUST adhere to these principles from `.claude/constitution.md`:
+### How It Works
 
-1. **Simplicity First** - Minimal complexity, no future-proofing
-2. **Anti-Abstraction** - Use frameworks (Next.js/Drizzle) directly, avoid wrappers
-3. **Integration-First Testing** - Real databases, contract tests mandatory
-4. **Test-First** - No code before tests (Red-Green-Refactor)
-5. **Vertical Slicing** - End-to-end functionality (API + UI + tests) per scenario
-6. **Specification Quality** - Mark ambiguities with `[NEEDS CLARIFICATION]`
-7. **Complexity Tracking** - Document justified exceptions
-8. **Context Management** - /clear between phases for AI performance
+The `/build` command follows this flow:
 
-### Quality Gates
+1. **UNDERSTAND** (1 min) - Scan domain module and existing patterns
+2. **PLAN** (1 min) - Show inline brief plan and ask 1-2 critical questions
+3. **DATABASE** (2 min) - Update schema if needed
+4. **BACKEND** (5 min) - Build services (Result<T>) and API routes
+5. **FRONTEND** (5 min) - Build TanStack Query hooks and UI components
+6. **TESTS** (3 min) - Write integration tests (after feature works)
+7. **VERIFY** (1 min) - Run tests, format, commit
 
-**Before `/implement`**:
+**Total time:** ~15-20 minutes for typical features
 
-- ✅ All `[NEEDS CLARIFICATION]` markers resolved
-- ✅ Spec focuses on WHAT/WHY, not HOW
-- ✅ Scenarios are testable, independent, precise, minimal
+### What You Get
 
-**During `/groundwork`**:
+Each `/build` delivers:
+- ✅ **Backend:** Service methods with Result<T>, API routes with auth/validation
+- ✅ **Frontend:** TanStack Query hooks, UI components
+- ✅ **Tests:** Integration tests via HTTP with real database
+- ✅ **Commit:** Auto-formatted, tested, ready to push
 
-- ✅ Simplicity Gate: Minimal complexity, no future-proofing
-- ✅ Anti-Abstraction Gate: Using frameworks directly
-- ✅ Groundwork Gate: Justified upfront infrastructure
+### When to Write Tests
 
-**During `/implement`**:
+**Integration Tests (API) - ALWAYS:**
+- Write AFTER API route implementation
+- Test via HTTP with Supertest
+- Use real test database
+- Location: `modules/{domain}/tests/integration/{feature}.api.test.ts`
 
-- ✅ Test-First: Write tests before code
-- ✅ Vertical Slicing: API + UI + tests together
-- ✅ No guessing: Stop and ask for clarification if ambiguous
+**Unit Tests (Service) - WHEN COMPLEX:**
+- Write AFTER service implementation
+- Only for complex business logic with edge cases
+- Location: `modules/{domain}/tests/unit/{service}.test.ts`
 
-### BDD Best Practices
+**Frontend Tests - AFTER FEATURE STABLE:**
+- Not upfront, only when feature is being used
+- Test critical user interactions
+- Location: `modules/{domain}/tests/{component}.test.tsx`
 
-- **ALWAYS** run `/groundwork` before implementing scenarios with database changes
-- **Use /clear** between workflow phases to keep context focused and improve performance
-- **Implement one scenario at a time** for better code quality and easier review
-- **Groundwork = shared infrastructure only** - NO business logic, NO scenario-specific code
-- **Each scenario gets its own branch**: `feature/{domain}/{feature}/{scenario-slug}`
-- **Review specs before implementing** to ensure scenarios pass quality gates
-- **Mark ambiguities** with `[NEEDS CLARIFICATION]` instead of guessing
-- **Document complexity** when violating constitutional principles
+**E2E Tests - RARELY:**
+- Only critical multi-step flows (checkout, signup)
+- After feature complete and stable
+- Use Chrome DevTools MCP tools (see `/build` skill documentation)
+- Location: `tests/e2e/`
 
-### When to Skip Groundwork
+### Core Development Principles
 
-- Simple features with no database changes
-- Single-file utilities or helpers
-- When prototyping and speed matters most
+1. **KISS** - Keep it simple, no future-proofing
+2. **YAGNI** - Only build what's needed NOW
+3. **Vertical Slicing** - Ship end-to-end functionality (API + UI together)
+4. **Integration-First Testing** - Real databases, verify contracts
+5. **Use Framework Patterns** - Next.js/Drizzle/TanStack directly, no wrappers
 
-## Testing Commands
+### Additional Commands
+
+- **`/fix-bug [description]`** - Bug fix workflow with root cause analysis
+- **`/create-policy`** - Generate privacy policy page from codebase analysis
+
+## Development Commands
 
 ```bash
 # Run all tests
@@ -82,14 +94,23 @@ pnpm run check:fix
 
 # Type check
 pnpm typecheck
+
+# Start dev server
+pnpm dev
+
+# Build for production
+pnpm build
 ```
 
-## Code Style
+## Code Style and Patterns
 
 - Use TypeScript strict mode
 - Prefer functional components with hooks
 - Co-locate tests with the code they test in `modules/{domain}/tests/`
-- Follow testing pyramid: Many unit tests, some API tests, few E2E tests
+- Use Result<T> for all service method return values
+- Use withAuth/withHandler wrappers for API routes
+- Use TanStack Query for frontend data fetching
+- Use Zod for validation schemas
 - Use Drizzle ORM for database operations
 - Use better-auth for authentication
 
@@ -98,48 +119,97 @@ pnpm typecheck
 ```
 modules/
 └── {domain}/
-    ├── services/          # Business logic
-    ├── types/             # TypeScript types
-    ├── schema.ts          # Database schema (Drizzle)
+    ├── services/
+    │   └── {domain}.service.ts    # Business logic, returns Result<T>
+    ├── hooks/
+    │   └── use-{feature}.ts       # TanStack Query hooks
+    ├── components/
+    │   └── {Component}.tsx        # Reusable domain components
+    ├── types/
+    │   └── {domain}.types.ts      # TypeScript types
+    ├── schemas.ts                 # Zod validation schemas
+    ├── schema.ts                  # Drizzle database schema
     └── tests/
-        ├── unit/          # Fast, isolated tests (Vitest)
-        └── integration/   # API tests (Vitest + Supertest)
+        ├── unit/                  # Service tests (when complex)
+        ├── integration/           # API tests (always)
+        └── {component}.test.tsx   # Component tests (when stable)
 ```
 
-## Workflow Patterns
+## Essential Patterns
 
-### After Groundwork
+### Backend: Result<T>
 
-```bash
-/groundwork specs/posts/archive-posts.md
-# Review changes, then:
-/clear
-/implement specs/posts/archive-posts.md
+All service methods return `Result<T>` for explicit error handling:
+
+```typescript
+type Result<T> =
+  | { success: true; data: T }
+  | { success: false; error: AppError };
+
+// Service method
+async archivePost(postId: string): Promise<Result<Post>> {
+  const result = await db.update(posts)
+    .set({ archivedAt: new Date() })
+    .where(eq(posts.id, postId));
+
+  if (!result) {
+    return { success: false, error: { code: 'POST_NOT_FOUND' } };
+  }
+
+  return { success: true, data: result };
+}
 ```
 
-### Between Scenarios
+### Backend: API Routes
 
-```bash
-# After completing scenario 1:
-/clear
-# Then implement scenario 2 with fresh context:
-/implement specs/posts/archive-posts.md --scenario 2
+Use `withAuth` for authenticated routes, `withHandler` for public routes:
+
+```typescript
+import { withAuth } from '@/lib/api/with-auth';
+
+export const POST = withAuth(async (req, { params, user }) => {
+  const { id } = await params; // Next.js 15+ async params
+  const result = await postService.archivePost(id, user.id);
+  return result; // Auto-converts to NextResponse
+});
 ```
 
-## Important Notes
+### Frontend: TanStack Query
 
-- **Context management is critical** - Use /clear frequently
-- **Test-first development** - Write failing tests before implementation (Article IV)
-- **Vertical slicing** - Each scenario should deliver end-to-end functionality (API + UI) (Article VIII)
-- **YAGNI principle** - Only build what's needed for current scenarios (Article I)
-- **Documentation** - Update GROUNDWORK.md and spec files as you go
-- **Uncertainty handling** - Mark ambiguities with `[NEEDS CLARIFICATION]` instead of guessing (Article VI)
-- **Constitutional compliance** - Check gates and document justified exceptions
-- **Bidirectional feedback** - Update specs with production learnings (Article XI)
+Use hooks for data fetching and mutations:
+
+```typescript
+// Query (GET)
+export function usePosts() {
+  return useQuery({
+    queryKey: ['posts'],
+    queryFn: async () => {
+      const res = await fetch('/api/posts');
+      return res.json();
+    },
+  });
+}
+
+// Mutation (POST/PUT/DELETE)
+export function useArchivePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (postId: string) => {
+      const res = await fetch(`/api/posts/${postId}/archive`, {
+        method: 'POST',
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+}
+```
 
 ## Key Resources
 
-- `.claude/IMPLEMENTATION-PATTERNS.md` - **Technical patterns (READ FIRST)** - Container usage, API responses, Next.js 15+
-- `.claude/constitution.md` - Architectural principles and phase gates
-- `.claude/BDD-WORKFLOW.md` - Complete workflow guide with constitutional BDD details
-- `.claude/commands/` - Command templates with quality constraints
+- `.claude/IMPLEMENTATION-PATTERNS.md` - Complete technical patterns reference
+- `.claude/skills/build/SKILL.md` - Full `/build` command workflow
+- `modules/` - Example domain modules showing patterns in practice
