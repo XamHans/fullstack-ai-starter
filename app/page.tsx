@@ -24,7 +24,6 @@ import {
   X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -39,7 +38,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Cover } from '@/components/ui/cover';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { PixelatedCanvas } from '@/components/ui/pixelated-canvas';
 import { Separator } from '@/components/ui/separator';
 
 type TechCategory = {
@@ -279,7 +277,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Right Column - Hero Image */}
+            {/* Right Column - Hero Visual */}
             <motion.div
               className="relative order-first lg:order-last"
               initial={{ opacity: 0, x: 50 }}
@@ -302,17 +300,42 @@ export default function LandingPage() {
                 <motion.div
                   whileHover={{ scale: 1.02, rotate: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="relative"
+                  className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-background shadow-2xl dark:border-neutral-800"
                 >
-                  <Image
-                    src="/hero.svg"
-                    alt="Spec-Driven AI Starter Kit - Tech Stack Showcase"
-                    width={600}
-                    height={400}
-                    className="rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full h-auto"
-                    priority
-                  />
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/5 via-transparent to-transparent" />
+                  <div className="grid min-h-[360px] grid-cols-2 gap-px bg-border">
+                    {[
+                      { label: 'Specs', icon: Braces },
+                      { label: 'Routes', icon: Server },
+                      { label: 'Database', icon: Database },
+                      { label: 'Tests', icon: TestTube },
+                    ].map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div
+                          key={item.label}
+                          className="flex flex-col items-center justify-center gap-3 bg-background p-8"
+                        >
+                          <Icon className="h-10 w-10 text-primary" />
+                          <span className="text-sm font-medium text-muted-foreground">
+                            {item.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent p-8">
+                    <div className="rounded-lg border bg-background/90 p-4 shadow-sm backdrop-blur">
+                      <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Production-ready AI stack
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Next.js, Drizzle, Better Auth, TanStack Query, AI SDK, and Vitest wired
+                        together for real product work.
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
@@ -1205,25 +1228,20 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <div className="mx-auto mt-8">
-                <PixelatedCanvas
-                  src="/johannes.png"
-                  width={400}
-                  height={600}
-                  cellSize={3}
-                  dotScale={0.9}
-                  shape="square"
-                  backgroundColor="#000000"
-                  dropoutStrength={0.1}
-                  interactive
-                  distortionStrength={0.1}
-                  distortionRadius={50}
-                  distortionMode="repel"
-                  followSpeed={0.2}
-                  jitterStrength={4}
-                  jitterSpeed={1}
-                  sampleAverage
-                  className="rounded-xl shadow-lg"
-                />
+                <div className="grid min-h-[420px] place-items-center rounded-xl border bg-background p-8 shadow-lg">
+                  <div className="space-y-6 text-center">
+                    <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary/10">
+                      <Users className="h-9 w-9 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-lg font-semibold">Built from real project pain</p>
+                      <p className="mx-auto max-w-sm text-sm text-muted-foreground">
+                        A starter kit shaped by the work of turning AI-assisted prototypes into
+                        maintainable production systems.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
